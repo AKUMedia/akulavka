@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKU Лавка — подписки на нейросети на ваш аккаунт</title>
+<meta name="description" content="Оформляем Claude, ChatGPT и Gemini на ваш собственный аккаунт. Без общих логинов и чужих паролей.">
+<meta property="og:title" content="AKU Лавка — подписки на нейросети">
+<meta property="og:description" content="Оформляем Claude, ChatGPT и Gemini на ваш собственный аккаунт.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        soot:   '#171310',
+        board:  '#211B16',
+        edge:   '#342A20',
+        paper:  '#F2E9DE',
+        faded:  '#A29484',
+        brass:  '#E0A253',
+        sage:   '#8AA872'
+      },
+      fontFamily: {
+        sign: ['Literata', 'Georgia', 'serif'],
+        ui:   ['Manrope', 'system-ui', 'sans-serif']
+      }
+    }
+  }
+}
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background: #171310; }
+  /* Лампа над прилавком — единственный декоративный элемент страницы */
+  .lamp {
+    background:
+      radial-gradient(58% 42% at 50% -6%, rgba(224,162,83,.20) 0%, rgba(224,162,83,.06) 42%, rgba(23,19,16,0) 72%);
+    animation: warmup 1.6s ease-out both;
+  }
+  @keyframes warmup { from { opacity: 0 } to { opacity: 1 } }
+  @media (prefers-reduced-motion: reduce) {
+    .lamp { animation: none }
+    html { scroll-behavior: auto }
+  }
+  .rule { border-top: 1px solid #342A20; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid #E0A253; outline-offset: 3px; border-radius: 2px;
+  }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .chev { transform: rotate(45deg); }
+</style>
+</head>
+<body class="font-ui text-paper antialiased">
+
+<!-- ═══════════ НАСТРОЙКИ: меняй только этот блок ═══════════ -->
+<script>
+const CONFIG = {
+  telegram: 'hipnohop',          // твой ник в Telegram без @ — сюда падают заказы
+  channel:  'https://t.me/Alekseii_AI',
+  cardLink: 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
+  promo:    'NEURO500',
+  openFrom: 9,                   // часы работы лавки, по твоему времени
+  openTo:   23,
+
+  // ЦЕНЫ — ПЛЕЙСХОЛДЕРЫ. Поставь реальные после теста карты.
+  goods: [
+    {
+      id: 'claude',
+      name: 'Claude Pro',
+      term: '1 месяц',
+      note: 'Оформляю на ваш аккаунт. Anthropic, модели Sonnet и Opus.',
+      price: 2490,
+      tag: 'Чаще всего берут'
+    },
+    {
+      id: 'gpt',
+      name: 'ChatGPT Plus',
+      term: '1 месяц',
+      note: 'Оформляю на ваш аккаунт. OpenAI, GPT последней версии.',
+      price: 2290,
+      tag: null
+    },
+    {
+      id: 'gemini',
+      name: 'Google Gemini Pro',
+      term: '1 месяц',
+      note: 'Оформляю на ваш аккаунт. Плюс место в Google Диске.',
+      price: 1690,
+      tag: null
+    },
+    {
+      id: 'card',
+      name: 'Своя зарубежная карта',
+      term: 'выпуск разово',
+      note: 'Если хотите платить сами и за что угодно. По промокоду ниже дешевле.',
+      price: null,
+      priceLabel: 'по ссылке',
+      href: 'CARD',
+      tag: 'Без моего участия'
+    },
+    {
+      id: 'guide',
+      name: 'Гайд «Claude с нуля»',
+      term: 'PDF',
+      note: 'Как пользоваться, чтобы подписка окупилась. Отдаю бесплатно.',
+      price: 0,
+      priceLabel: 'бесплатно',
+      href: 'https://akumedia.github.io/guide/',
+      tag: null
+    }
+  ]
+};
+</script>
+
+<!-- ═══════════ Шапка ═══════════ -->
+<header class="lamp">
+  <nav class="max-w-3xl mx-auto px-5 pt-6 flex items-center justify-between">
+    <span class="font-sign text-lg tracking-tight">AKU&nbsp;Лавка</span>
+    <a href="#polka" class="text-sm text-faded hover:text-paper transition-colors">Что есть в наличии</a>
+  </nav>
+
+  <div class="max-w-3xl mx-auto px-5 pt-16 pb-14 sm:pt-24 sm:pb-20">
+    <p id="status" class="text-sm text-sage mb-6"></p>
+
+    <h1 class="font-sign text-4xl sm:text-5xl leading-[1.15] tracking-tight max-w-xl">
+      Подписки на нейросети, оформленные на ваш собственный аккаунт
+    </h1>
+
+    <p class="mt-6 text-faded leading-relaxed max-w-lg">
+      Никаких общих логинов и чужих паролей. Вы регистрируете аккаунт сами,
+      я оформляю на него оплату своей зарубежной картой. Аккаунт остаётся
+      только вашим — вместе со всей перепиской и файлами.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <a href="#polka"
+         class="bg-brass text-soot font-bold text-sm px-6 py-3 rounded-sm hover:bg-paper transition-colors">
+        Посмотреть, что есть
+      </a>
+      <span class="text-sm text-faded">Оформляю обычно за 15–40 минут</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ Полка ═══════════ -->
+<main>
+<section id="polka" class="max-w-3xl mx-auto px-5 py-16 sm:py-20">
+  <h2 class="font-sign text-2xl mb-2">На полке</h2>
+  <p class="text-faded text-sm mb-10">Нужен другой сервис — напишите, посмотрю и посчитаю.</p>
+
+  <ul id="shelf" class="rule"></ul>
+
+  <p class="mt-8 text-sm text-faded leading-relaxed">
+    Цены в рублях. Оплатить можно криптой, переводом на карту или Telegram Stars —
+    в переписке подскажу, как вам удобнее.
+  </p>
+</section>
+
+<!-- ═══════════ Как это происходит ═══════════ -->
+<section class="max-w-3xl mx-auto px-5 py-16 sm:py-20 rule">
+  <h2 class="font-sign text-2xl mb-10">Как это происходит</h2>
+
+  <ol class="space-y-9">
+    <li class="flex gap-5">
+      <span class="font-sign text-brass text-xl shrink-0 w-6">1</span>
+      <div>
+        <h3 class="font-bold mb-1.5">Пишете мне в Telegram</h3>
+        <p class="text-faded text-sm leading-relaxed max-w-md">
+          Говорите, какой сервис нужен. Отвечаю, свободен ли он сейчас, и называю
+          итоговую сумму. Никаких скрытых комиссий сверху не появится.
+        </p>
+      </div>
+    </li>
+    <li class="flex gap-5">
+      <span class="font-sign text-brass text-xl shrink-0 w-6">2</span>
+      <div>
+        <h3 class="font-bold mb-1.5">Регистрируете аккаунт на себя</h3>
+        <p class="text-faded text-sm leading-relaxed max-w-md">
+          На свою почту, со своим паролем. Если аккаунт уже есть — ещё проще.
+          Дальше нужен временный доступ, чтобы я провёл оплату: покажу, как
+          сменить пароль сразу после.
+        </p>
+      </div>
+    </li>
+    <li class="flex gap-5">
+      <span class="font-sign text-brass text-xl shrink-0 w-6">3</span>
+      <div>
+        <h3 class="font-bold mb-1.5">Подписка активна</h3>
+        <p class="text-faded text-sm leading-relaxed max-w-md">
+          Проверяете, что всё работает, и меняете пароль. За три дня до окончания
+          месяца напомню про продление — если не нужно, просто не отвечайте.
+        </p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- ═══════════ Кто за прилавком ═══════════ -->
+<section class="max-w-3xl mx-auto px-5 py-16 sm:py-20 rule">
+  <h2 class="font-sign text-2xl mb-6">Кто за прилавком</h2>
+
+  <div class="max-w-lg space-y-4 text-faded leading-relaxed">
+    <p>
+      Меня зовут Алексей. Я занимаюсь внедрением ИИ в бизнес — собираю
+      автоматизации, ботов и внутренние сервисы для компаний. Нейросетями
+      пользуюсь каждый день по работе, поэтому и подписки эти держу для себя.
+    </p>
+    <p>
+      Лавка появилась просто потому, что у меня постоянно спрашивали, где взять
+      доступ. Заказы я обрабатываю сам, без менеджеров и колл-центра. Это значит,
+      что ночью я отвечу утром — зато отвечу лично.
+    </p>
+    <p class="text-paper">
+      Лавка открылась недавно, отзывов пока мало. Поэтому вот на что можно
+      посмотреть вместо них:
+    </p>
+  </div>
+
+  <div class="mt-7 flex flex-col sm:flex-row gap-3">
+    <a href="" id="lnk-channel"
+       class="border border-edge px-5 py-3 rounded-sm text-sm hover:border-brass transition-colors">
+      Мой канал про нейросети
+    </a>
+    <a href="https://aku-automation.io" target="_blank" rel="noopener"
+       class="border border-edge px-5 py-3 rounded-sm text-sm hover:border-brass transition-colors">
+      Что я делаю для бизнеса
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════ Если что-то пойдёт не так ═══════════ -->
+<section class="max-w-3xl mx-auto px-5 py-16 sm:py-20 rule">
+  <h2 class="font-sign text-2xl mb-6">Если что-то пойдёт не так</h2>
+
+  <div class="max-w-lg space-y-4 text-faded leading-relaxed">
+    <p>
+      Подписка не активировалась или слетела в течение оплаченного месяца —
+      восстанавливаю за свой счёт. Если восстановить не выходит, возвращаю деньги
+      за неиспользованные дни.
+    </p>
+    <p>
+      Чего я не могу: повлиять на решения самих сервисов, вернуть деньги за
+      месяц, которым вы уже пользовались, и починить доступ, если вы сменили
+      данные аккаунта и не сказали мне.
+    </p>
+    <p>
+      Пишу это заранее и открыто, чтобы потом не выяснять на эмоциях.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ Вопросы ═══════════ -->
+<section class="max-w-3xl mx-auto px-5 py-16 sm:py-20 rule">
+  <h2 class="font-sign text-2xl mb-8">Вопросы, которые задают</h2>
+
+  <div id="faq" class="max-w-xl"></div>
+</section>
+
+<!-- ═══════════ Финальный призыв ═══════════ -->
+<section class="max-w-3xl mx-auto px-5 py-16 sm:py-24 rule">
+  <h2 class="font-sign text-3xl mb-4 max-w-md leading-snug">Напишите, и разберёмся за пару сообщений</h2>
+  <p class="text-faded mb-8 max-w-md leading-relaxed">
+    Даже если не уверены, какой сервис нужен, — расскажите задачу, подскажу без
+    оплаты.
+  </p>
+  <a href="" id="lnk-main"
+     class="inline-block bg-brass text-soot font-bold px-7 py-3.5 rounded-sm hover:bg-paper transition-colors">
+    Написать в Telegram
+  </a>
+</section>
+</main>
+
+<!-- ═══════════ Подвал ═══════════ -->
+<footer class="rule">
+  <div class="max-w-3xl mx-auto px-5 py-12 text-xs text-faded leading-relaxed space-y-5">
+    <p>
+      AKU Лавка — независимый сервис. Не связан с компаниями Anthropic (Claude),
+      OpenAI (ChatGPT), Google (Gemini) и другими упомянутыми брендами. Названия
+      сервисов используются исключительно для описания оказываемых услуг.
+    </p>
+    <p>
+      Оказываемая услуга — помощь в оформлении оплаты подписки на аккаунт
+      заказчика. Продажа самих аккаунтов, паролей и общего доступа не ведётся.
+      Оформляя заказ, вы соглашаетесь с условиями, описанными в разделах «Как это
+      происходит» и «Если что-то пойдёт не так».
+    </p>
+    <div class="flex flex-wrap gap-x-6 gap-y-2 pt-3">
+      <a href="" id="lnk-foot" class="hover:text-paper transition-colors">Telegram</a>
+      <a href="" id="lnk-chan2" class="hover:text-paper transition-colors">Канал</a>
+      <a href="https://aku-automation.io" target="_blank" rel="noopener" class="hover:text-paper transition-colors">
+        Сделано с помощью AKU Automation
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const tg = 'https://t.me/' + CONFIG.telegram;
+  const money = n => n.toLocaleString('ru-RU') + ' ₽';
+
+  const order = g =>
+    tg + '?text=' + encodeURIComponent('Здравствуйте! Интересует ' + g.name + ' (' + g.term + ').');
+
+  /* ---- Полка ---- */
+  document.getElementById('shelf').innerHTML = CONFIG.goods.map(g => {
+    const href  = g.href === 'CARD' ? CONFIG.cardLink : (g.href || order(g));
+    const blank = (g.href && g.href !== 'CARD') || g.href === 'CARD' ? ' target="_blank" rel="noopener"' : '';
+    const price = g.priceLabel || money(g.price);
+    const cta   = g.href ? 'Открыть' : 'Взять';
+
+    return `
+      <li class="border-b border-edge">
+        <a href="${href}"${blank} class="group flex items-baseline gap-4 py-6 sm:py-7">
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h3 class="font-sign text-lg group-hover:text-brass transition-colors">${g.name}</h3>
+              <span class="text-xs text-faded">${g.term}</span>
+              ${g.tag ? `<span class="text-xs text-sage">${g.tag}</span>` : ''}
+            </div>
+            <p class="text-sm text-faded mt-2 leading-relaxed max-w-md">${g.note}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="font-sign text-lg whitespace-nowrap">${price}</div>
+            <div class="text-xs text-faded group-hover:text-brass transition-colors mt-1">${cta}</div>
+          </div>
+        </a>
+      </li>`;
+  }).join('');
+
+  /* ---- Вопросы ---- */
+  const faq = [
+    ['Вы получите доступ к моему аккаунту?',
+     'На время оплаты — да, иначе провести платёж невозможно. Сразу после активации вы меняете пароль, и доступ у меня пропадает. Переписку и файлы я не открываю.'],
+    ['Почему нельзя оплатить самому?',
+     'Можно, и это даже дешевле. Нужна зарубежная карта — её выпуск есть на полке отдельной строкой, промокод ' + CONFIG.promo + ' даёт скидку. Я нужен только тем, кому не хочется в этом разбираться.'],
+    ['Аккаунт могут заблокировать?',
+     'Такое случается редко, но случается — сервисы иногда проверяют географию платежей. Если это произойдёт в течение оплаченного месяца, я восстанавливаю доступ за свой счёт или возвращаю деньги за оставшиеся дни.'],
+    ['Как оплатить?',
+     'Криптой, переводом на карту или через Telegram Stars. Принимаю рубли, тенге и белорусские рубли. Напишите — подберём удобный способ.'],
+    ['Подписка продлится сама?',
+     'Нет, автосписания не будет. За три дня до окончания я напишу и спрошу, продлевать ли. Не ответите — просто ничего не произойдёт.'],
+    ['Работаете ночью?',
+     'Заказы принимаю круглосуточно, оформляю с ' + CONFIG.openFrom + ':00 до ' + CONFIG.openTo + ':00. Ночная заявка уйдёт в работу утром.']
+  ];
+
+  document.getElementById('faq').innerHTML = faq.map(([q, a]) => `
+    <details class="border-b border-edge">
+      <summary class="flex items-center justify-between gap-4 py-5">
+        <span class="font-bold text-[15px]">${q}</span>
+        <span class="chev text-brass text-xl leading-none transition-transform shrink-0">+</span>
+      </summary>
+      <p class="text-faded text-sm leading-relaxed pb-5 pr-8">${a}</p>
+    </details>`).join('');
+
+  /* ---- Ссылки ---- */
+  document.getElementById('lnk-main').href = tg + '?text=' + encodeURIComponent('Здравствуйте! Пишу из Лавки.');
+  document.getElementById('lnk-foot').href = tg;
+  document.getElementById('lnk-channel').href = CONFIG.channel;
+  document.getElementById('lnk-chan2').href   = CONFIG.channel;
+  ['lnk-main','lnk-foot','lnk-channel','lnk-chan2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.target = '_blank'; el.rel = 'noopener';
+  });
+
+  /* ---- Статус лавки ---- */
+  const h = new Date().getHours();
+  const open = h >= CONFIG.openFrom && h < CONFIG.openTo;
+  const s = document.getElementById('status');
+  s.textContent = open
+    ? 'Лавка открыта — отвечаю сейчас'
+    : 'Лавка закрыта, отвечу с ' + CONFIG.openFrom + ':00. Заявку оставить можно';
+  if (!open) s.className = 'text-sm text-faded mb-6';
+})();
+</script>
+</body>
+</html>
