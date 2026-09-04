@@ -38,8 +38,9 @@ tailwind.config = {
 }
 </script>
 <style>
-  html { scroll-behavior: smooth; background: #100E0C; }
-  body { background: #100E0C; }
+  html { scroll-behavior: smooth; background: #100E0C; overflow-x: hidden; }
+  body { background: #100E0C; overflow-x: hidden; }
+  * { min-width: 0 }
 
   /* Тёплый свет над прилавком */
   .lamp {
@@ -100,8 +101,11 @@ tailwind.config = {
           letter-spacing: .13em; text-transform: uppercase; }
   .glass { background: rgba(32,28,24,.72); backdrop-filter: blur(14px);
            -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(224,162,83,.22) }
-  .huge { font-size: clamp(44px, 11.5vw, 132px); line-height: .92; letter-spacing: -.035em }
-  .stat { font-size: clamp(30px, 6vw, 52px); line-height: 1; letter-spacing: -.03em }
+  .huge { font-size: clamp(32px, 8.2vw, 92px); line-height: .95; letter-spacing: -.035em;
+          overflow-wrap: break-word; hyphens: none }
+  @media (min-width: 1180px) { .huge { font-size: 100px } }
+  .stat { font-size: clamp(26px, 6.4vw, 48px); line-height: 1; letter-spacing: -.03em }
+  @media (max-width: 400px) { .tech { font-size: 10px; letter-spacing: .1em } }
 
   .noscroll { overflow: hidden }
 
@@ -255,8 +259,8 @@ const ICONS = {
 
 <!-- ══════════════════ Шапка ══════════════════ -->
 <header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
-  <div class="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
-    <a href="#/" class="font-display font-extrabold text-[17px] tracking-tight shrink-0">
+  <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
+    <a href="#/" class="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight shrink-0">
       AKU<span class="text-brass">.</span>Лавка
     </a>
 
@@ -267,14 +271,15 @@ const ICONS = {
     </nav>
 
     <a href="#/cart" id="cartBtn"
-       class="relative flex items-center gap-2 border border-edge2 hover:border-brass transition-colors rounded-full pl-4 pr-4 py-2 text-sm shrink-0">
-      <span>Корзина</span>
+       class="relative flex items-center gap-2 border border-edge2 hover:border-brass transition-colors rounded-full px-3.5 sm:px-4 py-2 text-sm shrink-0">
+      <span class="hidden sm:inline">Корзина</span>
+      <span class="sm:hidden">▤</span>
       <span id="cartCount"
             class="min-w-[20px] h-5 px-1.5 rounded-full bg-brass text-ink text-xs font-bold grid place-items-center">0</span>
     </a>
   </div>
 
-  <nav class="sm:hidden flex items-center gap-6 text-sm text-faded px-5 pb-3 border-t border-edge/60 pt-3">
+  <nav class="sm:hidden flex items-center gap-5 text-[13px] text-faded px-5 pb-2.5 border-t border-edge/60 pt-2.5 overflow-x-auto whitespace-nowrap">
     <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
     <a href="#/help" class="hover:text-paper transition-colors">Как работает</a>
     <a href="#/about" class="hover:text-paper transition-colors">О лавке</a>
@@ -285,8 +290,8 @@ const ICONS = {
 
 <!-- ══════════════════ Подвал ══════════════════ -->
 <footer class="border-t border-edge mt-8">
-  <div class="max-w-5xl mx-auto px-5 py-12">
-    <div class="grid sm:grid-cols-3 gap-9 mb-10">
+  <div class="max-w-6xl mx-auto px-5 py-10 sm:py-12">
+    <div class="grid sm:grid-cols-3 gap-8 sm:gap-9 mb-9 sm:mb-10">
       <div>
         <a href="#/" class="font-display font-extrabold text-base tracking-tight">AKU<span class="text-brass">.</span>Лавка</a>
         <p class="text-faded text-sm mt-3 leading-relaxed">
@@ -324,10 +329,10 @@ const ICONS = {
 </footer>
 
 <!-- Уведомление о добавлении -->
-<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden">
+<div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 hidden">
   <div class="bg-panel border border-edge2 rounded-xl px-5 py-3.5 shadow-2xl flex items-center gap-3">
     <span id="toastDot" class="w-2.5 h-2.5 rounded-full bg-brass shrink-0"></span>
-    <span id="toastText" class="text-sm"></span>
+    <span id="toastText" class="text-sm flex-1 min-w-0"></span>
     <a href="#/cart" class="text-sm font-bold text-brass hover:text-paper transition-colors ml-1">В корзину</a>
   </div>
 </div>
@@ -403,7 +408,7 @@ const ICONS = {
     const ext  = g.external ? ' target="_blank" rel="noopener"' : '';
     const p    = g.usd ? priceFor(g, 1) : null;
     return `
-      <a href="${href}"${ext} class="card rise block bg-board border border-edge rounded-2xl p-5"
+      <a href="${href}"${ext} class="card rise block bg-board border border-edge rounded-2xl p-4 sm:p-5"
          style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
         <div class="flex items-start justify-between gap-3 mb-4">
           ${markTile(g)}
@@ -411,7 +416,7 @@ const ICONS = {
                        style="background:${g.tint}1F;color:${g.tint}">Часто берут</span>` : ''}
         </div>
         <h3 class="font-display font-bold text-[15px] leading-snug mb-2">${esc(g.name)}</h3>
-        <p class="text-faded text-[13px] leading-relaxed mb-5 min-h-[52px]">${esc(g.short)}</p>
+        <p class="text-faded text-[13px] leading-relaxed mb-4 sm:mb-5 sm:min-h-[52px]">${esc(g.short)}</p>
         <div class="tech text-faded/70 flex items-center gap-2 mb-3">
           <span>[ ${esc(cat(g.cat))} ]</span>
           <span style="color:${g.tint}">/</span>
@@ -481,7 +486,7 @@ const ICONS = {
       <div class="orb" style="width:300px;height:300px;background:rgba(108,140,245,.10);top:0;right:2%;animation-delay:-9s"></div>
       <div class="orb" style="width:240px;height:240px;background:rgba(240,134,74,.08);bottom:-80px;left:42%;animation-delay:-15s"></div>
 
-      <div class="relative max-w-6xl mx-auto px-5 pt-12 pb-12 sm:pt-16 sm:pb-16">
+      <div class="relative max-w-6xl mx-auto px-5 pt-10 pb-10 sm:pt-16 sm:pb-16">
         <div class="tech text-faded flex flex-wrap items-center gap-x-3 gap-y-2 mb-8">
           <span>[ 01 — витрина ]</span>
           <span class="text-brass">/</span>
@@ -491,21 +496,22 @@ const ICONS = {
         </div>
 
         <h1 class="font-display font-black huge">
-          НЕЙРО<span class="text-brass">·</span>ПОДПИСКИ
+          ПОДПИСКИ<br>НА НЕЙРО<span class="text-brass">СЕТИ</span>
         </h1>
 
-        <div class="mt-9 grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-end">
+        <div class="mt-8 sm:mt-10 grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-end">
           <div>
             <p class="text-faded leading-relaxed max-w-md text-[15px]">
               Никаких общих логинов и чужих паролей. Вы регистрируете аккаунт сами,
               я оформляю на него оплату зарубежной картой. Аккаунт остаётся только вашим —
               вместе со всей перепиской и файлами.
             </p>
-            <div class="mt-8 flex flex-wrap items-center gap-3">
+            <div class="mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
               <a href="#/shop"
-                 class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">
+                 class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors text-center">
                 Открыть каталог</a>
-              <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl">
+              <a href="#/pick"
+                 class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl text-center">
                 Подобрать за 3 вопроса</a>
             </div>
           </div>
@@ -527,32 +533,32 @@ const ICONS = {
       </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 pb-14">
+    <section class="max-w-6xl mx-auto px-5 pb-12 sm:pb-14">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-edge border border-edge rounded-2xl overflow-hidden">
         ${[
           ['15–40', 'минут на оформление'],
-          [shown().filter(g=>g.usd).length + '+', 'сервисов на полке'],
+          [CONFIG.goods.filter(g=>g.usd).length + '', 'сервисов оформляю'],
           ['−' + CONFIG.cryptoOff + '%', 'при оплате криптой'],
           [CONFIG.openFrom + '–' + CONFIG.openTo, 'часы работы лавки']
         ].map(([n,l]) => `
-          <div class="bg-ink p-6">
-            <div class="font-display font-black stat text-paper mb-2">${n}</div>
-            <div class="tech text-faded">${l}</div>
+          <div class="bg-ink p-4 sm:p-6">
+            <div class="font-display font-black stat text-paper mb-1.5 sm:mb-2">${n}</div>
+            <div class="tech text-faded leading-relaxed">${l}</div>
           </div>`).join('')}
       </div>
     </section>
 
     ${marquee()}
 
-    <section class="max-w-6xl mx-auto px-5 py-16">
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16">
       <div class="tech text-faded mb-4">[ 02 — на полке ]</div>
       <div class="flex items-end justify-between gap-4 mb-8">
-        <h2 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight">Что есть сейчас</h2>
+        <h2 class="font-display font-extrabold text-2xl sm:text-4xl tracking-tight">Что есть сейчас</h2>
         <a href="#/shop" class="text-sm text-brass hover:text-paper transition-colors shrink-0">Весь каталог</a>
       </div>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${hits.map(goodCard).join('')}</div>
 
-      <div class="mt-6 bg-board border border-edge rounded-2xl p-6">
+      <div class="mt-6 bg-board border border-edge rounded-2xl p-5 sm:p-6">
         <div class="tech text-faded mb-3">[ под заказ ]</div>
         <p class="text-faded text-sm leading-relaxed mb-4">
           Эти оформляю по запросу — напишите, отвечу по срокам и цене:
@@ -565,15 +571,15 @@ const ICONS = {
       </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 py-16 border-t border-edge">
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <h2 class="font-display font-bold text-2xl mb-3">Окупится или нет</h2>
       <p class="text-faded mb-8 max-w-lg leading-relaxed">
         Подписка стоит денег, но экономит часы. Посчитайте, за сколько дней она вернётся именно вам.
       </p>
-      <div id="calc" class="bg-board border border-edge rounded-2xl p-6 sm:p-8 max-w-2xl"></div>
+      <div id="calc" class="bg-board border border-edge rounded-2xl p-5 sm:p-8 max-w-2xl"></div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 py-16 border-t border-edge">
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <h2 class="font-display font-bold text-2xl mb-10">Три шага до подписки</h2>
       <div class="grid sm:grid-cols-3 gap-8">
         ${[
@@ -589,9 +595,9 @@ const ICONS = {
       </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 py-16 border-t border-edge">
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <div class="grid lg:grid-cols-2 gap-10">
-        <div class="bg-board border border-edge rounded-2xl p-7">
+        <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7">
           <h2 class="font-display font-bold text-xl mb-5">Чего я не продаю</h2>
           <ul class="space-y-4">
             ${[
@@ -631,7 +637,7 @@ const ICONS = {
       </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 py-16 border-t border-edge">
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <div class="grid lg:grid-cols-[1fr_1.1fr] gap-10">
         <div>
           <h2 class="font-display font-bold text-2xl mb-4">Вопросы</h2>
@@ -708,14 +714,14 @@ const ICONS = {
     const cats = CONFIG.cats.filter(c => all.some(g => g.cat === c.id));
     const chip = (id, name) => `
       <button data-cat="${id}"
-        class="px-4 py-2 rounded-full text-sm border transition-colors ${
+        class="px-4 py-2 rounded-full text-sm border transition-colors whitespace-nowrap shrink-0 ${
           activeCat === id ? 'bg-brass text-ink border-brass font-semibold'
                            : 'border-edge2 text-faded hover:text-paper hover:border-faded'}">${name}</button>`;
 
     return `
-    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16">
+    <section class="max-w-6xl mx-auto px-5 py-10 sm:py-16">
       <div class="tech text-faded mb-4">[ каталог / ${String(all.length).padStart(2,'0')} позиций ]</div>
-      <h1 class="font-display font-black text-4xl sm:text-6xl tracking-tight mb-4">КАТАЛОГ</h1>
+      <h1 class="font-display font-black text-[38px] sm:text-6xl leading-none tracking-tight mb-4">КАТАЛОГ</h1>
       <p class="text-faded mb-8 max-w-lg leading-relaxed">
         Нужного сервиса нет в списке — напишите, посмотрю и посчитаю. Беру почти всё,
         что оплачивается зарубежной картой.
@@ -727,7 +733,7 @@ const ICONS = {
         <span>Не знаете, что выбрать — подберу за три вопроса</span>
       </a>
 
-      <div class="flex flex-wrap gap-2.5 mb-9">
+      <div class="flex gap-2.5 mb-8 sm:mb-9 overflow-x-auto pb-1 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap">
         ${chip('all','Всё')}${cats.map(c => chip(c.id, c.name)).join('')}
       </div>
 
@@ -787,13 +793,13 @@ const ICONS = {
     if (quizStep >= QUIZ.length) {
       const g = pickResult();
       return `
-      <section class="max-w-2xl mx-auto px-5 py-16 sm:py-24">
+      <section class="max-w-2xl mx-auto px-5 py-12 sm:py-24">
         <p class="text-sm text-faded mb-4">Судя по ответам, вам подойдёт</p>
         <div class="bg-board border rounded-2xl p-7 mb-8" style="border-color:${g.tint}44">
           <div class="flex items-center gap-4 mb-5">
             ${markTile(g, 56)}
             <div>
-              <h1 class="font-display font-extrabold text-2xl">${esc(g.name)}</h1>
+              <h1 class="font-display font-extrabold text-xl sm:text-2xl">${esc(g.name)}</h1>
               <p class="text-faded text-sm mt-1">${esc(g.for)}</p>
             </div>
           </div>
@@ -814,12 +820,12 @@ const ICONS = {
 
     const step = QUIZ[quizStep];
     return `
-    <section class="max-w-2xl mx-auto px-5 py-16 sm:py-24">
+    <section class="max-w-2xl mx-auto px-5 py-12 sm:py-24">
       <div class="flex gap-2 mb-9">
         ${QUIZ.map((_,i) => `<span class="h-1 flex-1 rounded-full ${i <= quizStep ? 'bg-brass' : 'bg-edge2'}"></span>`).join('')}
       </div>
       <p class="text-sm text-faded mb-3">Вопрос ${quizStep+1} из ${QUIZ.length}</p>
-      <h1 class="font-display font-extrabold text-2xl sm:text-3xl mb-8">${step.q}</h1>
+      <h1 class="font-display font-extrabold text-[22px] sm:text-3xl leading-snug mb-7 sm:mb-8">${step.q}</h1>
       <div class="space-y-3">
         ${step.a.map(([label,val]) => `
           <button data-quiz="${val}"
@@ -842,15 +848,15 @@ const ICONS = {
 
     const termBtn = t2 => `
       <button data-term="${t2.months}"
-        class="flex-1 px-3 py-3 rounded-xl border text-sm transition-colors ${
+        class="flex-1 min-w-0 px-2 py-3 rounded-xl border text-[13px] sm:text-sm transition-colors ${
           pickedTerm === t2.months ? 'border-brass bg-brass/10 text-paper font-semibold'
                                    : 'border-edge2 text-faded hover:border-faded'}">
-        <span class="block">${t2.label}</span>
+        <span class="block whitespace-nowrap">${t2.label}</span>
         ${t2.off ? `<span class="block text-xs text-sage mt-0.5">−${t2.off}%</span>` : ''}
       </button>`;
 
     return `
-    <section class="max-w-6xl mx-auto px-5 py-10 sm:py-14">
+    <section class="max-w-6xl mx-auto px-5 py-8 sm:py-14">
       <nav class="text-sm text-faded mb-8 flex items-center gap-2 flex-wrap">
         <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
         <span class="text-edge2">/</span><span>${esc(cat(g.cat))}</span>
@@ -861,7 +867,7 @@ const ICONS = {
           <div class="flex items-center gap-4 mb-6">
             ${markTile(g, 64)}
             <div>
-              <h1 class="font-display font-extrabold text-2xl sm:text-3xl tracking-tight">${esc(g.name)}</h1>
+              <h1 class="font-display font-extrabold text-xl sm:text-3xl leading-tight tracking-tight">${esc(g.name)}</h1>
               <p class="text-faded text-sm mt-1.5">${esc(g.for || cat(g.cat))}</p>
             </div>
           </div>
@@ -892,7 +898,7 @@ const ICONS = {
           </div>`}
         </div>
 
-        <aside class="lg:sticky lg:top-24 bg-board border rounded-2xl p-6" style="border-color:${g.tint}33">
+        <aside class="lg:sticky lg:top-24 bg-board border rounded-2xl p-5 sm:p-6" style="border-color:${g.tint}33">
           ${isExt ? `
             <div class="font-display font-extrabold text-2xl mb-2">${esc(g.priceLabel)}</div>
             <p class="text-faded text-sm leading-relaxed mb-6">
@@ -908,7 +914,7 @@ const ICONS = {
             <div class="flex gap-2 mb-6">${CONFIG.terms.map(termBtn).join('')}</div>
 
             <div class="flex items-baseline gap-3 mb-1">
-              <span class="font-display font-black text-4xl">${money(p)}</span>
+              <span class="font-display font-black text-3xl sm:text-4xl">${money(p)}</span>
               ${t.off ? `<span class="text-faded text-sm line-through">${money(base(g)*t.months)}</span>` : ''}
             </div>
             <p class="text-sage text-sm mb-1">криптой ${money(crypto(p))}</p>
@@ -953,8 +959,8 @@ const ICONS = {
     const rows = items.map(i => {
       const g = G(i.id), line = priceFor(g, i.months) * i.qty;
       return `
-      <div class="flex items-start gap-4 py-6 border-b border-edge">
-        ${markTile(g, 48)}
+      <div class="flex items-start gap-3 sm:gap-4 py-5 sm:py-6 border-b border-edge">
+        ${markTile(g, 44)}
         <div class="flex-1 min-w-0">
           <a href="#/p/${g.id}" class="font-display font-bold text-[15px] hover:text-brass transition-colors">${esc(g.name)}</a>
           <p class="text-faded text-sm mt-1">${term(i.months).label} · ${money(priceFor(g,i.months))}</p>
@@ -967,16 +973,16 @@ const ICONS = {
             <button data-qty="${i.key}" data-v="0" class="text-sm text-faded hover:text-rust transition-colors ml-2">Убрать</button>
           </div>
         </div>
-        <div class="font-display font-bold text-[15px] shrink-0">${money(line)}</div>
+        <div class="font-display font-bold text-[14px] sm:text-[15px] shrink-0 whitespace-nowrap">${money(line)}</div>
       </div>`;
     }).join('');
 
     return `
-    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16">
-      <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">Корзина</h1>
+    <section class="max-w-6xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">КОРЗИНА</h1>
       <div class="grid lg:grid-cols-[1fr_340px] gap-10 items-start">
         <div class="border-t border-edge">${rows}</div>
-        <aside class="lg:sticky lg:top-24 bg-board border border-edge rounded-2xl p-6">
+        <aside class="lg:sticky lg:top-24 bg-board border border-edge rounded-2xl p-5 sm:p-6">
           <div class="flex items-baseline justify-between mb-2">
             <span class="text-faded text-sm">Позиций</span><span class="text-sm">${cartQty()}</span>
           </div>
@@ -1006,8 +1012,8 @@ const ICONS = {
   /* ─────────── Как это работает ─────────── */
   function viewHelp() {
     return `
-    <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
-      <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">Как это работает</h1>
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[34px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">КАК ЭТО РАБОТАЕТ</h1>
       <div class="space-y-10 mb-16">
         ${[
           ['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Состав заказа приходит мне в Telegram. Я отвечаю, свободен ли сервис сейчас, и называю итоговую сумму — скрытых комиссий сверху не появится.'],
@@ -1023,7 +1029,7 @@ const ICONS = {
           </div>`).join('')}
       </div>
 
-      <div class="bg-board border border-edge rounded-2xl p-7 mb-16">
+      <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7 mb-14 sm:mb-16">
         <h2 class="font-display font-bold text-xl mb-5">Возврат и гарантия</h2>
         <div class="space-y-4 text-faded text-[15px] leading-relaxed">
           <p><span class="text-paper font-semibold">Что я делаю.</span> Подписка не активировалась
@@ -1052,8 +1058,8 @@ const ICONS = {
   /* ─────────── О лавке ─────────── */
   function viewAbout() {
     return `
-    <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
-      <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">О лавке</h1>
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">О ЛАВКЕ</h1>
       <div class="space-y-5 text-[15px] leading-relaxed text-faded mb-12">
         <p>Меня зовут Алексей. Я занимаюсь внедрением ИИ в бизнес: собираю автоматизации,
            ботов и внутренние сервисы для компаний. Нейросетями пользуюсь каждый день по работе,
@@ -1067,7 +1073,7 @@ const ICONS = {
            оформление на ваш собственный аккаунт.</p>
       </div>
 
-      <div class="bg-board border border-edge rounded-2xl p-7 mb-12">
+      <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7 mb-12">
         <h2 class="font-display font-bold text-lg mb-3">Лавка открылась недавно</h2>
         <p class="text-faded text-[15px] leading-relaxed mb-6">
           Отзывов пока мало, и выдумывать я их не буду. Вместо этого — то, что можно проверить сейчас:</p>
@@ -1092,8 +1098,8 @@ const ICONS = {
   /* ─────────── Условия (оферта) ─────────── */
   function viewTerms() {
     return `
-    <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
-      <h1 class="font-display font-extrabold text-3xl tracking-tight mb-4">Условия</h1>
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-4">УСЛОВИЯ</h1>
       <p class="text-faded text-sm mb-10">Публичная оферта и политика конфиденциальности</p>
 
       <div class="space-y-8 text-[15px] leading-relaxed text-faded">
