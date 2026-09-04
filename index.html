@@ -83,6 +83,17 @@ tailwind.config = {
   }
   ::selection { background: #E0A253; color: #100E0C }
 
+
+  .marquee { overflow: hidden; white-space: nowrap; position: relative }
+  .marquee-track { display: inline-flex; align-items: center; animation: slide 34s linear infinite }
+  @keyframes slide { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px;
+    background: #3D352C; outline: none }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px;
+    border-radius: 50%; background: #E0A253; cursor: pointer; border: 3px solid #100E0C }
+  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%;
+    background: #E0A253; cursor: pointer; border: 3px solid #100E0C }
+
   .noscroll { overflow: hidden }
 
   @media (prefers-reduced-motion: reduce) {
@@ -99,111 +110,137 @@ const CONFIG = {
   telegram : 'hipnohop',
   channel  : 'https://t.me/Alekseii_AI',
   cardLink : 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
+  guideLink: 'https://aku-automation.io/guide/?utm_source=lavka&utm_medium=site&utm_campaign=guide',
+  siteLink : 'https://aku-automation.io',
   promo    : 'NEURO500',
   openFrom : 9,
   openTo   : 23,
 
-  // Скидка за длинный срок
+  rate      : 92,    // рабочий курс: курс ЦБ + комиссия карты + спред
+  markup    : 1.5,   // наценка
+  cryptoOff : 5,     // скидка за оплату криптой, %
+
   terms: [
-    { months: 1,  label: '1 месяц',  mult: 1,    off: 0  },
-    { months: 3,  label: '3 месяца', mult: 2.85, off: 5  },
-    { months: 6,  label: '6 месяцев',mult: 5.4,  off: 10 }
+    { months: 1, label: '1 месяц',   mult: 1,    off: 0  },
+    { months: 3, label: '3 месяца',  mult: 2.85, off: 5  },
+    { months: 6, label: '6 месяцев', mult: 5.4,  off: 10 }
   ],
 
   cats: [
-    { id: 'chat',  name: 'Чат-модели'      },
-    { id: 'image', name: 'Картинки и видео'},
-    { id: 'code',  name: 'Код'             },
-    { id: 'sound', name: 'Музыка и голос'  },
-    { id: 'tools', name: 'Полезное'        }
+    { id:'chat',  name:'Чат-модели'       },
+    { id:'image', name:'Картинки и видео' },
+    { id:'code',  name:'Код'              },
+    { id:'sound', name:'Музыка и голос'   },
+    { id:'tools', name:'Полезное'         }
   ],
 
-  // ЦЕНЫ — ПЛЕЙСХОЛДЕРЫ за 1 месяц. Заменить после теста карты.
+  // usd — официальная цена сервиса. price считается автоматически.
+  // Проверь usd на сайте каждого сервиса перед запуском.
   goods: [
-    { id:'claude', cat:'chat', name:'Claude Pro', mark:'C', tint:'#F0864A',
-      short:'Сильнее всего в тексте, коде и работе с документами.',
-      price:2490, hit:true, terms:true,
-      about:'Подписка Anthropic. Открывает продвинутые модели, длинные диалоги и загрузку файлов. Считается лучшим выбором для работы с текстом, аналитикой и программированием.',
+    { id:'claude', cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, hit:true,
+      short:'Сильнее всех в тексте, коде и работе с документами.',
+      for:'Тексты, аналитика, программирование',
+      about:'Подписка Anthropic. Открывает продвинутые модели, длинные диалоги и загрузку файлов. Считается лучшим выбором для работы с текстом и кодом: пишет аккуратнее конкурентов и реже выдумывает.',
       inc:['Продвинутые модели вместо базовой','Загрузка документов и картинок','Проекты и сохранённые инструкции','Приложение на телефоне и компьютере'] },
 
-    { id:'gpt', cat:'chat', name:'ChatGPT Plus', mark:'G', tint:'#2FBF9A',
-      short:'Самый универсальный. Голос, картинки, анализ файлов.',
-      price:2290, hit:true, terms:true,
-      about:'Подписка OpenAI. Самый популярный сервис: помимо текста умеет рисовать, говорить голосом, разбирать таблицы и искать в интернете.',
+    { id:'gpt', cat:'chat', name:'ChatGPT Plus', icon:'gpt', tint:'#2FBF9A', usd:20, hit:true,
+      short:'Самый универсальный. Голос, картинки, разбор файлов.',
+      for:'Всё понемногу, первый выбор новичка',
+      about:'Подписка OpenAI. Самый популярный сервис: помимо текста рисует картинки, говорит голосом, разбирает таблицы и ищет в интернете. Если берёте первую подписку в жизни — обычно берут эту.',
       inc:['Свежие модели без ограничений базовой версии','Генерация картинок','Голосовой режим','Анализ файлов и таблиц'] },
 
-    { id:'gemini', cat:'chat', name:'Google Gemini Pro', mark:'G', tint:'#6C8CF5',
-      short:'Связка с Google Диском, Почтой и Документами.',
-      price:1690, hit:true, terms:true,
-      about:'Подписка Google. Отличается тем, что живёт прямо внутри Google Документов, Почты и Диска, плюс даёт дополнительное место в облаке.',
-      inc:['Продвинутые модели Google','Помощник внутри Документов и Почты','Дополнительное место на Диске','Работа с очень длинными текстами'] },
+    { id:'gemini', cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20,
+      short:'Живёт внутри Google Документов, Почты и Диска.',
+      for:'Работа в экосистеме Google',
+      about:'Подписка Google. Отличается тем, что помощник встроен прямо в Документы, Почту и Диск, плюс даёт дополнительное место в облаке. Оформляю обычным способом на ваш аккаунт — без студенческих и промо-схем, которые массово блокируют через пару месяцев. Поэтому дороже, чем предложения «18 месяцев за копейки», зато подписка не отвалится.',
+      inc:['Продвинутые модели Google','Помощник в Документах и Почте','Дополнительное место на Диске','Работа с очень длинными текстами'] },
 
-    { id:'perplexity', cat:'chat', name:'Perplexity Pro', mark:'P', tint:'#38B3B8',
-      short:'Поиск с источниками. Хорош для research и учёбы.',
-      price:1790, terms:true,
-      about:'Поисковик на нейросети: отвечает на вопрос и сразу показывает ссылки на источники. Удобен, когда важно проверить, откуда взялся факт.',
+    { id:'perplexity', cat:'chat', name:'Perplexity Pro', icon:'perplexity', tint:'#38B3B8', usd:20,
+      short:'Поиск с источниками. Для research и учёбы.',
+      for:'Проверка фактов, учёба, research',
+      about:'Поисковик на нейросети: отвечает на вопрос и сразу показывает ссылки на источники. Незаменим, когда важно проверить, откуда взялся факт.',
       inc:['Неограниченные подробные запросы','Ссылки на источники в каждом ответе','Выбор модели под задачу','Загрузка своих файлов'] },
 
-    { id:'grok', cat:'chat', name:'SuperGrok', mark:'X', tint:'#B4A8FF',
-      short:'Быстрый, без лишних ограничений, живые данные из X.',
-      price:2390, terms:true,
-      about:'Подписка xAI. Отвечает свободнее многих конкурентов и видит, что прямо сейчас происходит в соцсети X.',
+    { id:'grok', cat:'chat', name:'SuperGrok', icon:'grok', tint:'#B4A8FF', usd:30,
+      short:'Свободнее конкурентов, видит происходящее в X.',
+      for:'Свежие данные и мало ограничений',
+      about:'Подписка xAI. Отвечает свободнее большинства конкурентов и видит, что прямо сейчас обсуждают в соцсети X.',
       inc:['Продвинутый режим рассуждений','Данные из X в реальном времени','Генерация картинок','Повышенные лимиты'] },
 
-    { id:'midjourney', cat:'image', name:'Midjourney', mark:'M', tint:'#C9CDD6',
-      short:'Лучшее качество картинок среди генераторов.',
-      price:2890, hit:true, terms:true,
-      about:'Генератор изображений с самой узнаваемой картинкой на рынке. Подходит для рекламы, обложек, концептов и иллюстраций.',
-      inc:['Быстрые генерации по тарифу','Работа в веб-версии','Приватный режим на старших тарифах','Апскейл и вариации'] },
+    { id:'midjourney', cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10, hit:true,
+      short:'Лучшая картинка среди генераторов изображений.',
+      for:'Реклама, обложки, иллюстрации',
+      about:'Генератор изображений с самой узнаваемой картинкой на рынке. Базовый тариф — на пробу, для потока работы обычно берут следующий, посчитаю отдельно.',
+      inc:['Быстрые генерации по тарифу','Работа в веб-версии','Апскейл и вариации','Свои референсы и стили'] },
 
-    { id:'runway', cat:'image', name:'Runway', mark:'R', tint:'#7BE3C4',
-      short:'Видео из текста и картинки. Монтаж на нейросети.',
-      price:3290, terms:true,
-      about:'Сервис для видео: оживляет фотографии, генерирует ролики по описанию, вырезает фон и объекты без ручного монтажа.',
+    { id:'runway', cat:'image', name:'Runway', icon:'runway', tint:'#7BE3C4', usd:15,
+      short:'Видео из текста и фото, монтаж на нейросети.',
+      for:'Ролики и обработка видео',
+      about:'Оживляет фотографии, генерирует ролики по описанию, вырезает фон и объекты без ручного монтажа.',
       inc:['Генерация видео из текста и фото','Удаление фона и объектов','Замедление и апскейл','Кредиты по тарифу'] },
 
-    { id:'kling', cat:'image', name:'Kling AI', mark:'K', tint:'#FF9BB8',
-      short:'Реалистичное видео и оживление фото.',
-      price:2190, terms:true,
-      about:'Один из сильнейших генераторов видео. Хорошо держит движение людей и лица, поэтому часто берут под рекламные ролики.',
-      inc:['Видео до нескольких секунд за генерацию','Оживление фотографий','Режим повышенного качества','Приоритетная очередь'] },
+    { id:'kling', cat:'image', name:'Kling AI', icon:'kling', tint:'#FF9BB8', usd:10,
+      short:'Реалистичное видео, хорошо держит лица и движение.',
+      for:'Рекламные ролики с людьми',
+      about:'Один из сильнейших генераторов видео. Лучше конкурентов справляется с движением людей и лицами, поэтому его часто берут под рекламу.',
+      inc:['Генерация видео по описанию','Оживление фотографий','Режим повышенного качества','Приоритетная очередь'] },
 
-    { id:'cursor', cat:'code', name:'Cursor Pro', mark:'C', tint:'#A78BFA',
+    { id:'cursor', cat:'code', name:'Cursor Pro', icon:'cursor', tint:'#A78BFA', usd:20,
       short:'Редактор кода, который пишет код за вас.',
-      price:2590, terms:true,
-      about:'Среда разработки со встроенным ИИ. Понимает весь проект целиком и вносит правки сразу в несколько файлов.',
-      inc:['Быстрые запросы без лимита базовой версии','Работа с проектом целиком','Автодополнение по контексту','Агент, правящий несколько файлов'] },
+      for:'Разработка и сборка проектов',
+      about:'Среда разработки со встроенным ИИ. Понимает проект целиком и вносит правки сразу в несколько файлов.',
+      inc:['Быстрые запросы без лимитов базовой версии','Работа с проектом целиком','Автодополнение по контексту','Агент, правящий несколько файлов'] },
 
-    { id:'copilot', cat:'code', name:'GitHub Copilot', mark:'⌘', tint:'#9EA7B3',
+    { id:'copilot', cat:'code', name:'GitHub Copilot', icon:'copilot', tint:'#9EA7B3', usd:10,
       short:'Подсказки кода прямо в вашем редакторе.',
-      price:1490, terms:true,
-      about:'Дописывает код по мере набора внутри привычного редактора. Самый спокойный вариант входа для тех, кто не хочет менять инструменты.',
+      for:'Ускорить работу, не меняя инструменты',
+      about:'Дописывает код по мере набора внутри привычного редактора. Самый спокойный вход для тех, кто не хочет менять рабочую среду.',
       inc:['Автодополнение в редакторе','Чат по вашему коду','Объяснение чужого кода','Работа в популярных редакторах'] },
 
-    { id:'suno', cat:'sound', name:'Suno', mark:'♪', tint:'#F45D9B',
+    { id:'suno', cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10,
       short:'Песни целиком: музыка, вокал и текст.',
-      price:2790, terms:true,
-      about:'Генератор музыки. Делает законченный трек с вокалом по описанию жанра и настроения — от джингла до полноценной песни.',
+      for:'Джинглы, треки, музыка для видео',
+      about:'Делает законченный трек с вокалом по описанию жанра и настроения — от джингла для рекламы до полноценной песни.',
       inc:['Расширенный лимит генераций','Коммерческое использование','Загрузка своего вокала','Скачивание в хорошем качестве'] },
 
-    { id:'eleven', cat:'sound', name:'ElevenLabs', mark:'⌇', tint:'#7FD1FF',
-      short:'Озвучка и клонирование голоса на русском.',
-      price:1990, terms:true,
-      about:'Синтез речи, которую тяжело отличить от живой. Умеет копировать голос по короткой записи и озвучивать длинные тексты.',
-      inc:['Много символов озвучки в месяц','Копирование своего голоса','Естественная русская речь','Скачивание в высоком качестве'] },
+    { id:'eleven', cat:'sound', name:'ElevenLabs', icon:'eleven', tint:'#7FD1FF', usd:22,
+      short:'Озвучка и копирование голоса на русском.',
+      for:'Озвучка роликов и подкастов',
+      about:'Синтез речи, которую тяжело отличить от живой. Копирует голос по короткой записи и озвучивает длинные тексты на русском.',
+      inc:['Большой лимит символов в месяц','Копирование своего голоса','Естественная русская речь','Скачивание в высоком качестве'] },
 
-    { id:'card', cat:'tools', name:'Своя зарубежная карта', mark:'▤', tint:'#E0A253',
-      short:'Платите сами и за что угодно, а не только за нейросети.',
-      price:null, priceLabel:'по ссылке', external:'CARD',
-      about:'Виртуальная карта, которой можно оплачивать зарубежные сервисы самостоятельно. Дешевле, чем через меня, но придётся разобраться самому. По моему промокоду выпуск со скидкой.',
-      inc:['Оплата любых зарубежных сервисов','Пополнение с российских карт и крипты','Выпуск за несколько минут','Скидка по промокоду '+'NEURO500'] },
+    { id:'card', cat:'tools', name:'Своя зарубежная карта', icon:'card', tint:'#E0A253',
+      priceLabel:'по ссылке', external:'CARD',
+      short:'Платить самому и за что угодно, а не только за нейросети.',
+      for:'Кто хочет разобраться сам',
+      about:'Виртуальная карта для оплаты зарубежных сервисов своими руками. Дешевле, чем через меня, но разбираться придётся самостоятельно. По моему промокоду выпуск со скидкой.',
+      inc:['Оплата любых зарубежных сервисов','Пополнение с российских карт и крипты','Выпуск за несколько минут','Скидка по промокоду NEURO500'] },
 
-    { id:'guide', cat:'tools', name:'Гайд «Claude с нуля»', mark:'✦', tint:'#8AA872',
+    { id:'guide', cat:'tools', name:'Гайд «Claude с нуля»', icon:'guide', tint:'#8AA872',
+      priceLabel:'бесплатно', external:'GUIDE',
       short:'Чтобы подписка окупилась, а не пылилась.',
-      price:0, priceLabel:'бесплатно', external:'https://akumedia.github.io/guide/',
-      about:'Разбор с нуля: как устроен Claude, как формулировать запросы и какие задачи ему отдавать. Написан мной, отдаю бесплатно.',
-      inc:['С нуля, без технических терминов','Готовые формулировки запросов','Разбор частых ошибок','Открывается сразу, без почты'] }
+      for:'Первое знакомство с нейросетями',
+      about:'Разбор с нуля: как устроен Claude, как формулировать запросы и какие задачи ему отдавать. Написан мной, отдаю бесплатно и без почты.',
+      inc:['С нуля, без технических терминов','Готовые формулировки запросов','Разбор частых ошибок','Открывается сразу'] }
   ]
+};
+
+/* Знаки сервисов — оригинальные иконки по смыслу, в фирменном цвете каждого. */
+const ICONS = {
+  claude:     '<path d="M7 6v12M12 3v18M17 8v8"/>',
+  gpt:        '<circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="4.6" r="1.7"/><circle cx="18.4" cy="8.3" r="1.7"/><circle cx="18.4" cy="15.7" r="1.7"/><circle cx="12" cy="19.4" r="1.7"/><circle cx="5.6" cy="15.7" r="1.7"/><circle cx="5.6" cy="8.3" r="1.7"/>',
+  gemini:     '<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+  perplexity: '<circle cx="11" cy="11" r="6"/><path d="M11 8v6M8 11h6M15.5 15.5 20 20"/>',
+  grok:       '<circle cx="12" cy="12" r="9"/><path d="M8 16 16 8M14 8h2v2"/>',
+  midjourney: '<path d="M12 3 3 18h18L12 3Z"/><path d="M12 3v15M7.5 11h9"/>',
+  runway:     '<path d="M4 20 12 4l8 16"/><path d="M8 14h8M10.5 9h3"/>',
+  kling:      '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v12M17 6v12M3 12h4M17 12h4"/>',
+  cursor:     '<path d="M6 3 18 12l-5.5 1.2L15 20l-2.4 1-2.6-6.5L6 18V3Z"/>',
+  copilot:    '<circle cx="8" cy="12" r="4.5"/><circle cx="16" cy="12" r="4.5"/>',
+  suno:       '<path d="M3 12c2-6 4 6 6 0s4 6 6 0 4 6 6 0"/>',
+  eleven:     '<path d="M5 9v6M9.5 5v14M14.5 7v10M19 10v4"/>',
+  card:       '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/>',
+  guide:      '<path d="M4 4.5h6a2.5 2.5 0 0 1 2.5 2.5v13a2 2 0 0 0-2-2H4V4.5Z"/><path d="M20 4.5h-6A2.5 2.5 0 0 0 11.5 7v13a2 2 0 0 1 2-2H20V4.5Z"/>'
 };
 </script>
 
@@ -252,12 +289,13 @@ const CONFIG = {
         <a href="#/help" class="block text-faded hover:text-paper transition-colors">Как это работает</a>
         <a href="#/about" class="block text-faded hover:text-paper transition-colors">О лавке</a>
         <a href="#/cart" class="block text-faded hover:text-paper transition-colors">Корзина</a>
+        <a href="#/terms" class="block text-faded hover:text-paper transition-colors">Условия и возврат</a>
       </div>
       <div class="text-sm space-y-2.5">
         <a href="" data-lnk="tg" class="block text-faded hover:text-paper transition-colors">Написать в Telegram</a>
         <a href="" data-lnk="channel" class="block text-faded hover:text-paper transition-colors">Канал про нейросети</a>
-        <a href="https://aku-automation.io" target="_blank" rel="noopener"
-           class="block text-faded hover:text-paper transition-colors">Сделано с помощью AKU Automation</a>
+        <a href="" data-lnk="guide" class="block text-faded hover:text-paper transition-colors">Бесплатный гайд по Claude</a>
+        <a href="" data-lnk="site" class="block text-faded hover:text-paper transition-colors">Сделано с помощью AKU Automation</a>
       </div>
     </div>
 
@@ -289,14 +327,31 @@ const CONFIG = {
 (function () {
   'use strict';
 
-  const app  = document.getElementById('app');
-  const tg   = 'https://t.me/' + CONFIG.telegram;
-  const G    = id => CONFIG.goods.find(g => g.id === id);
-  const cat  = id => (CONFIG.cats.find(c => c.id === id) || {}).name || '';
-  const term = m  => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
-  const esc  = s  => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const app = document.getElementById('app');
+  const tg  = 'https://t.me/' + CONFIG.telegram;
+  const G   = id => CONFIG.goods.find(g => g.id === id);
+  const cat = id => (CONFIG.cats.find(c => c.id === id) || {}).name || '';
+  const term = m => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const money = n => n.toLocaleString('ru-RU') + ' ₽';
-  const priceFor = (g, months) => Math.round(g.price * term(months).mult / 10) * 10;
+  const extLink = g => g.external === 'CARD' ? CONFIG.cardLink
+                     : g.external === 'GUIDE' ? CONFIG.guideLink : g.external;
+
+  const base = g => Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
+  const priceFor = (g, months) => Math.round(base(g) * term(months).mult / 10) * 10;
+  const crypto = n => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
+
+  function icon(g, size, stroke) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none"
+      stroke="${g.tint}" stroke-width="${stroke || 1.6}" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true">${ICONS[g.icon] || ''}</svg>`;
+  }
+  function markTile(g, s) {
+    s = s || 46;
+    return `<div class="tile shrink-0 grid place-items-center rounded-xl"
+      style="width:${s}px;height:${s}px;background:linear-gradient(140deg, ${g.tint}26, ${g.tint}0D);
+             border:1px solid ${g.tint}3D">${icon(g, Math.round(s*0.5))}</div>`;
+  }
 
   /* ─────────── Корзина ─────────── */
   let cart = {};
@@ -331,22 +386,11 @@ const CONFIG = {
     toastTimer = setTimeout(() => box.classList.add('hidden'), 3200);
   }
 
-  /* ─────────── Кусочки разметки ─────────── */
-  function markTile(g, size) {
-    const s = size || 44;
-    return `<div class="tile shrink-0 grid place-items-center rounded-xl font-display font-extrabold"
-      style="width:${s}px;height:${s}px;background:linear-gradient(140deg, ${g.tint}2E, ${g.tint}12);
-             border:1px solid ${g.tint}40; color:${g.tint}; font-size:${Math.round(s*.42)}px">${esc(g.mark)}</div>`;
-  }
-
-  function priceTag(g) {
-    if (g.priceLabel) return g.priceLabel;
-    return money(g.price);
-  }
-
+  /* ─────────── Карточка в каталоге ─────────── */
   function goodCard(g, i) {
-    const href = g.external ? (g.external === 'CARD' ? CONFIG.cardLink : g.external) : '#/p/' + g.id;
+    const href = g.external ? extLink(g) : '#/p/' + g.id;
     const ext  = g.external ? ' target="_blank" rel="noopener"' : '';
+    const p    = g.usd ? priceFor(g, 1) : null;
     return `
       <a href="${href}"${ext} class="card rise block bg-board border border-edge rounded-2xl p-5"
          style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
@@ -357,9 +401,12 @@ const CONFIG = {
         </div>
         <h3 class="font-display font-bold text-[15px] leading-snug mb-2">${esc(g.name)}</h3>
         <p class="text-faded text-[13px] leading-relaxed mb-5 min-h-[52px]">${esc(g.short)}</p>
-        <div class="flex items-baseline justify-between gap-2 pt-4 border-t border-edge">
-          <span class="font-display font-bold text-base">${priceTag(g)}</span>
-          <span class="text-xs text-faded">${g.price ? 'в месяц' : ''}</span>
+        <div class="pt-4 border-t border-edge">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-display font-bold text-base">${p ? money(p) : g.priceLabel}</span>
+            <span class="text-xs text-faded">${p ? 'в месяц' : ''}</span>
+          </div>
+          ${p ? `<div class="text-xs text-sage mt-1.5">криптой ${money(crypto(p))}</div>` : ''}
         </div>
       </a>`;
   }
@@ -380,32 +427,47 @@ const CONFIG = {
      'На время оплаты — да, иначе провести платёж невозможно. Сразу после активации вы меняете пароль, и доступ у меня пропадает. Вашу переписку и файлы я не открываю.'],
     ['Почему нельзя оплатить самому?',
      'Можно, и это дешевле. Нужна зарубежная карта — она есть в каталоге отдельной строкой, промокод <span class="text-brass font-semibold">' + CONFIG.promo + '</span> даёт скидку на выпуск. Я нужен тем, кому не хочется в этом разбираться.'],
+    ['Почему у других дешевле?',
+     'Обычно потому, что там общий аккаунт на несколько человек либо подписка, оформленная через студенческую или региональную схему. Такие живут до ближайшей проверки. Я оформляю обычным способом на ваш личный аккаунт — дороже, зато не отваливается.'],
     ['Аккаунт могут заблокировать?',
      'Такое случается редко, но случается: сервисы иногда проверяют географию платежей. Если это произойдёт в течение оплаченного месяца, я восстанавливаю доступ за свой счёт либо возвращаю деньги за оставшиеся дни.'],
     ['Как оплатить?',
-     'Криптой, переводом на карту или через Telegram Stars. Принимаю рубли, тенге и белорусские рубли. Напишите — подберём удобный способ.'],
+     'Криптой (со скидкой ' + CONFIG.cryptoOff + '%), переводом на карту или через Telegram Stars. Принимаю рубли, тенге и белорусские рубли. Способ выбираем в переписке.'],
     ['Подписка продлится сама?',
      'Нет, автосписания не будет. За три дня до окончания я напишу и спрошу, продлевать ли. Не ответите — просто ничего не произойдёт.'],
     ['Нужен VPN?',
-     'Для большинства сервисов — да, чтобы просто зайти на сайт. Оплата от этого не зависит. Если не пользовались раньше, подскажу бесплатные варианты.'],
+     'Для большинства сервисов — да, чтобы просто открыть сайт. На оплату это не влияет. Если не пользовались раньше, подскажу бесплатные варианты.'],
     ['Работаете ночью?',
      'Заявки принимаю круглосуточно, оформляю с ' + CONFIG.openFrom + ':00 до ' + CONFIG.openTo + ':00. Ночной заказ уйдёт в работу утром.']
   ];
+
+  /* ─────────── Бегущая строка ─────────── */
+  function marquee() {
+    const items = ['подписки на нейросети','оформление на ваш аккаунт','без общих аккаунтов',
+                   'крипта · карта · stars','гарантия замены','отвечаю лично'];
+    const row = items.map(t =>
+      `<span class="px-6 text-faded">${t}</span><span class="text-brass">✦</span>`).join('');
+    return `
+      <div class="marquee border-y border-edge py-3.5 text-sm">
+        <div class="marquee-track">${row}${row}</div>
+      </div>`;
+  }
 
   /* ─────────── Главная ─────────── */
   function viewHome() {
     const h = new Date().getHours();
     const open = h >= CONFIG.openFrom && h < CONFIG.openTo;
-    const hits = CONFIG.goods.filter(g => g.hit);
+    const hits = CONFIG.goods.filter(g => g.hit).concat([G('cursor')]);
 
     return `
     <section class="lamp relative overflow-hidden">
-      <div class="orb" style="width:320px;height:320px;background:rgba(224,162,83,.13);top:-120px;left:8%"></div>
-      <div class="orb" style="width:260px;height:260px;background:rgba(108,140,245,.10);top:20px;right:4%;animation-delay:-9s"></div>
+      <div class="orb" style="width:340px;height:340px;background:rgba(224,162,83,.14);top:-130px;left:6%"></div>
+      <div class="orb" style="width:280px;height:280px;background:rgba(108,140,245,.11);top:10px;right:3%;animation-delay:-9s"></div>
+      <div class="orb" style="width:220px;height:220px;background:rgba(244,93,155,.08);bottom:-60px;left:38%;animation-delay:-15s"></div>
 
       <div class="relative max-w-5xl mx-auto px-5 pt-16 pb-14 sm:pt-24 sm:pb-20">
         <p class="text-sm mb-6 flex items-center gap-2 ${open ? 'text-sage' : 'text-faded'}">
-          <span class="w-2 h-2 rounded-full ${open ? 'bg-sage' : 'bg-faded'}"></span>
+          <span class="w-2 h-2 rounded-full ${open ? 'bg-sage animate-pulse' : 'bg-faded'}"></span>
           ${open ? 'Лавка открыта — отвечаю сейчас' : 'Лавка закрыта, отвечу с ' + CONFIG.openFrom + ':00'}
         </p>
 
@@ -422,29 +484,29 @@ const CONFIG = {
         <div class="mt-10 flex flex-wrap items-center gap-4">
           <a href="#/shop"
              class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">
-            Открыть каталог
-          </a>
-          <a href="#/help" class="text-sm text-faded hover:text-paper transition-colors px-2">
-            Как это работает
-          </a>
-        </div>
-
-        <div class="mt-14 flex flex-wrap gap-x-10 gap-y-4 text-sm">
-          <span class="text-faded">Оформляю за <span class="text-paper">15–40 минут</span></span>
-          <span class="text-faded">Аккаунт <span class="text-paper">остаётся вашим</span></span>
-          <span class="text-faded">Слетело — <span class="text-paper">чиню за свой счёт</span></span>
+            Открыть каталог</a>
+          <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl">
+            Подобрать за 3 вопроса</a>
         </div>
       </div>
     </section>
+
+    ${marquee()}
 
     <section class="max-w-5xl mx-auto px-5 py-16">
       <div class="flex items-end justify-between gap-4 mb-8">
         <h2 class="font-display font-bold text-2xl">Чаще всего берут</h2>
         <a href="#/shop" class="text-sm text-brass hover:text-paper transition-colors shrink-0">Весь каталог</a>
       </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        ${hits.map(goodCard).join('')}
-      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">${hits.map(goodCard).join('')}</div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-5 py-16 border-t border-edge">
+      <h2 class="font-display font-bold text-2xl mb-3">Окупится или нет</h2>
+      <p class="text-faded mb-8 max-w-lg leading-relaxed">
+        Подписка стоит денег, но экономит часы. Посчитайте, за сколько дней она вернётся именно вам.
+      </p>
+      <div id="calc" class="bg-board border border-edge rounded-2xl p-6 sm:p-8 max-w-2xl"></div>
     </section>
 
     <section class="max-w-5xl mx-auto px-5 py-16 border-t border-edge">
@@ -464,68 +526,145 @@ const CONFIG = {
     </section>
 
     <section class="max-w-5xl mx-auto px-5 py-16 border-t border-edge">
-      <div class="grid lg:grid-cols-2 gap-12">
+      <div class="grid lg:grid-cols-2 gap-10">
+        <div class="bg-board border border-edge rounded-2xl p-7">
+          <h2 class="font-display font-bold text-xl mb-5">Чего я не продаю</h2>
+          <ul class="space-y-4">
+            ${[
+              ['Общие аккаунты на несколько человек','Дешевле, но их регулярно блокируют, а вашу переписку видят посторонние.'],
+              ['Студенческие и промо-подписки','Живут до первой проверки. Потом доступ пропадает, а деньги уже потрачены.'],
+              ['Готовые аккаунты «под ключ»','Формально они остаются моими. Через месяц начинаются споры, чей это аккаунт.']
+            ].map(([t,d]) => `
+              <li class="flex gap-3">
+                <span class="text-rust shrink-0 mt-0.5">✕</span>
+                <div>
+                  <p class="font-semibold text-[15px] mb-1">${t}</p>
+                  <p class="text-faded text-sm leading-relaxed">${d}</p>
+                </div>
+              </li>`).join('')}
+          </ul>
+        </div>
+
         <div>
-          <h2 class="font-display font-bold text-2xl mb-6">Кто за прилавком</h2>
+          <h2 class="font-display font-bold text-xl mb-5">Кто за прилавком</h2>
           <div class="space-y-4 text-faded leading-relaxed text-[15px]">
             <p>Меня зовут Алексей. Я занимаюсь внедрением ИИ в бизнес — собираю автоматизации,
                ботов и внутренние сервисы для компаний. Нейросетями пользуюсь каждый день по работе,
                поэтому и подписки держу для себя.</p>
-            <p>Лавка появилась потому, что у меня постоянно спрашивали, где взять доступ. Заказы
-               обрабатываю сам, без менеджеров и колл-центра. Ночью отвечу утром — зато отвечу лично.</p>
-            <p class="text-paper">Лавка открылась недавно, отзывов пока мало. Вот на что можно
-               посмотреть вместо них:</p>
+            <p>Заказы обрабатываю сам, без менеджеров и колл-центра. Ночью отвечу утром — зато лично.</p>
+            <p class="text-paper">Лавка открылась недавно, отзывов пока мало, и выдумывать я их не буду.
+               Вот что можно проверить прямо сейчас:</p>
           </div>
-          <div class="mt-7 flex flex-col sm:flex-row gap-3">
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
             <a href="" data-lnk="channel"
-               class="border border-edge2 hover:border-brass transition-colors px-5 py-3 rounded-xl text-sm text-center">
-              Мой канал про нейросети</a>
-            <a href="https://aku-automation.io" target="_blank" rel="noopener"
-               class="border border-edge2 hover:border-brass transition-colors px-5 py-3 rounded-xl text-sm text-center">
+               class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">
+              Канал про нейросети</a>
+            <a href="" data-lnk="site"
+               class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">
               Что я делаю для бизнеса</a>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-5 py-16 border-t border-edge">
+      <div class="grid lg:grid-cols-[1fr_1.1fr] gap-10">
         <div>
           <h2 class="font-display font-bold text-2xl mb-4">Вопросы</h2>
-          ${faqBlock(FAQ.slice(0,4))}
+          <p class="text-faded leading-relaxed">
+            Не нашли свой — просто спросите, отвечу без оплаты и без «оставьте заявку».
+          </p>
+          <a href="" data-lnk="ask"
+             class="inline-block mt-6 bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">
+            Написать в Telegram</a>
+        </div>
+        <div>${faqBlock(FAQ.slice(0,5))}
           <a href="#/help" class="inline-block mt-6 text-sm text-brass hover:text-paper transition-colors">
-            Остальные вопросы и условия</a>
+            Все вопросы и условия</a>
         </div>
       </div>
     </section>`;
   }
 
+  /* ─────────── Калькулятор окупаемости ─────────── */
+  let calcRate = 800, calcHours = 4;
+  function drawCalc() {
+    const box = document.getElementById('calc');
+    if (!box) return;
+    const price   = priceFor(G('claude'), 1);
+    const saved   = calcHours * calcRate;
+    const days    = saved > 0 ? Math.max(1, Math.ceil(price / (saved / 30))) : 0;
+    const profit  = saved - price;
+
+    box.innerHTML = `
+      <div class="grid sm:grid-cols-2 gap-7 mb-7">
+        <label class="block">
+          <span class="text-sm text-faded">Сколько стоит ваш час работы</span>
+          <div class="flex items-baseline gap-2 mt-2 mb-3">
+            <span class="font-display font-extrabold text-2xl">${money(calcRate)}</span>
+          </div>
+          <input type="range" id="cRate" min="200" max="5000" step="100" value="${calcRate}"
+                 class="w-full accent-brass cursor-pointer">
+        </label>
+        <label class="block">
+          <span class="text-sm text-faded">Сколько часов в месяц сэкономит</span>
+          <div class="flex items-baseline gap-2 mt-2 mb-3">
+            <span class="font-display font-extrabold text-2xl">${calcHours} ч</span>
+          </div>
+          <input type="range" id="cHours" min="1" max="40" step="1" value="${calcHours}"
+                 class="w-full accent-brass cursor-pointer">
+        </label>
+      </div>
+      <div class="border-t border-edge pt-6 grid sm:grid-cols-3 gap-5">
+        <div>
+          <p class="text-sm text-faded mb-1">Подписка стоит</p>
+          <p class="font-display font-bold text-lg">${money(price)}</p>
+        </div>
+        <div>
+          <p class="text-sm text-faded mb-1">Экономит в месяц</p>
+          <p class="font-display font-bold text-lg">${money(saved)}</p>
+        </div>
+        <div>
+          <p class="text-sm text-faded mb-1">${profit >= 0 ? 'Окупается за' : 'Пока не окупается'}</p>
+          <p class="font-display font-bold text-lg ${profit >= 0 ? 'text-sage' : 'text-faded'}">
+            ${profit >= 0 ? days + (days === 1 ? ' день' : days < 5 ? ' дня' : ' дней') : '—'}</p>
+        </div>
+      </div>
+      <p class="text-xs text-faded mt-5 leading-relaxed">
+        Считаю по цене Claude Pro за месяц. Цифры примерные: сколько именно вы сэкономите,
+        зависит от задач.
+      </p>`;
+  }
+
   /* ─────────── Каталог ─────────── */
   let activeCat = 'all';
-
   function viewShop() {
-    const list = activeCat === 'all'
-      ? CONFIG.goods
-      : CONFIG.goods.filter(g => g.cat === activeCat);
-
+    const list = activeCat === 'all' ? CONFIG.goods : CONFIG.goods.filter(g => g.cat === activeCat);
     const chip = (id, name) => `
       <button data-cat="${id}"
         class="px-4 py-2 rounded-full text-sm border transition-colors ${
           activeCat === id ? 'bg-brass text-ink border-brass font-semibold'
-                           : 'border-edge2 text-faded hover:text-paper hover:border-faded'}">
-        ${name}</button>`;
+                           : 'border-edge2 text-faded hover:text-paper hover:border-faded'}">${name}</button>`;
 
     return `
     <section class="max-w-5xl mx-auto px-5 py-12 sm:py-16">
       <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-3">Каталог</h1>
-      <p class="text-faded mb-9 max-w-lg leading-relaxed">
+      <p class="text-faded mb-8 max-w-lg leading-relaxed">
         Нужного сервиса нет в списке — напишите, посмотрю и посчитаю. Беру почти всё,
         что оплачивается зарубежной картой.
       </p>
 
-      <div id="cats" class="flex flex-wrap gap-2.5 mb-9">
-        ${chip('all','Всё')}
-        ${CONFIG.cats.map(c => chip(c.id, c.name)).join('')}
+      <a href="#/pick" class="inline-flex items-center gap-3 bg-board border border-edge2 hover:border-brass
+                              transition-colors rounded-xl px-5 py-3.5 mb-8 text-sm">
+        <span class="text-brass">✦</span>
+        <span>Не знаете, что выбрать — подберу за три вопроса</span>
+      </a>
+
+      <div class="flex flex-wrap gap-2.5 mb-9">
+        ${chip('all','Всё')}${CONFIG.cats.map(c => chip(c.id, c.name)).join('')}
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        ${list.map(goodCard).join('')}
-      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${list.map(goodCard).join('')}</div>
 
       <div class="mt-12 bg-board border border-edge rounded-2xl p-7 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
         <div>
@@ -539,19 +678,93 @@ const CONFIG = {
     </section>`;
   }
 
+  /* ─────────── Подбор за 3 вопроса ─────────── */
+  const QUIZ = [
+    { q:'Для чего в первую очередь?', a:[
+        ['Текст, учёба, работа с документами', 'chat'],
+        ['Картинки и видео',                   'image'],
+        ['Программирование',                   'code'],
+        ['Музыка и озвучка',                   'sound'] ] },
+    { q:'Насколько важна цена?', a:[
+        ['Хочу подешевле',        'cheap'],
+        ['Хочу лучшее качество',  'best'],
+        ['Что-то среднее',        'mid'] ] },
+    { q:'Опыт работы с нейросетями?', a:[
+        ['Первая подписка',        'new'],
+        ['Пользуюсь регулярно',    'pro'] ] }
+  ];
+  let quizStep = 0, quizAns = [];
+
+  function pickResult() {
+    const [cat, price, lvl] = quizAns;
+    let pool = CONFIG.goods.filter(g => g.cat === cat && g.usd);
+    if (!pool.length) pool = CONFIG.goods.filter(g => g.usd);
+    if (lvl === 'new' && cat === 'chat') pool.sort((a,b) => (a.id === 'gpt' ? -1 : 1));
+    else if (price === 'cheap') pool.sort((a,b) => a.usd - b.usd);
+    else if (price === 'best')  pool.sort((a,b) => b.usd - a.usd);
+    return pool[0];
+  }
+
+  function viewPick() {
+    if (quizStep >= QUIZ.length) {
+      const g = pickResult();
+      return `
+      <section class="max-w-2xl mx-auto px-5 py-16 sm:py-24">
+        <p class="text-sm text-faded mb-4">Судя по ответам, вам подойдёт</p>
+        <div class="bg-board border rounded-2xl p-7 mb-8" style="border-color:${g.tint}44">
+          <div class="flex items-center gap-4 mb-5">
+            ${markTile(g, 56)}
+            <div>
+              <h1 class="font-display font-extrabold text-2xl">${esc(g.name)}</h1>
+              <p class="text-faded text-sm mt-1">${esc(g.for)}</p>
+            </div>
+          </div>
+          <p class="text-faded text-[15px] leading-relaxed mb-6">${esc(g.about)}</p>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="#/p/${g.id}"
+               class="bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">
+              Смотреть подробнее</a>
+            <span class="font-display font-bold text-lg">${money(priceFor(g,1))} <span class="text-faded text-sm font-ui font-normal">в месяц</span></span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <button id="quizReset" class="text-faded hover:text-paper transition-colors">Пройти заново</button>
+          <a href="#/shop" class="text-brass hover:text-paper transition-colors">Смотреть весь каталог</a>
+        </div>
+      </section>`;
+    }
+
+    const step = QUIZ[quizStep];
+    return `
+    <section class="max-w-2xl mx-auto px-5 py-16 sm:py-24">
+      <div class="flex gap-2 mb-9">
+        ${QUIZ.map((_,i) => `<span class="h-1 flex-1 rounded-full ${i <= quizStep ? 'bg-brass' : 'bg-edge2'}"></span>`).join('')}
+      </div>
+      <p class="text-sm text-faded mb-3">Вопрос ${quizStep+1} из ${QUIZ.length}</p>
+      <h1 class="font-display font-extrabold text-2xl sm:text-3xl mb-8">${step.q}</h1>
+      <div class="space-y-3">
+        ${step.a.map(([label,val]) => `
+          <button data-quiz="${val}"
+            class="w-full text-left bg-board border border-edge hover:border-brass transition-colors
+                   rounded-xl px-5 py-4 text-[15px]">${label}</button>`).join('')}
+      </div>
+      ${quizStep > 0 ? `<button id="quizBack" class="mt-7 text-sm text-faded hover:text-paper transition-colors">Назад</button>` : ''}
+    </section>`;
+  }
+
   /* ─────────── Карточка товара ─────────── */
   let pickedTerm = 1;
-
   function viewProduct(id) {
     const g = G(id);
     if (!g) return viewNotFound();
-    const p = priceFor(g, pickedTerm);
+    const isExt = !!g.external;
+    const p = isExt ? 0 : priceFor(g, pickedTerm);
     const t = term(pickedTerm);
     const near = CONFIG.goods.filter(x => x.cat === g.cat && x.id !== g.id).slice(0,3);
 
     const termBtn = t2 => `
       <button data-term="${t2.months}"
-        class="flex-1 px-4 py-3 rounded-xl border text-sm transition-colors ${
+        class="flex-1 px-3 py-3 rounded-xl border text-sm transition-colors ${
           pickedTerm === t2.months ? 'border-brass bg-brass/10 text-paper font-semibold'
                                    : 'border-edge2 text-faded hover:border-faded'}">
         <span class="block">${t2.label}</span>
@@ -562,17 +775,16 @@ const CONFIG = {
     <section class="max-w-5xl mx-auto px-5 py-10 sm:py-14">
       <nav class="text-sm text-faded mb-8 flex items-center gap-2 flex-wrap">
         <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
-        <span class="text-edge2">/</span>
-        <span>${esc(cat(g.cat))}</span>
+        <span class="text-edge2">/</span><span>${esc(cat(g.cat))}</span>
       </nav>
 
       <div class="grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
         <div>
-          <div class="flex items-center gap-4 mb-7">
+          <div class="flex items-center gap-4 mb-6">
             ${markTile(g, 64)}
             <div>
               <h1 class="font-display font-extrabold text-2xl sm:text-3xl tracking-tight">${esc(g.name)}</h1>
-              <p class="text-faded text-sm mt-1.5">${esc(cat(g.cat))}</p>
+              <p class="text-faded text-sm mt-1.5">${esc(g.for || cat(g.cat))}</p>
             </div>
           </div>
 
@@ -587,44 +799,46 @@ const CONFIG = {
               </li>`).join('')}
           </ul>
 
-          <div class="bg-board border border-edge rounded-2xl p-6 max-w-lg">
-            <h3 class="font-display font-bold text-[15px] mb-3">Если подписка слетит</h3>
-            <p class="text-faded text-sm leading-relaxed">
-              Восстанавливаю за свой счёт. Если восстановить не выходит — возвращаю деньги
-              за неиспользованные дни. Условия целиком описаны в разделе
-              <a href="#/help" class="text-brass hover:text-paper transition-colors">«Как это работает»</a>.
-            </p>
-          </div>
+          ${isExt ? '' : `
+          <div class="grid sm:grid-cols-2 gap-4 max-w-lg">
+            <div class="bg-board border border-edge rounded-2xl p-5">
+              <h3 class="font-display font-bold text-[15px] mb-2">Если подписка слетит</h3>
+              <p class="text-faded text-sm leading-relaxed">
+                Восстанавливаю за свой счёт. Не выходит — возвращаю деньги за неиспользованные дни.</p>
+            </div>
+            <div class="bg-board border border-edge rounded-2xl p-5">
+              <h3 class="font-display font-bold text-[15px] mb-2">Аккаунт остаётся вашим</h3>
+              <p class="text-faded text-sm leading-relaxed">
+                Оформляю на ваш логин. После активации меняете пароль — доступа у меня нет.</p>
+            </div>
+          </div>`}
         </div>
 
-        <aside class="lg:sticky lg:top-24 bg-board border border-edge rounded-2xl p-6"
-               style="border-color:${g.tint}33">
-          ${g.external ? `
+        <aside class="lg:sticky lg:top-24 bg-board border rounded-2xl p-6" style="border-color:${g.tint}33">
+          ${isExt ? `
             <div class="font-display font-extrabold text-2xl mb-2">${esc(g.priceLabel)}</div>
             <p class="text-faded text-sm leading-relaxed mb-6">
-              ${g.id === 'card'
+              ${g.external === 'CARD'
                 ? 'Выпуск на стороне сервиса. Промокод <span class="text-brass font-semibold">'+CONFIG.promo+'</span> даёт скидку.'
                 : 'Открывается сразу, без почты и регистрации.'}
             </p>
-            <a href="${g.external === 'CARD' ? CONFIG.cardLink : g.external}" target="_blank" rel="noopener"
+            <a href="${extLink(g)}" target="_blank" rel="noopener"
                class="block text-center bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">
               Открыть</a>
           ` : `
             <p class="text-sm text-faded mb-3">Срок подписки</p>
-            <div class="flex gap-2 mb-6" id="terms">
-              ${CONFIG.terms.map(termBtn).join('')}
-            </div>
+            <div class="flex gap-2 mb-6">${CONFIG.terms.map(termBtn).join('')}</div>
 
             <div class="flex items-baseline gap-3 mb-1">
               <span class="font-display font-extrabold text-3xl">${money(p)}</span>
-              ${t.off ? `<span class="text-faded text-sm line-through">${money(g.price * t.months)}</span>` : ''}
+              ${t.off ? `<span class="text-faded text-sm line-through">${money(base(g)*t.months)}</span>` : ''}
             </div>
-            <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · оформление на ваш аккаунт</p>
+            <p class="text-sage text-sm mb-1">криптой ${money(crypto(p))}</p>
+            <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · на ваш аккаунт</p>
 
             <button id="addBtn"
               class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">
               Добавить в корзину</button>
-
             <a href="" data-lnk="ask" class="block text-center text-sm text-faded hover:text-paper transition-colors mt-4">
               Сначала спросить</a>
           `}
@@ -642,18 +856,19 @@ const CONFIG = {
   /* ─────────── Корзина ─────────── */
   function viewCart() {
     const items = cartList();
-
     if (!items.length) return `
       <section class="max-w-5xl mx-auto px-5 py-20 text-center">
         <div class="max-w-sm mx-auto">
           <div class="w-16 h-16 rounded-2xl border border-edge2 grid place-items-center mx-auto mb-7 text-2xl text-faded">▤</div>
           <h1 class="font-display font-extrabold text-2xl mb-3">В корзине пусто</h1>
           <p class="text-faded leading-relaxed mb-8">
-            Выберите подписку в каталоге — или напишите мне, если не уверены, какая нужна.
-          </p>
-          <a href="#/shop"
-             class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">
-            Открыть каталог</a>
+            Выберите подписку в каталоге — или пройдите подбор, если не уверены, какая нужна.</p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">
+              Открыть каталог</a>
+            <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-7 py-3.5 rounded-xl">
+              Подобрать за 3 вопроса</a>
+          </div>
         </div>
       </section>`;
 
@@ -671,8 +886,7 @@ const CONFIG = {
             <span class="text-sm w-4 text-center">${i.qty}</span>
             <button data-qty="${i.key}" data-v="${i.qty+1}"
               class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">+</button>
-            <button data-qty="${i.key}" data-v="0"
-              class="text-sm text-faded hover:text-rust transition-colors ml-2">Убрать</button>
+            <button data-qty="${i.key}" data-v="0" class="text-sm text-faded hover:text-rust transition-colors ml-2">Убрать</button>
           </div>
         </div>
         <div class="font-display font-bold text-[15px] shrink-0">${money(line)}</div>
@@ -682,29 +896,27 @@ const CONFIG = {
     return `
     <section class="max-w-5xl mx-auto px-5 py-12 sm:py-16">
       <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">Корзина</h1>
-
       <div class="grid lg:grid-cols-[1fr_340px] gap-10 items-start">
         <div class="border-t border-edge">${rows}</div>
-
         <aside class="lg:sticky lg:top-24 bg-board border border-edge rounded-2xl p-6">
           <div class="flex items-baseline justify-between mb-2">
-            <span class="text-faded text-sm">Позиций</span>
-            <span class="text-sm">${cartQty()}</span>
+            <span class="text-faded text-sm">Позиций</span><span class="text-sm">${cartQty()}</span>
           </div>
-          <div class="flex items-baseline justify-between pb-5 mb-5 border-b border-edge">
+          <div class="flex items-baseline justify-between mb-2">
             <span class="text-faded text-sm">К оплате</span>
             <span class="font-display font-extrabold text-2xl">${money(cartTotal())}</span>
           </div>
-
+          <div class="flex items-baseline justify-between pb-5 mb-5 border-b border-edge">
+            <span class="text-sage text-sm">Криптой (−${CONFIG.cryptoOff}%)</span>
+            <span class="text-sage font-semibold">${money(crypto(cartTotal()))}</span>
+          </div>
           <p class="text-faded text-sm leading-relaxed mb-6">
             Нажмите кнопку — состав заказа откроется у меня в Telegram. Там подтвердим сумму
-            и выберем способ оплаты: крипта, перевод на карту или Telegram Stars.
+            и выберем способ оплаты.
           </p>
-
           <button id="checkout"
             class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">
             Оформить заказ</button>
-
           <p class="text-faded text-xs leading-relaxed mt-4">
             Деньги на сайте не списываются. Оплата — только после того, как я подтвержу заказ.
           </p>
@@ -718,34 +930,32 @@ const CONFIG = {
     return `
     <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
       <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">Как это работает</h1>
-
       <div class="space-y-10 mb-16">
         ${[
           ['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Состав заказа приходит мне в Telegram. Я отвечаю, свободен ли сервис сейчас, и называю итоговую сумму — скрытых комиссий сверху не появится.'],
-          ['Оплачиваете удобным способом','Крипта, перевод на карту или Telegram Stars. Принимаю рубли, тенге и белорусские рубли. Способ выбираем в переписке.'],
+          ['Оплачиваете удобным способом','Крипта (со скидкой ' + CONFIG.cryptoOff + '%), перевод на карту или Telegram Stars. Принимаю рубли, тенге и белорусские рубли.'],
           ['Регистрируете аккаунт на себя','На свою почту, со своим паролем. Если аккаунт уже есть — ещё проще. Дальше нужен временный доступ, чтобы я провёл оплату: подскажу, как безопасно передать и как сразу после сменить пароль.'],
           ['Проверяете и меняете пароль','Убеждаетесь, что подписка активна, и меняете пароль. С этого момента аккаунт полностью ваш, доступа у меня нет.'],
           ['Продлеваете, если нужно','За три дня до окончания я напишу. Автосписания нет: не ответите — просто ничего не произойдёт.']
         ].map(([t,d],i)=>`
           <div class="flex gap-5">
             <span class="font-display font-extrabold text-xl text-brass shrink-0 w-7">${i+1}</span>
-            <div>
-              <h2 class="font-display font-bold text-[16px] mb-2">${t}</h2>
-              <p class="text-faded text-[15px] leading-relaxed">${d}</p>
-            </div>
+            <div><h2 class="font-display font-bold text-[16px] mb-2">${t}</h2>
+              <p class="text-faded text-[15px] leading-relaxed">${d}</p></div>
           </div>`).join('')}
       </div>
 
       <div class="bg-board border border-edge rounded-2xl p-7 mb-16">
-        <h2 class="font-display font-bold text-xl mb-5">Если что-то пойдёт не так</h2>
+        <h2 class="font-display font-bold text-xl mb-5">Возврат и гарантия</h2>
         <div class="space-y-4 text-faded text-[15px] leading-relaxed">
           <p><span class="text-paper font-semibold">Что я делаю.</span> Подписка не активировалась
              или слетела в течение оплаченного месяца — восстанавливаю за свой счёт. Если восстановить
-             не выходит, возвращаю деньги за неиспользованные дни.</p>
+             не выходит, возвращаю деньги за неиспользованные дни, пропорционально остатку.</p>
+          <p><span class="text-paper font-semibold">Полный возврат.</span> Если я не смог оформить
+             подписку вообще — возвращаю всю сумму тем же способом, которым вы платили, в течение суток.</p>
           <p><span class="text-paper font-semibold">Чего я не могу.</span> Повлиять на решения самих
              сервисов, вернуть деньги за месяц, которым вы уже пользовались, и починить доступ, если
              вы сменили данные аккаунта и не сказали мне.</p>
-          <p>Пишу это заранее и открыто, чтобы потом не выяснять на эмоциях.</p>
         </div>
       </div>
 
@@ -766,31 +976,28 @@ const CONFIG = {
     return `
     <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
       <h1 class="font-display font-extrabold text-3xl sm:text-4xl tracking-tight mb-10">О лавке</h1>
-
       <div class="space-y-5 text-[15px] leading-relaxed text-faded mb-12">
         <p>Меня зовут Алексей. Я занимаюсь внедрением ИИ в бизнес: собираю автоматизации,
            ботов и внутренние сервисы для компаний. Нейросетями пользуюсь каждый день по работе,
            поэтому и подписки на них держу для себя.</p>
         <p>Лавка появилась просто потому, что у меня постоянно спрашивали, где взять доступ.
            Сначала я отвечал в личке по одному человеку, потом решил собрать всё в одном месте.</p>
-        <p>Заказы обрабатываю сам — без менеджеров, колл-центра и ботов-автоответчиков. Это значит,
-           что ночью я отвечу утром. Зато отвечу лично и разберусь, а не отправлю в раздел помощи.</p>
-        <p class="text-paper">Принципиально не продаю общие аккаунты — те, где один логин делят
-           пять человек. Они дешевле, но их регулярно блокируют, а ваша переписка видна посторонним.
-           Здесь только оформление на ваш собственный аккаунт.</p>
+        <p>Заказы обрабатываю сам — без менеджеров, колл-центра и ботов-автоответчиков. Ночью
+           отвечу утром. Зато отвечу лично и разберусь, а не отправлю в раздел помощи.</p>
+        <p class="text-paper">Принципиально не продаю общие аккаунты и промо-подписки. Они дешевле,
+           но живут до первой проверки, а переписка в общем аккаунте видна посторонним. Здесь только
+           оформление на ваш собственный аккаунт.</p>
       </div>
 
       <div class="bg-board border border-edge rounded-2xl p-7 mb-12">
         <h2 class="font-display font-bold text-lg mb-3">Лавка открылась недавно</h2>
         <p class="text-faded text-[15px] leading-relaxed mb-6">
-          Отзывов пока мало, и я не собираюсь их выдумывать. Вместо этого — то, что можно
-          проверить прямо сейчас:
-        </p>
+          Отзывов пока мало, и выдумывать я их не буду. Вместо этого — то, что можно проверить сейчас:</p>
         <div class="flex flex-col sm:flex-row gap-3">
           <a href="" data-lnk="channel"
              class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">
             Канал про нейросети</a>
-          <a href="https://aku-automation.io" target="_blank" rel="noopener"
+          <a href="" data-lnk="site"
              class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">
             Что я делаю для бизнеса</a>
         </div>
@@ -801,6 +1008,37 @@ const CONFIG = {
            class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">
           Написать мне</a>
       </div>
+    </section>`;
+  }
+
+  /* ─────────── Условия (оферта) ─────────── */
+  function viewTerms() {
+    return `
+    <section class="max-w-3xl mx-auto px-5 py-12 sm:py-16">
+      <h1 class="font-display font-extrabold text-3xl tracking-tight mb-4">Условия</h1>
+      <p class="text-faded text-sm mb-10">Публичная оферта и политика конфиденциальности</p>
+
+      <div class="space-y-8 text-[15px] leading-relaxed text-faded">
+        ${[
+          ['Предмет','AKU Лавка оказывает услугу по оформлению оплаты подписки на аккаунт заказчика в стороннем сервисе. Аккаунты, логины, пароли и общий доступ не продаются. Права на сами сервисы принадлежат их владельцам.'],
+          ['Заключение договора','Оформляя заказ и производя оплату, заказчик подтверждает согласие с настоящими условиями. Заказ считается принятым после письменного подтверждения исполнителем в Telegram.'],
+          ['Порядок оказания услуги','Заказчик самостоятельно регистрирует аккаунт и предоставляет временный доступ для проведения платежа. После активации подписки заказчик обязан сменить пароль. Срок оформления — как правило, в течение рабочего дня.'],
+          ['Стоимость и оплата','Стоимость указана на сайте и подтверждается при оформлении. Оплата производится до оказания услуги. Цены могут меняться вслед за курсом валют и тарифами сервисов; уже подтверждённый заказ пересчёту не подлежит.'],
+          ['Возврат','Если услуга не оказана — возврат полной суммы в течение суток тем же способом оплаты. Если подписка перестала работать в течение оплаченного периода — восстановление за счёт исполнителя либо возврат за неиспользованные дни. Возврат за использованный период не производится.'],
+          ['Ответственность','Исполнитель не отвечает за решения сторонних сервисов, включая блокировку аккаунта по их инициативе, изменение тарифов и прекращение работы сервиса в отдельных странах. Исполнитель не отвечает за утрату доступа, вызванную действиями самого заказчика.'],
+          ['Данные','Собираются только данные, необходимые для оказания услуги: контакт в Telegram и сведения, переданные заказчиком добровольно. Данные не передаются третьим лицам, кроме случаев, предусмотренных законом. Содержимое аккаунта заказчика не просматривается и не сохраняется. Сайт не использует рекламные трекеры.'],
+          ['Контакты','Все вопросы, претензии и запросы на возврат принимаются в Telegram по контакту, указанному на сайте. Срок ответа — в течение рабочего дня.']
+        ].map(([t,d],i) => `
+          <div class="pb-8 border-b border-edge">
+            <h2 class="font-display font-bold text-[16px] text-paper mb-3">${i+1}. ${t}</h2>
+            <p>${d}</p>
+          </div>`).join('')}
+      </div>
+
+      <p class="text-faded text-xs leading-relaxed mt-10">
+        AKU Лавка — независимый сервис. Не связан с Anthropic, OpenAI, Google, Midjourney, xAI
+        и другими упомянутыми брендами. Названия используются исключительно для описания услуг.
+      </p>
     </section>`;
   }
 
@@ -816,27 +1054,31 @@ const CONFIG = {
 
   /* ─────────── Роутер ─────────── */
   function render() {
-    const raw = location.hash.replace(/^#\/?/, '');
-    const seg = raw.split('/').filter(Boolean);
+    const seg = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     let html;
-
-    if (!seg.length)               html = viewHome();
-    else if (seg[0] === 'shop')    html = viewShop();
-    else if (seg[0] === 'p')       html = viewProduct(seg[1]);
-    else if (seg[0] === 'cart')    html = viewCart();
-    else if (seg[0] === 'help')    html = viewHelp();
-    else if (seg[0] === 'about')   html = viewAbout();
-    else                           html = viewNotFound();
+    if (!seg.length)             html = viewHome();
+    else if (seg[0] === 'shop')  html = viewShop();
+    else if (seg[0] === 'pick')  html = viewPick();
+    else if (seg[0] === 'p')     html = viewProduct(seg[1]);
+    else if (seg[0] === 'cart')  html = viewCart();
+    else if (seg[0] === 'help')  html = viewHelp();
+    else if (seg[0] === 'about') html = viewAbout();
+    else if (seg[0] === 'terms') html = viewTerms();
+    else                         html = viewNotFound();
 
     app.innerHTML = '<div class="view-in">' + html + '</div>';
     wireLinks(app);
+    drawCalc();
   }
 
   function wireLinks(scope) {
     scope.querySelectorAll('[data-lnk]').forEach(el => {
       const k = el.dataset.lnk;
       el.href = k === 'channel' ? CONFIG.channel
-              : k === 'ask' ? tg + '?text=' + encodeURIComponent('Здравствуйте! Вопрос по Лавке: ')
+              : k === 'site'    ? CONFIG.siteLink
+              : k === 'guide'   ? CONFIG.guideLink
+              : k === 'card'    ? CONFIG.cardLink
+              : k === 'ask'     ? tg + '?text=' + encodeURIComponent('Здравствуйте! Вопрос по Лавке: ')
               : tg;
       el.target = '_blank'; el.rel = 'noopener';
     });
@@ -845,7 +1087,7 @@ const CONFIG = {
   /* ─────────── События ─────────── */
   document.addEventListener('click', e => {
     const c = e.target.closest('[data-cat]');
-    if (c) { activeCat = c.dataset.cat; render(); window.scrollTo({top:0}); return; }
+    if (c) { activeCat = c.dataset.cat; render(); return; }
 
     const t = e.target.closest('[data-term]');
     if (t) { pickedTerm = +t.dataset.term; render(); return; }
@@ -853,11 +1095,13 @@ const CONFIG = {
     const q = e.target.closest('[data-qty]');
     if (q) { setQty(q.dataset.qty, +q.dataset.v); return; }
 
-    if (e.target.closest('#addBtn')) {
-      const id = location.hash.split('/')[2];
-      addToCart(id, pickedTerm);
-      return;
-    }
+    const z = e.target.closest('[data-quiz]');
+    if (z) { quizAns[quizStep] = z.dataset.quiz; quizStep++; render(); window.scrollTo({top:0}); return; }
+
+    if (e.target.closest('#quizBack'))  { quizStep = Math.max(0, quizStep-1); render(); return; }
+    if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
+
+    if (e.target.closest('#addBtn')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
 
     if (e.target.closest('#checkout')) {
       const lines = cartList().map(i => {
@@ -866,14 +1110,20 @@ const CONFIG = {
                (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(priceFor(g,i.months)*i.qty);
       }).join('\n');
       const msg = 'Здравствуйте! Заказ из Лавки:\n\n' + lines +
-                  '\n\nИтого: ' + money(cartTotal()) + '\n\nКак оплатить?';
+                  '\n\nИтого: ' + money(cartTotal()) +
+                  '\nКриптой: ' + money(crypto(cartTotal())) + '\n\nКак оплатить?';
       window.open(tg + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
-      return;
     }
   });
 
+  document.addEventListener('input', e => {
+    if (e.target.id === 'cRate')  { calcRate  = +e.target.value; drawCalc(); }
+    if (e.target.id === 'cHours') { calcHours = +e.target.value; drawCalc(); }
+  });
+
   window.addEventListener('hashchange', () => {
-    if (!location.hash.startsWith('#/p/')) pickedTerm = 1;
+    if (!location.hash.startsWith('#/p/'))   pickedTerm = 1;
+    if (!location.hash.startsWith('#/pick')) { quizStep = 0; quizAns = []; }
     render();
     window.scrollTo({ top: 0, behavior: 'instant' });
   });
