@@ -122,7 +122,8 @@ tailwind.config = {
 const CONFIG = {
   telegram : 'hipnohop',
   channel  : 'https://t.me/Alekseii_AI',
-  cardLink : 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
+  cardLink : 'https://t.me/Cashinout_bot?start=23610',
+  cardLink2: 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
   guideLink: 'https://aku-automation.io/guide/?utm_source=lavka&utm_medium=site&utm_campaign=guide',
   siteLink : 'https://aku-automation.io',
   promo    : 'NEURO500',
@@ -228,15 +229,22 @@ const CONFIG = {
       about:'Синтез речи, которую тяжело отличить от живой. Копирует голос по короткой записи и озвучивает длинные тексты на русском.',
       inc:['Большой лимит символов в месяц','Копирование своего голоса','Естественная русская речь','Скачивание в высоком качестве'] },
 
-    { id:'card', cat:'tools', name:'Своя зарубежная карта', icon:'card', tint:'#E0A253',
-      priceLabel:'по ссылке', external:'CARD',
+    { id:'card', cat:'tools', name:'Виртуальная карта Cashinout', icon:'card', tint:'#E0A253',
+      priceLabel:'по ссылке', external:'CARD', tag:'Платите сами',
       short:'Платить самому и за что угодно, а не только за нейросети.',
       for:'Кто хочет разобраться сам',
-      about:'Виртуальная карта для оплаты зарубежных сервисов своими руками. Дешевле, чем через меня, но разбираться придётся самостоятельно. По моему промокоду выпуск со скидкой.',
-      inc:['Оплата любых зарубежных сервисов','Пополнение с российских карт и крипты','Выпуск за несколько минут','Скидка по промокоду NEURO500'] },
+      about:'Виртуальная карта для оплаты зарубежных сервисов своими руками. Дешевле, чем через нас, но разбираться придётся самостоятельно. Именно этой картой мы пользуемся сами — поэтому и рекомендуем.',
+      inc:['Оплата любых зарубежных сервисов','Пополнение с российских карт и крипты','Выпуск за несколько минут','Разные типы карт под разные задачи'] },
+
+    { id:'card2', cat:'tools', name:'Виртуальная карта «Плати по всему миру»', icon:'card', tint:'#B4A8FF',
+      priceLabel:'по ссылке', external:'CARD2',
+      short:'Альтернативный сервис карт, если первый не подошёл.',
+      for:'Второй вариант оплаты',
+      about:'Ещё один сервис виртуальных карт для оплаты зарубежных сервисов. Держим его как альтернативу: если по какой-то причине не подошёл основной, стоит попробовать этот. По промокоду NEURO500 выпуск со скидкой.',
+      inc:['Оплата зарубежных сервисов','Пополнение рублями','Промокод NEURO500 на выпуск','Работает независимо от первого сервиса'] },
 
     { id:'guide', cat:'tools', name:'Гайд «Claude с нуля»', icon:'guide', tint:'#8AA872',
-      priceLabel:'бесплатно', external:'GUIDE',
+      priceLabel:'бесплатно', external:'GUIDE', tag:'Бесплатно',
       short:'Чтобы подписка окупилась, а не пылилась.',
       for:'Первое знакомство с нейросетями',
       about:'Разбор с нуля: как устроен Claude, как формулировать запросы и какие задачи ему отдавать. Написан мной, отдаю бесплатно и без почты.',
@@ -357,7 +365,8 @@ const ICONS = {
   const term = m => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const money = n => n.toLocaleString('ru-RU') + ' ₽';
-  const extLink = g => g.external === 'CARD' ? CONFIG.cardLink
+  const extLink = g => g.external === 'CARD'  ? CONFIG.cardLink
+                     : g.external === 'CARD2' ? CONFIG.cardLink2
                      : g.external === 'GUIDE' ? CONFIG.guideLink : g.external;
 
   const base = g => Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
@@ -419,15 +428,15 @@ const ICONS = {
          style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
         <div class="flex items-start justify-between gap-3 mb-4">
           ${markTile(g)}
-          ${g.hit ? `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                       style="background:${g.tint}1F;color:${g.tint}">Часто берут</span>` : ''}
+          ${(g.tag || g.hit) ? `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+                       style="background:${g.tint}1F;color:${g.tint}">${esc(g.tag || 'Часто берут')}</span>` : ''}
         </div>
         <h3 class="font-display font-bold text-[15px] leading-snug mb-2">${esc(g.name)}</h3>
         <p class="text-faded text-[13px] leading-relaxed mb-4 sm:mb-5 sm:min-h-[52px]">${esc(g.short)}</p>
         <div class="tech text-faded/70 flex items-center gap-2 mb-3">
           <span>[ ${esc(cat(g.cat))} ]</span>
           <span style="color:${g.tint}">/</span>
-          <span>${p ? '30 дней' : g.external === 'CARD' ? 'разово' : 'pdf'}</span>
+          <span>${p ? '30 дней' : g.external === 'GUIDE' ? 'pdf' : 'разово'}</span>
         </div>
         <div class="pt-4 border-t border-edge">
           <div class="flex items-baseline justify-between gap-2">
@@ -454,7 +463,7 @@ const ICONS = {
     ['Вы получите доступ к моему аккаунту?',
      'На время оплаты — да, иначе провести платёж невозможно. Сразу после активации вы меняете пароль, и доступ пропадает. Переписку и файлы мы не открываем.'],
     ['Почему нельзя оплатить самому?',
-     'Можно, и это дешевле. Нужна зарубежная карта — она есть в каталоге отдельной позицией. Мы нужны тем, кому не хочется в этом разбираться.'],
+     'Можно, и это дешевле. Нужна зарубежная карта — в каталоге есть два проверенных сервиса, где её выпускают за несколько минут. Мы нужны тем, кому не хочется в этом разбираться.'],
     ['Почему у других дешевле?',
      'Обычно потому, что там общий аккаунт на несколько человек либо подписка через студенческую или региональную схему. Такие живут до ближайшей проверки. Мы оформляем обычным способом на ваш личный аккаунт — дороже, зато не отваливается.'],
     ['Аккаунт могут заблокировать?',
@@ -486,7 +495,7 @@ const ICONS = {
   function viewHome() {
     const h = new Date().getHours();
     const open = h >= CONFIG.openFrom && h < CONFIG.openTo;
-    const hits = shown().filter(g => g.usd);
+    const hits = shown();
 
     return `
     <section class="lamp relative overflow-hidden">
@@ -937,6 +946,8 @@ const ICONS = {
             <div class="font-display font-extrabold text-2xl mb-2">${esc(g.priceLabel)}</div>
             <p class="text-faded text-sm leading-relaxed mb-6">
               ${g.external === 'CARD'
+                ? 'Выпуск на стороне сервиса, занимает несколько минут.'
+                : g.external === 'CARD2'
                 ? 'Выпуск на стороне сервиса. Промокод <span class="text-brass font-semibold">'+CONFIG.promo+'</span> даёт скидку.'
                 : 'Открывается сразу, без почты и регистрации.'}
             </p>
