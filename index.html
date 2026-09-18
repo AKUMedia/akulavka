@@ -2,1002 +2,911 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#121110">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Штаб">
-<link rel="apple-touch-icon" href="data:image/png;base64,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">
-<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAARe0lEQVR4nO3dzaql2VnA8V2dvoCqmqgzBwHtkNxA40AQFQMK4sB7KEKnyXWEQIUQoe9AERQDRQhkJnEelRBIIIN4Hw6qqKRPnY/3Y71rPR+/37Bpis3eaz3/d619qs6zly+e3wDo56PVLwCANQQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGjq49UvAMZ78/rTK/7Yb377Z1f8sbDKs5cvnq9+DbDPRfP9PIUgFwEgtLCzfjtVICwBIJAC434LSSAIAWClJhP/cXrAKgLAVCb+k/SAaQSAyxn6h4kBlxIALmHoDycGDCcAjGTuT6AEjCIAnGXoLyQGnCEAHGTuh6IEHCAA7GPuB6cEbCcAbGLup6MEPEkAeIy5X4AS8BAB4H6pR/9FI897QjECwJdkmXEBx5m3jnQEgHfCzq/UA8u7SmQC0F20CVV+MHnDiUMA+goyiZoPIJ8CCwlAR8uHjnFzL58LkwlALwtHjOGyi0+KCQSgiyUDxSgZwmfHRQSgvsnjw+C4lE+TgQSgspnDwqSYzIfLeQJQ07TpYDQs57PmMAGoZs44MAsC8tGzlwDUMWH/2/wpWAlsJAAV2PB8yKrgSQKQ29Wb3A4vwCLhIQKQ2KUb264uxmrhQwKQ0nWb2U4uz+LhPQFIxu5lCAuJmwDkctGmtWPbsqKaE4AcbFSuY3W1JQDR2ZzMYaU1JAChXbEnbUgeYcm1IgBB2YcsZPk1IQARDd9+9h4HWIflCUAsthzRWJOFCUAgY3eabcZAFmdJAhDFwA1md3ERq7QYAVjPpiIXK7aMj1a/gO7sJdIZuNKW/L573nMCWGnU6jf6WcICzk4A1rBzKMNizssV0AI2DJWMWoeug+ZzAphtyCo3+gnI2k5HAObx4E95FnkuAjCJhyP6sNqz8B3ADPYDrQxZq74SmMAJ4HLn17HRT1IWf3BOANeyAejs/Op1DriUE8BVXPvAW/ZCWAJwCQ/+cIdNEZAroPEsdPiQ66CABGAw0x8eogHRuAIa6eTqNPppwk4JwglgGGsaNjq52p0DRhGAMUx/2EUDInAFNMCZtWj005zts5ATwFmWL5xxZhc4B5wkAKeY/nCeBqwiAMeZ/jCKBiwhAAeZ/jCWBswnAEeY/nAFDZjMTwHtdnidGf2wkV02hxPAPtYlTHB4vzgH7CIAO5j+MI0GTCAAW5n+MJkGXE0ANjH9YQkNuJQAPM30h4U04DoC8ATTH5bTgIsIwGNMfwhCA64gAA8y/SEUDRhOAO5n+kNAGjCWANzD9IewNGAgARjG9Ic57LVRBOCuY48JViTMdGzHOQTcIQBfYvpDFhpwngD8jukPuWjASQLwjukPGWnAGQJwu5n+kJkGHCYAAE0JgMd/SM8h4JjuATD9oQYNOKB1AEx/qEQD9modgANMf4jMDt2lbwAOZN/agvgO7NO2h4CmATD9oTAN2KhjAHp+0sDjGk6GjgE4wOM/5GLPbtEuAC5/oAkXQU/qFQDTH1rRgMc1CkCrzxU4rM+saBSAAzz+Q3Z28SO6BMDlD7TlIughLQJg+kNzGnCvFgEA4EP1A+DxH7g5BNyneABMf+A9DbijeAD2Mv2hNnv891UOQO10A3MUniSVA7CXRwPowE5/r2wA9kbbmoA+9u73qoeAmgGo+mkBq5ScKjUDsJfHf+jGrr+VDIDLH2ALF0EFAwDAFtUC4PEf2K75IaBUAEx/YK/ODSgVAAC2qxMAj//AMW0PAXUCAMAuRQLg8R84o+choEgAdjH9gQ81nAwVAlAjxUAuBSZPhQDs0jDywEbd5sPHq1/AWREi/Plnrz7/7NXqVxHRn/35X//2t/935z/+1V/+xRf/9HrJ6wnu1be+8+bHP7nzH//oD//gv/7zp0teT3A/+OEX3/3e99e+hjevP03djF4ngNQfFTBBqymROwARHv+BzlJPodwB2KVV2IHD+syKxAFIHV6gjLyzKHEAdumTdOC8JhMjawDyJheoJ+lEyhqAXZrEHBiow9xIGYCksQUKyziXUgZglw4ZB65QfnrkC0DGzAIdpJtO+QKwS/mAA5eqPUOSBSBdYIFWcs2oZAHYpXa6gTkKT5JMAciVVqCnRJPq2csXz1e/hq12va3pov21T/70zY/+dfWreOcXv/jl3/ztP6x+FU/49S9//pWvRHmC+eOvfn31S3jCj/79X77x9a+tfhXv/N3f/+PP//t/V7+KfUrOnyj7B4DJ0gSgZH6BLHZNlSy3QGkCAMBYOQLg8R9Yrt4hIEcAABhOAACaShAA9z9AEMVugRIEAIArRA+Ax38glEqHgOgBAOAiAgDQVOgAuP8BAipzCxQ6AABcp0gAPP4DM9WYOXEDEPncBLBd2GkWNwAAXKpCAGqcxYBcCkyeoAEIe2ICOCDmTAsaAACulj4ABU5hQFLZ50/EAMQ8KwGcEXCyRQwAABPkDkD28xeQXeoplDsAABwWLgABr8kAhog238IFYLvUJy+gjLyzKHEAADgjVgCinY8Axgo15WIFAIBpsgYg76UbUE/SiZQ1AACcFCgAoa7GAC4SZ9YFCgAAM6UMQNLrNqCwjHMpZQAAOC9KAOJcigFcLcjEixIAACbLF4CMF21AB+mmU74AADCEAAA0FSIAQb4PAZgmwtwLEYDt0l2xAa3kmlHJAgDAKAIA0JQAADS1PgARvgkBmG/59FsfgO1yfbsC9JRoUmUKAAADCQBAUwIA0JQAADS1OADLvwQHWGjtDExzAkj0xTrQXJZ5lSYAAIwlAABNCQBAUwIA0JQAADS1MgB+BhRg4STMcQLI8jNVAG+lmFo5AgDAcAIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAU8sCsP1vP6f4C3UAd2yfXav+NQgnAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaEoAAJpaFoBvfvtnG//PN68/vfSVAFxh++zaPg/HcgIAaEoAAJoSAICmBACgKQEAaEoAAJoSAICmBACgKQEAaCpHAPxlYCCXFFNrZQBW/e1ngDgWTsIcJwAAhhMAgKYEAKApAQBoSgAAmkoTgBQ/UwVwyzOvFgfAT4ICna2dgWlOAACMJQAATQkAQFMCANBUpgBk+WId6CzRpFofAD8IBPS0fPqtDwAASwgAQFMCANBUsgAk+nYFaCjXjAoRgOXfhABMFmHuhQgAAPMJAEBT+QKQ64oN6CPddMoXAACGiBKACN+HAMwRZOJFCQAAk6UMQLqLNqC8jHMpZQAAOC9QAIJcigFcKs6sCxQAAGbKGoCM121AVUknUtYAAHBSrADEuRoDuEKoKRcrAABMkzgASS/dgGLyzqJwAQh1PgIYKNp8CxcAAObIHYC8Jy+ghtRTKHcAADgsYgCiXZMBnBdwskUMwC6pz19Aatnnz8erXwARffLJn/zmV/+z+lVk4u0io6AngIBnJYDDYs60CieAN68/Xfvmfv7Zq88/e7XwBUAu//Fv/3z+D/nBD7/47ve+f/7POSz7/c8t7AkAgKvFDUDMExPAXmGnWdwA7FLgLAYkUmPmFAkAAHuFDsCuc1ONIAPx7Zo2Ye9/bsEDAMB1BACgqegBcAsEhFLm/ucWPwAAXCRBABwCgCAqPf7fUgQAgCsIAEBTOQLgFghYrtj9zy1LAAAY7tnLF89Xv4at6uUXyKLk/HECAGiqbAB8EwCMUnWeZApAllMV0FmiSZUpAHtVjTYwU+FJkiwAidIKNJRrRiULwF6F0w1MUHuG5AtArsACfaSbTvkCsFftgAPXKT89UgYgXWaB8jLOpZQB2Kt8xoHhOsyNrAHIGFugqqQTKWsA9uoQc2CUJhMjcQCSJhcoJu8sShyAvZokHTipz6zIHYC84QVqSD2Fcgdgrz5hB45pNSXSByB1foHUss+f9AHYq1XegV26zYcKAcgeYSCjApOnQgD26hZ5YIuGk6FIAPamuOEnDTxi70wo8Ph/KxMAAPaqEwCHAOCYno//t0oBAGCXUgFwCAD2avv4fysWgJsGAHt0nv63egEAYKOCAXAIALZo/vh/KxmAAzQAurHrb1UDUC/UwFolp0rNANxcBAEPc/nzVtkAHKAB0IGd/l7lAFSNNjBT4UlSOQAHeDSA2uzx31c8AAfSbX1AVQd2d+HH/1v5ANw0ALjdbqb/feoHAIB7tQiAQwA05/H/Xi0CcNMAaMz0f0iXAByjAZCdXfyIRgFoknTgpD6zolEAbi6CoBmXP4/rFYCbBkAbpv+T2gXgGA2AXOzZLToGoFvkgS0aToaOAbi5CILSXP5s1DQANw2Aokz/7foG4BgNgMjs0F1aB+BY9q0wiOnY3mz7+H9rHoCbBkAVpv8B3QNw0wDIz/Q/RgAAmhKA280hADLz+H+YALyjAZCR6X+GAPyOBkAupv9JAvAlGgBZmP7nCcBdGgDxmf5DCMAwGgBz2GujCMA9Dj8mWJdwtcO7zOP/hwTgfhoAAZn+YwnAgzQAQjH9hxOAx2gABGH6X0EAnqABsJzpfxEBeJoGwEKm/3UEYBMNgCVM/0sJwFYaAJOZ/lcTgB00AKYx/ScQgH00ACYw/ed49vLF89WvIZ8z09wChUfYXDM5ARxxZp05CsBDTP/JBOAgDYCxTP/5BOA4DYBRTP8lBOAUDYDzTP9VBOAsDYAzTP+F/BTQGCdHuXVMQ3bNck4AY5xci44CdGP6RyAAw2gAbGT6B+EKaLDzc9zipjAbJBQngMHOr05HAaoy/aMRgPE0AD5k+gfkCugqQ4a4FU8B9kJYAnAtTz00ZwtE5groWq6D6Mz0D84JYAZHYLqx5lNwAphhyDp2FCAL0z8LJ4B5Rk1wG4OwLPJcBGA2D0dUZW2nIwALeEqiGEs6Kd8BLDBqlftWgAhM/7ycAFayc0jNAs5OABYb+BRvFzGNdVuDK6DFBq5+N0LMYfqX4QQQhU1FfFZpMQIQyNhHeBuMgSzOkgQgluHXOHYaJ1mThQlARLYcEViH5QlAUFd8o2v7sZHl14QAhGYfMpkl14oARHfRD3fak9xhpTUkADnYnFzH6mpLADKxURnLimpOAJK57q/72rStWEjcBCApu5fDLB7eE4DELv3Hf2zmYqwWPiQAuV39D8DZ2AVYJDxEACqY8O+A2uTpWBU8SQDqsOF5y0pgIwGoZs5vBbD/A/LRs5cA1DTtl8MYB8v5rDlMACqb+TvCTIfJfLicJwD1Tf5VkYbFpXyaDCQAXSz5jcHGxxA+Oy4iAL0s/MXxBsouPikmEICOFg6Xt4yYe/lcmEwA+lo+bt5qPnR8CiwkAN0FGUDvlZ9E3nDiEADeiTaY3ks9obyrRCYAfEnYgXVHwPnlrSMdAeB+WcbZvS6acd4TihEAHpN65PGW0c9DBIBNlCAdc58nCQD7KEFw5j7bCQAHKUEo5j4HCABnKcFC5j5nCAAjicEEhj6jCACXUILhzH2GEwAuJwaHGfpcSgCYSgyeZOgzjQCwkh7cTHzWEQACadIDE58gBIDQCiTBuCcsASCfsFUw68lFACjookKY7xQjAABNfbT6BQCwhgAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTAgDQlAAANPX/LOUSHl5ZADMAAAAASUVORK5CYII=">
-<link rel="manifest" id="mf">
-<title>Штаб — AKU Automation</title>
-<link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=gambetta@400,500,600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKU Лавка — подписки на нейросети на ваш аккаунт</title>
+<meta name="description" content="Claude, ChatGPT, HeyGen и другие подписки на ваш собственный аккаунт. Claude оформляем по ID — без пароля.">
+<meta property="og:title" content="AKU Лавка — подписки на нейросети">
+<meta property="og:description" content="Подписки на нейросети на ваш аккаунт. Claude — без передачи пароля.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { ink:'#100E0C', board:'#181512', panel:'#201C18', edge:'#2E2822', edge2:'#3D352C',
+            paper:'#F6F1EA', faded:'#9C9187', brass:'#E0A253', sage:'#8AA872', rust:'#E0654A' },
+  fontFamily: { display:['Unbounded','system-ui','sans-serif'], ui:['Manrope','system-ui','sans-serif'],
+                mono:['JetBrains Mono','ui-monospace','monospace'] }
+}}}
+</script>
 <style>
-:root{
-  --bg:#121110;
-  --bg-2:#171614;
-  --surface:rgba(255,255,255,.035);
-  --surface-2:rgba(255,255,255,.055);
-  --line:rgba(242,237,228,.10);
-  --line-2:rgba(242,237,228,.18);
-  --paper:#F2EDE4;
-  --paper-dim:rgba(242,237,228,.62);
-  --paper-mute:rgba(242,237,228,.38);
-  --brass:#C8A24A;
-  --brass-soft:rgba(200,162,74,.14);
-  --sage:#7FA88B;
-  --sage-soft:rgba(127,168,139,.14);
-  --clay:#C25B4E;
-  --clay-soft:rgba(194,91,78,.14);
-  --r:14px;
-  --sans:'Satoshi','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --serif:'Gambetta','Iowan Old Style',Georgia,serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
-body{
-  background:var(--bg);color:var(--paper);font-family:var(--sans);
-  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
-  min-height:100vh;overflow-x:hidden;
-}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(900px 500px at 12% -5%, rgba(200,162,74,.10), transparent 60%),
-    radial-gradient(700px 500px at 100% 0%, rgba(127,168,139,.06), transparent 60%);
-}
-button,input,select,textarea{font:inherit;color:inherit}
-button{background:none;border:none;cursor:pointer}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
-::selection{background:var(--brass);color:#16140f}
-
-/* ---------- LOCK SCREEN ---------- */
-#lock{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px}
-#lock .box{width:100%;max-width:330px;text-align:center}
-#lock .mark{font-family:var(--serif);font-size:40px;letter-spacing:-.02em;margin-bottom:6px}
-#lock p{color:var(--paper-mute);font-size:13px;margin-bottom:22px}
-#lock input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;text-align:center;letter-spacing:.2em}
-#lock input::placeholder{letter-spacing:normal;color:var(--paper-mute)}
-#lock button{width:100%;margin-top:10px;background:var(--brass);color:#16140f;font-weight:700;border-radius:12px;padding:13px}
-#lock .err{color:var(--clay);font-size:13px;height:18px;margin-top:10px}
-
-/* ---------- SHELL ---------- */
-.shell{position:relative;z-index:1;display:none;min-height:100vh}
-.shell.on{display:block}
-@media(min-width:960px){.shell.on{display:grid;grid-template-columns:232px 1fr}}
-
-/* rail */
-.rail{display:none;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;background:rgba(18,17,16,.6);backdrop-filter:blur(14px)}
-@media(min-width:960px){.rail{display:block}}
-.brand{display:flex;align-items:baseline;gap:8px;padding:0 10px 20px}
-.brand b{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:-.02em}
-.brand span{font-size:10.5px;color:var(--paper-mute);letter-spacing:.14em}
-.navlink{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border-radius:10px;color:var(--paper-dim);font-size:14px;font-weight:500;transition:background .18s,color .18s}
-.navlink:hover{background:var(--surface);color:var(--paper)}
-.navlink.on{background:var(--brass-soft);color:var(--paper)}
-.navlink svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
-.navlink .badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--clay)}
-.railfoot{margin-top:18px;padding:14px 10px 0;border-top:1px solid var(--line);font-size:11.5px;color:var(--paper-mute);line-height:1.7}
-
-/* topbar mobile */
-.mhead{position:sticky;top:0;z-index:40;background:rgba(18,17,16,.92);backdrop-filter:blur(16px);padding-top:env(safe-area-inset-top)}
-@media(min-width:960px){.mhead{display:none}}
-.topbar{display:flex;align-items:center;gap:10px;padding:13px 16px}
-.topbar b{font-family:var(--serif);font-size:20px;font-weight:600}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 10px;border-bottom:1px solid var(--line);scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.tabs::-webkit-scrollbar{display:none}
-.tab{white-space:nowrap;padding:7px 13px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--paper-dim)}
-.tab.on{background:var(--brass);border-color:var(--brass);color:#16140f;font-weight:700}
-
-main{padding:24px 16px calc(80px + env(safe-area-inset-bottom));max-width:1180px;width:100%}
-@media(min-width:960px){main{padding:34px 40px 80px}}
-
-/* ---------- TYPE ---------- */
-.h1{font-family:var(--serif);font-size:clamp(28px,4.4vw,40px);font-weight:500;letter-spacing:-.025em;line-height:1.1}
-.h2{font-family:var(--serif);font-size:21px;font-weight:500;letter-spacing:-.02em}
-.sub{color:var(--paper-mute);font-size:13px}
-.num{font-family:var(--serif);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-
-/* ---------- COMPONENTS ---------- */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;backdrop-filter:blur(10px)}
-.card.tight{padding:14px}
-.grid{display:grid;gap:12px}
-.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.g4{grid-template-columns:repeat(auto-fit,minmax(158px,1fr))}
-.row{display:flex;align-items:center;gap:10px}
-.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.wrap{flex-wrap:wrap}
-.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:34px 0 14px;flex-wrap:wrap}
-.sechead:first-child{margin-top:0}
-
-.btn{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 13px;font-size:13px;font-weight:500;color:var(--paper-dim);transition:border-color .18s,color .18s,background .18s}
-.btn:hover{border-color:var(--line-2);color:var(--paper)}
-.btn.gold{background:var(--brass);border-color:var(--brass);color:#16140f;font-weight:700}
-.btn.gold:hover{filter:brightness(1.08);color:#16140f}
-.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
-.btn.danger:hover{border-color:var(--clay);color:var(--clay)}
-
-.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--line)}
-.pill.gold{background:var(--brass-soft);border-color:rgba(200,162,74,.3);color:var(--brass)}
-.pill.sage{background:var(--sage-soft);border-color:rgba(127,168,139,.3);color:var(--sage)}
-.pill.clay{background:var(--clay-soft);border-color:rgba(194,91,78,.3);color:var(--clay)}
-.pill.mute{color:var(--paper-mute)}
-
-.bar{height:5px;border-radius:999px;background:rgba(242,237,228,.09);overflow:hidden}
-.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brass),#E0C177);width:0;transition:width 1.1s cubic-bezier(.22,1,.36,1)}
-.bar.sage i{background:linear-gradient(90deg,var(--sage),#A9C9B3)}
-
-.stat{padding:15px}
-.stat .lbl{font-size:12px;color:var(--paper-mute);margin-bottom:7px}
-.stat .val{font-family:var(--serif);font-size:27px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.1}
-.stat .hint{font-size:11.5px;color:var(--paper-mute);margin-top:6px}
-
-.list{display:flex;flex-direction:column;gap:8px}
-.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .18s}
-.item:hover{border-color:var(--line-2)}
-.item .body{flex:1;min-width:0}
-.item .t{font-weight:600;font-size:14px}
-.item .d{font-size:12.5px;color:var(--paper-mute);margin-top:2px}
-.item .acts{display:flex;gap:6px;opacity:.55;transition:opacity .18s}
-.item:hover .acts{opacity:1}
-
-.empty{border:1px dashed var(--line-2);border-radius:12px;padding:22px;text-align:center;color:var(--paper-mute);font-size:13.5px}
-
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;font-size:11.5px;color:var(--paper-mute);font-weight:600;padding:0 10px 9px;white-space:nowrap}
-td{padding:11px 10px;border-top:1px solid var(--line);vertical-align:middle}
-.tscroll{overflow-x:auto;scrollbar-width:thin}
-
-/* hero */
-.hero{padding:6px 0 4px}
-.hero .line{font-family:var(--serif);font-size:clamp(30px,5.6vw,52px);font-weight:500;letter-spacing:-.03em;line-height:1.08}
-.hero .line em{font-style:normal;color:var(--brass)}
-.w{display:inline-block;opacity:0;filter:blur(7px);transform:translateY(.28em);animation:word .75s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes word{to{opacity:1;filter:blur(0);transform:none}}
-.hero .say{margin-top:14px;color:var(--paper-dim);font-size:15px;max-width:62ch;opacity:0;animation:word .7s .5s cubic-bezier(.22,1,.36,1) forwards}
-
-.view{display:none}
-.view.on{display:block;animation:enter .42s cubic-bezier(.22,1,.36,1)}
-@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-/* timeline */
-.tl{position:relative;padding-left:28px}
-.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--brass),rgba(242,237,228,.12) 22%,rgba(242,237,228,.12) 88%,transparent)}
-.mile{position:relative;padding:0 0 22px}
-.mile::before{content:'';position:absolute;left:-25px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:1.5px solid var(--line-2)}
-.mile.done::before{background:var(--sage);border-color:var(--sage)}
-.mile.now::before{background:var(--brass);border-color:var(--brass);box-shadow:0 0 0 4px var(--brass-soft)}
-.mile .when{font-size:11.5px;color:var(--paper-mute);letter-spacing:.06em}
-.mile .ttl{font-weight:700;font-size:15px;margin-top:2px}
-.mile .txt{font-size:13px;color:var(--paper-dim);margin-top:3px;max-width:68ch}
-.year{font-family:var(--serif);font-size:30px;color:var(--paper-mute);margin:8px 0 14px;letter-spacing:-.02em}
-
-/* pipeline */
-.pipe{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
-.col{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px;min-height:96px}
-.col h4{font-size:12px;color:var(--paper-mute);font-weight:600;margin-bottom:9px;display:flex;justify-content:space-between}
-.chip{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:7px;cursor:pointer;transition:border-color .18s,transform .18s}
-.chip:hover{border-color:var(--brass);transform:translateX(2px)}
-.chip .n{font-size:13.5px;font-weight:600}
-.chip .m{font-size:11.5px;color:var(--paper-mute);margin-top:2px}
-
-/* sparkline */
-.spark{width:100%;height:38px;display:block;overflow:visible}
-
-/* modal */
-.mask{position:fixed;inset:0;z-index:120;background:rgba(10,9,8,.72);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;padding:0}
-.mask.on{display:flex}
-@media(min-width:720px){.mask{align-items:center;padding:24px}}
-.modal{width:100%;max-width:470px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:18px 18px 0 0;padding:20px;max-height:92vh;overflow-y:auto;animation:up .3s cubic-bezier(.22,1,.36,1)}
-@media(min-width:720px){.modal{border-radius:18px}}
-@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--paper-mute);margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
-.field textarea{min-height:76px;resize:vertical}
-.field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--paper-mute) 50%),linear-gradient(135deg,var(--paper-mute) 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brass);outline:none}
-
-.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:190;background:var(--paper);color:#16140f;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.22,1,.36,1)}
-.toast.on{opacity:1;transform:translate(-50%,0)}
-
-.note{border-left:2px solid var(--brass);background:var(--brass-soft);border-radius:0 12px 12px 0;padding:12px 14px;font-size:13.5px;color:var(--paper-dim)}
-.note.clay{border-color:var(--clay);background:var(--clay-soft)}
-
-input[type=checkbox]{width:17px;height:17px;accent-color:var(--brass);cursor:pointer;flex:none}
-.done{text-decoration:line-through;color:var(--paper-mute)}
-
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  html { scroll-behavior:smooth; background:#100E0C; overflow-x:hidden }
+  body { background:#100E0C; overflow-x:hidden }
+  * { min-width:0 }
+  .lamp { background: radial-gradient(62% 46% at 50% -8%, rgba(224,162,83,.17) 0%, rgba(224,162,83,.05) 45%, rgba(16,14,12,0) 74%) }
+  .orb { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; animation:drift 22s ease-in-out infinite alternate }
+  @keyframes drift { from{transform:translate(0,0) scale(1)} to{transform:translate(28px,-22px) scale(1.14)} }
+  .view-in { animation:viewIn .32s cubic-bezier(.2,.7,.3,1) both }
+  @keyframes viewIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+  .rise { animation:rise .45s cubic-bezier(.2,.7,.3,1) both }
+  @keyframes rise { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+  .card { transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease }
+  .card:hover { transform:translateY(-4px); border-color:var(--tint); box-shadow:0 12px 34px -18px var(--tint) }
+  .tile { transition:transform .22s ease }
+  .card:hover .tile { transform:rotate(-4deg) scale(1.06) }
+  .pop { animation:pop .3s cubic-bezier(.3,1.6,.5,1) }
+  @keyframes pop { 0%{transform:scale(1)} 45%{transform:scale(1.32)} 100%{transform:scale(1)} }
+  .toast-in { animation:toastIn .3s cubic-bezier(.2,.8,.3,1) both }
+  @keyframes toastIn { from{opacity:0;transform:translateY(20px) scale(.96)} to{opacity:1;transform:none} }
+  details>summary { list-style:none; cursor:pointer }
+  details>summary::-webkit-details-marker { display:none }
+  details[open] .chev { transform:rotate(45deg) }
+  .chev { transition:transform .22s ease }
+  a:focus-visible,button:focus-visible,summary:focus-visible { outline:2px solid #E0A253; outline-offset:3px; border-radius:3px }
+  ::selection { background:#E0A253; color:#100E0C }
+  .tech { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11px; letter-spacing:.13em; text-transform:uppercase }
+  .glass { background:rgba(32,28,24,.72); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(224,162,83,.22) }
+  .huge { font-size:clamp(32px,8.2vw,92px); line-height:.95; letter-spacing:-.035em; overflow-wrap:break-word }
+  @media (min-width:1180px){ .huge{font-size:100px} }
+  .stat { font-size:clamp(26px,6.4vw,48px); line-height:1; letter-spacing:-.03em }
+  @media (max-width:400px){ .tech{font-size:10px;letter-spacing:.1em} }
+  .marquee { overflow:hidden; white-space:nowrap; position:relative }
+  .marquee-track { display:inline-flex; align-items:center; animation:slide 34s linear infinite }
+  @keyframes slide { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  input[type=range]{ -webkit-appearance:none; appearance:none; height:4px; border-radius:4px; background:#3D352C; outline:none }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#E0A253; cursor:pointer; border:3px solid #100E0C }
+  input[type=range]::-moz-range-thumb{ width:20px; height:20px; border-radius:50%; background:#E0A253; cursor:pointer; border:3px solid #100E0C }
+  @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} html{scroll-behavior:auto} }
 </style>
 </head>
-<body>
+<body class="font-ui text-paper antialiased min-h-screen flex flex-col">
 
-<div id="lock">
-  <div class="box">
-    <div class="mark">Штаб</div>
-    <p id="pwhint">AKU Automation</p>
-    <input id="pw" type="password" placeholder="Код доступа" autocomplete="current-password" inputmode="numeric">
-    <button id="pwgo">Войти</button>
-    <div class="err" id="pwerr"></div>
-    <button id="pwreset" style="background:none;color:var(--paper-mute);font-size:12px;margin-top:14px;font-weight:400;padding:6px">Забыл код</button>
+<!-- ═══════ НАСТРОЙКИ: правишь только этот блок ═══════ -->
+<script>
+const CONFIG = {
+  telegram : 'hipnohop',
+  channel  : 'https://t.me/Alekseii_AI',
+  siteLink : 'https://aku-automation.io',
+  guideLink: 'https://aku-automation.io/guide/?utm_source=lavka&utm_medium=site&utm_campaign=guide',
+  cardLink : 'https://t.me/Cashinout_bot?start=23610',
+  cardLink2: 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
+  lexyLink : 'https://lexygpt.com/?ref=ALEKSEIAI',
+  promo    : 'NEURO500',
+  openFrom : 9,
+  openTo   : 23,
+
+  rate      : 92,    // рубли за доллар на карте, со всеми комиссиями
+  markup    : 1.46,  // наценка: $20 даёт 2690 ₽
+  cryptoOff : 5,     // скидка за оплату криптой, %
+
+  terms: [
+    { months:1, label:'1 месяц',   mult:1,    off:0  },
+    { months:3, label:'3 месяца',  mult:2.85, off:5  },
+    { months:6, label:'6 месяцев', mult:5.4,  off:10 }
+  ],
+
+  cats: [
+    { id:'chat',  name:'Чат-модели'       },
+    { id:'image', name:'Картинки и видео' },
+    { id:'code',  name:'Код'              },
+    { id:'sound', name:'Музыка и голос'   },
+    { id:'tools', name:'Полезное'         }
+  ],
+
+  goods: [
+    { id:'claude', cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, hit:true, noLogin:true,
+      short:'Сильнее всех в тексте, коде и работе с документами.',
+      for:'Тексты, аналитика, программирование',
+      about:'Подписка Anthropic. Продвинутые модели, длинные диалоги, загрузка файлов. Лучший выбор для работы с текстом и кодом: пишет аккуратнее конкурентов и реже выдумывает. Единственная позиция, которую мы оформляем вообще без доступа к вашему аккаунту — только по ID.',
+      inc:['Оформляем по ID — пароль не нужен','Продвинутые модели вместо базовой','Загрузка документов и картинок','Проекты и сохранённые инструкции'] },
+
+    { id:'gpt', cat:'chat', name:'ChatGPT Plus', icon:'gpt', tint:'#2FBF9A', usd:20, hit:true,
+      short:'Самый универсальный. Голос, картинки, разбор файлов.',
+      for:'Всё понемногу, первый выбор новичка',
+      about:'Подписка OpenAI. Самый популярный сервис: помимо текста рисует картинки, говорит голосом, разбирает таблицы и ищет в интернете. Если берёте первую подписку в жизни — обычно берут эту.',
+      inc:['Свежие модели без ограничений базовой версии','Генерация картинок','Голосовой режим','Анализ файлов и таблиц'] },
+
+    { id:'heygen', cat:'image', name:'HeyGen', icon:'heygen', tint:'#5B8CFF', usd:29, hit:true,
+      short:'Видео с говорящим аватаром по тексту.',
+      for:'Ролики без съёмки и микрофона',
+      about:'Делает видео, где аватар произносит ваш текст на нужном языке. Берут для обучающих роликов, рекламы и контента в соцсети, когда снимать себя не хочется или некогда.',
+      inc:['Готовые аватары и голоса','Свой аватар по короткой записи','Озвучка на русском и других языках','Экспорт без водяного знака'] },
+
+    { id:'lexy', cat:'image', name:'LexyGPT', icon:'lexy', tint:'#C77DFF',
+      priceLabel:'по ссылке', external:'LEXY', tag:'Без VPN и карты',
+      short:'Картинки и видео в Telegram, без оформления подписок.',
+      for:'Самый простой вход в нейросети',
+      about:'Российский сервис генерации изображений и видео, работает прямо в Telegram. Ничего оформлять не нужно: ни зарубежной карты, ни VPN, ни аккаунта на иностранном сайте. Если хочется просто попробовать нейросети без возни — начинайте отсюда.',
+      inc:['Генерация картинок по описанию','Видео из текста и фото','Работает в Telegram','Оплата российскими картами'] },
+
+    { id:'card', cat:'tools', name:'Виртуальная карта Cashinout', icon:'card', tint:'#E0A253',
+      priceLabel:'по ссылке', external:'CARD', tag:'Платите сами',
+      short:'Платить самому и за что угодно, а не только за нейросети.',
+      for:'Кто хочет разобраться сам',
+      about:'Виртуальная карта для оплаты зарубежных сервисов своими руками. Дешевле, чем через нас, но разбираться придётся самостоятельно. Именно этой картой мы пользуемся сами — поэтому и рекомендуем.',
+      inc:['Оплата любых зарубежных сервисов','Пополнение с российских карт и крипты','Выпуск за несколько минут','Разные типы карт под разные задачи'] },
+
+    { id:'card2', cat:'tools', name:'Карта «Плати по всему миру»', icon:'card', tint:'#B4A8FF',
+      priceLabel:'по ссылке', external:'CARD2',
+      short:'Альтернативный сервис карт с Apple Pay и Google Pay.',
+      for:'Второй вариант оплаты',
+      about:'Ещё один сервис виртуальных карт. Держим как альтернативу: если не подошёл основной, стоит попробовать этот. Поддерживает Apple Pay и Google Pay, есть подробная база знаний по оплате сервисов.',
+      inc:['Оплата зарубежных сервисов','Пополнение по СБП без комиссии','Apple Pay и Google Pay','Промокод NEURO500 на выпуск'] },
+
+    { id:'guide', cat:'tools', name:'Гайд «Claude с нуля»', icon:'guide', tint:'#8AA872',
+      priceLabel:'бесплатно', external:'GUIDE', tag:'Бесплатно',
+      short:'Чтобы подписка окупилась, а не пылилась.',
+      for:'Первое знакомство с нейросетями',
+      about:'Разбор с нуля: как устроен Claude, как формулировать запросы и какие задачи ему отдавать. Написан нами, отдаём бесплатно и без почты.',
+      inc:['С нуля, без технических терминов','Готовые формулировки запросов','Разбор частых ошибок','Открывается сразу'] },
+
+    { hidden:true, id:'gemini', cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20,
+      short:'Живёт внутри Google Документов, Почты и Диска.', for:'Работа в экосистеме Google',
+      about:'Подписка Google. Помощник встроен прямо в Документы, Почту и Диск, плюс даёт дополнительное место в облаке.',
+      inc:['Продвинутые модели Google','Помощник в Документах и Почте','Место на Диске','Очень длинные тексты'] },
+    { hidden:true, id:'perplexity', cat:'chat', name:'Perplexity Pro', icon:'perplexity', tint:'#38B3B8', usd:20,
+      short:'Поиск с источниками. Для research и учёбы.', for:'Проверка фактов, учёба',
+      about:'Поисковик на нейросети: отвечает на вопрос и сразу показывает ссылки на источники.',
+      inc:['Неограниченные подробные запросы','Ссылки на источники','Выбор модели под задачу','Загрузка своих файлов'] },
+    { hidden:true, id:'grok', cat:'chat', name:'SuperGrok', icon:'grok', tint:'#B4A8FF', usd:30,
+      short:'Свободнее конкурентов, видит происходящее в X.', for:'Свежие данные',
+      about:'Подписка xAI. Отвечает свободнее большинства конкурентов и видит, что прямо сейчас обсуждают в X.',
+      inc:['Режим рассуждений','Данные из X в реальном времени','Генерация картинок','Повышенные лимиты'] },
+    { hidden:true, id:'midjourney', cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10,
+      short:'Лучшая картинка среди генераторов.', for:'Реклама, обложки, иллюстрации',
+      about:'Генератор изображений с самой узнаваемой картинкой на рынке.',
+      inc:['Быстрые генерации по тарифу','Работа в веб-версии','Апскейл и вариации','Свои референсы'] },
+    { hidden:true, id:'runway', cat:'image', name:'Runway', icon:'runway', tint:'#7BE3C4', usd:15,
+      short:'Видео из текста и фото, монтаж на нейросети.', for:'Ролики и обработка видео',
+      about:'Оживляет фотографии, генерирует ролики по описанию, вырезает фон и объекты.',
+      inc:['Видео из текста и фото','Удаление фона','Замедление и апскейл','Кредиты по тарифу'] },
+    { hidden:true, id:'kling', cat:'image', name:'Kling AI', icon:'kling', tint:'#FF9BB8', usd:10,
+      short:'Реалистичное видео, хорошо держит лица.', for:'Рекламные ролики с людьми',
+      about:'Один из сильнейших генераторов видео. Лучше конкурентов справляется с движением людей.',
+      inc:['Видео по описанию','Оживление фотографий','Повышенное качество','Приоритетная очередь'] },
+    { hidden:true, id:'cursor', cat:'code', name:'Cursor Pro', icon:'cursor', tint:'#A78BFA', usd:20,
+      short:'Редактор кода, который пишет код за вас.', for:'Разработка проектов',
+      about:'Среда разработки со встроенным ИИ. Понимает проект целиком и правит несколько файлов сразу.',
+      inc:['Запросы без лимитов базовой версии','Работа с проектом целиком','Автодополнение','Агент для правок'] },
+    { hidden:true, id:'copilot', cat:'code', name:'GitHub Copilot', icon:'copilot', tint:'#9EA7B3', usd:10,
+      short:'Подсказки кода прямо в вашем редакторе.', for:'Не меняя инструменты',
+      about:'Дописывает код по мере набора внутри привычного редактора.',
+      inc:['Автодополнение в редакторе','Чат по вашему коду','Объяснение чужого кода','Популярные редакторы'] },
+    { hidden:true, id:'suno', cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10,
+      short:'Песни целиком: музыка, вокал и текст.', for:'Джинглы и треки',
+      about:'Делает законченный трек с вокалом по описанию жанра и настроения.',
+      inc:['Расширенный лимит','Коммерческое использование','Загрузка своего вокала','Хорошее качество'] },
+    { hidden:true, id:'eleven', cat:'sound', name:'ElevenLabs', icon:'eleven', tint:'#7FD1FF', usd:22,
+      short:'Озвучка и копирование голоса на русском.', for:'Озвучка роликов',
+      about:'Синтез речи, которую тяжело отличить от живой. Копирует голос по короткой записи.',
+      inc:['Большой лимит символов','Копирование своего голоса','Естественная русская речь','Высокое качество'] }
+  ]
+};
+
+const ICONS = {
+  claude:     '<path d="M7 6v12M12 3v18M17 8v8"/>',
+  gpt:        '<circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="4.6" r="1.7"/><circle cx="18.4" cy="8.3" r="1.7"/><circle cx="18.4" cy="15.7" r="1.7"/><circle cx="12" cy="19.4" r="1.7"/><circle cx="5.6" cy="15.7" r="1.7"/><circle cx="5.6" cy="8.3" r="1.7"/>',
+  gemini:     '<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+  perplexity: '<circle cx="11" cy="11" r="6"/><path d="M11 8v6M8 11h6M15.5 15.5 20 20"/>',
+  grok:       '<circle cx="12" cy="12" r="9"/><path d="M8 16 16 8M14 8h2v2"/>',
+  midjourney: '<path d="M12 3 3 18h18L12 3Z"/><path d="M12 3v15M7.5 11h9"/>',
+  runway:     '<path d="M4 20 12 4l8 16"/><path d="M8 14h8M10.5 9h3"/>',
+  kling:      '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v12M17 6v12M3 12h4M17 12h4"/>',
+  heygen:     '<rect x="3" y="4" width="18" height="13" rx="2"/><circle cx="12" cy="9.5" r="2.4"/><path d="M8 14.5c1-1.6 6-1.6 7 0M9 21h6"/>',
+  lexy:       '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m3 16 5-4 4 3 3-2 6 5"/>',
+  cursor:     '<path d="M6 3 18 12l-5.5 1.2L15 20l-2.4 1-2.6-6.5L6 18V3Z"/>',
+  copilot:    '<circle cx="8" cy="12" r="4.5"/><circle cx="16" cy="12" r="4.5"/>',
+  suno:       '<path d="M3 12c2-6 4 6 6 0s4 6 6 0 4 6 6 0"/>',
+  eleven:     '<path d="M5 9v6M9.5 5v14M14.5 7v10M19 10v4"/>',
+  card:       '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/>',
+  guide:      '<path d="M4 4.5h6a2.5 2.5 0 0 1 2.5 2.5v13a2 2 0 0 0-2-2H4V4.5Z"/><path d="M20 4.5h-6A2.5 2.5 0 0 0 11.5 7v13a2 2 0 0 1 2-2H20V4.5Z"/>'
+};
+</script>
+
+<header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
+  <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
+    <a href="#/" class="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight shrink-0">AKU<span class="text-brass">.</span>Лавка</a>
+    <nav class="hidden sm:flex items-center gap-7 text-sm text-faded">
+      <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
+      <a href="#/help" class="hover:text-paper transition-colors">Как это работает</a>
+      <a href="#/about" class="hover:text-paper transition-colors">О лавке</a>
+    </nav>
+    <a href="#/cart" class="relative flex items-center gap-2 border border-edge2 hover:border-brass transition-colors rounded-full px-3.5 sm:px-4 py-2 text-sm shrink-0">
+      <span class="hidden sm:inline">Корзина</span><span class="sm:hidden">▤</span>
+      <span id="cartCount" class="min-w-[20px] h-5 px-1.5 rounded-full bg-brass text-ink text-xs font-bold grid place-items-center">0</span>
+    </a>
+  </div>
+  <nav class="sm:hidden flex items-center gap-5 text-[13px] text-faded px-5 pb-2.5 border-t border-edge/60 pt-2.5 overflow-x-auto whitespace-nowrap">
+    <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
+    <a href="#/help" class="hover:text-paper transition-colors">Как работает</a>
+    <a href="#/about" class="hover:text-paper transition-colors">О лавке</a>
+  </nav>
+</header>
+
+<main id="app" class="flex-1"></main>
+
+<footer class="border-t border-edge mt-8">
+  <div class="max-w-6xl mx-auto px-5 py-10 sm:py-12">
+    <div class="grid sm:grid-cols-3 gap-8 sm:gap-9 mb-9 sm:mb-10">
+      <div>
+        <a href="#/" class="font-display font-extrabold text-base tracking-tight">AKU<span class="text-brass">.</span>Лавка</a>
+        <p class="text-faded text-sm mt-3 leading-relaxed">Подписки на нейросети, оформленные на ваш собственный аккаунт.</p>
+      </div>
+      <div class="text-sm space-y-2.5">
+        <a href="#/shop" class="block text-faded hover:text-paper transition-colors">Каталог</a>
+        <a href="#/help" class="block text-faded hover:text-paper transition-colors">Как это работает</a>
+        <a href="#/about" class="block text-faded hover:text-paper transition-colors">О лавке</a>
+        <a href="#/terms" class="block text-faded hover:text-paper transition-colors">Условия и возврат</a>
+      </div>
+      <div class="text-sm space-y-2.5">
+        <a href="" data-lnk="tg" class="block text-faded hover:text-paper transition-colors">Написать в Telegram</a>
+        <a href="" data-lnk="channel" class="block text-faded hover:text-paper transition-colors">Канал про нейросети</a>
+        <a href="" data-lnk="guide" class="block text-faded hover:text-paper transition-colors">Бесплатный гайд по Claude</a>
+        <a href="" data-lnk="site" class="block text-faded hover:text-paper transition-colors">Сделано с помощью AKU Automation</a>
+      </div>
+    </div>
+    <div class="border-t border-edge pt-8 space-y-4 text-xs text-faded leading-relaxed">
+      <p>AKU Лавка — независимый сервис. Не связан с компаниями Anthropic (Claude), OpenAI (ChatGPT), Google, HeyGen и другими упомянутыми брендами. Названия сервисов используются исключительно для описания оказываемых услуг.</p>
+      <p>Оказываемая услуга — помощь в оформлении оплаты подписки на аккаунт заказчика. Продажа аккаунтов, паролей и общего доступа не ведётся.</p>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 hidden">
+  <div class="bg-panel border border-edge2 rounded-xl px-5 py-3.5 shadow-2xl flex items-center gap-3">
+    <span id="toastDot" class="w-2.5 h-2.5 rounded-full bg-brass shrink-0"></span>
+    <span id="toastText" class="text-sm flex-1 min-w-0"></span>
+    <a href="#/cart" class="text-sm font-bold text-brass hover:text-paper transition-colors ml-1">В корзину</a>
   </div>
 </div>
-
-<div class="shell" id="shell">
-  <aside class="rail">
-    <div class="brand"><b>Штаб</b><span>AKU</span></div>
-    <nav id="rail-nav"></nav>
-    <div class="railfoot">
-      <div id="rf-date"></div>
-      <div id="rf-cur" style="margin-top:6px"></div>
-      <button class="btn sm" style="margin-top:10px;width:100%" onclick="exportData()">Скачать копию данных</button>
-      <button class="btn sm" style="margin-top:6px;width:100%" onclick="document.getElementById('imp').click()">Загрузить данные</button>
-      <button class="btn sm" style="margin-top:6px;width:100%" onclick="lockNow()">Выйти</button>
-    </div>
-  </aside>
-
-  <div>
-    <div class="mhead">
-    <div class="topbar">
-      <b>Штаб</b>
-      <button class="btn sm" style="margin-left:auto" id="curbtn2"></button>
-      <button class="btn sm" onclick="lockNow()">Выйти</button>
-    </div>
-    <div class="tabs" id="tabs"></div>
-    </div>
-    <main id="main"></main>
-  </div>
-</div>
-
-<input type="file" id="imp" accept="application/json,.json" style="display:none">
-<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
-<div class="toast" id="toast"></div>
 
 <script>
-/* ============================================================
-   ХРАНИЛИЩЕ
-   Сейчас данные лежат в браузере (localStorage).
-   Следующий шаг — Supabase: меняется только save()/load().
-   ============================================================ */
-const KEY='aku.hq.v1';
-const uid=()=>Math.random().toString(36).slice(2,9);
+(function () {
+  'use strict';
+  const app = document.getElementById('app');
+  const tg  = 'https://t.me/' + CONFIG.telegram;
+  const G   = id => CONFIG.goods.find(g => g.id === id);
+  const shown = () => CONFIG.goods.filter(g => !g.hidden);
+  const onRequest = () => CONFIG.goods.filter(g => g.hidden);
+  const cat = id => (CONFIG.cats.find(c => c.id === id) || {}).name || '';
+  const term = m => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const money = n => n.toLocaleString('ru-RU') + ' ₽';
+  const extLink = g => g.external === 'CARD'  ? CONFIG.cardLink
+                     : g.external === 'CARD2' ? CONFIG.cardLink2
+                     : g.external === 'LEXY'  ? CONFIG.lexyLink
+                     : g.external === 'GUIDE' ? CONFIG.guideLink : g.external;
+  const base = g => Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
+  const priceFor = (g, m) => Math.round(base(g) * term(m).mult / 10) * 10;
+  const crypto = n => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
 
-const iso0=()=>new Date().toISOString().slice(0,10);
-const SEED={
-  updated:null,lastOpen:null,streak:0,lastExport:null,
-  socialsChecked:iso0(),
-  goal:{net:1500,subs:5,subPrice:150},
-  reserve:0,
-  tasks:[],income:[],expenses:[],clients:[],ads:[],socials:[],
-  products:[],projects:[],partners:[],team:[],risks:[],ideas:[],wishes:[],roadmap:[]
-};
-
-let S=load(),CUR='USD',RATES={USD:1,RUB:95,BYN:3.2};
-
-function load(){try{const r=localStorage.getItem(KEY);if(!r)return structuredClone(SEED);return Object.assign(structuredClone(SEED),JSON.parse(r));}catch(e){return structuredClone(SEED);}}
-function save(){S.updated=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(S));}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1900);}
-
-/* ---------- ВАЛЮТА ---------- */
-const SYM={USD:'$',RUB:'₽',BYN:'Br'};
-async function rates(){
-  try{
-    const c=JSON.parse(localStorage.getItem('aku.rates')||'null');
-    if(c&&Date.now()-c.t<43200000){RATES=c.r;return;}
-    const r=await fetch('https://open.er-api.com/v6/latest/USD');const j=await r.json();
-    if(j&&j.rates){RATES={USD:1,RUB:j.rates.RUB||95,BYN:j.rates.BYN||3.2};localStorage.setItem('aku.rates',JSON.stringify({t:Date.now(),r:RATES}));}
-  }catch(e){}
-  paintCur();
-}
-function money(usd,dec){
-  const v=(usd||0)*RATES[CUR];
-  const s=v.toLocaleString('ru-RU',{maximumFractionDigits:dec===undefined?0:dec});
-  return CUR==='USD'?'$'+s:s+' '+SYM[CUR];
-}
-function cycleCur(){CUR=CUR==='USD'?'RUB':CUR==='RUB'?'BYN':'USD';localStorage.setItem('aku.cur',CUR);paintCur();render();}
-function paintCur(){
-  const lbl='Валюта: '+CUR+' · 1 $ = '+RATES.RUB.toFixed(1)+' ₽ / '+RATES.BYN.toFixed(2)+' Br';
-  const a=document.getElementById('rf-cur');if(a)a.innerHTML='<button class="btn sm" style="width:100%" onclick="cycleCur()">'+lbl+'</button>';
-  const b=document.getElementById('curbtn2');if(b){b.textContent=CUR;b.onclick=cycleCur;}
-}
-
-/* ---------- ДАТЫ И РАСЧЁТЫ ---------- */
-const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-const MONS=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-const today=()=>new Date();
-const iso=d=>d.toISOString().slice(0,10);
-const ru=s=>{const d=new Date(s);return d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();};
-const daysTo=s=>Math.ceil((new Date(s)-today())/86400000);
-const ym=s=>s.slice(0,7);
-const curYM=()=>iso(today()).slice(0,7);
-
-function monthIncome(k){return S.income.filter(i=>ym(i.date)===(k||curYM())).reduce((a,b)=>a+ +b.amt,0);}
-function monthExpense(){return S.expenses.reduce((a,b)=>a+(b.per==='year'? +b.amt/12 : +b.amt),0);}
-function monthAds(k){return S.ads.filter(a=>ym(a.date)===(k||curYM())).reduce((a,b)=>a+ +b.spend,0);}
-function mrr(){return S.clients.reduce((a,b)=>a+ +(b.mrr||0),0);}
-function mrrTarget(){return S.goal.subs*S.goal.subPrice;}
-function activeClients(){return S.clients.filter(c=>c.stage==='deal'||c.stage==='sub').length;}
-function profit(){return monthIncome()-monthExpense()-monthAds();}
-function runway(){const e=monthExpense();return e>0?(S.reserve/e):0;}
-function totalAds(){return S.ads.reduce((a,b)=>a+ +b.spend,0);}
-function adClients(){return S.ads.reduce((a,b)=>a+ +b.cl,0);}
-function cac(){const c=adClients();return c>0?totalAds()/c:0;}
-
-function countUp(el,to,fmt){
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches){el.textContent=fmt(to);return;}
-  const t0=performance.now(),dur=900;
-  (function step(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=fmt(to*e);if(p<1)requestAnimationFrame(step);})(t0);
-}
-function animateAll(){
-  document.querySelectorAll('[data-count]').forEach(el=>{
-    const to=+el.dataset.count,mode=el.dataset.mode||'money';
-    countUp(el,to,v=>mode==='money'?money(v):Math.round(v).toLocaleString('ru-RU'));
-  });
-  requestAnimationFrame(()=>document.querySelectorAll('.bar i').forEach(b=>b.style.width=b.dataset.w+'%'));
-}
-
-/* ---------- НАВИГАЦИЯ ---------- */
-const I={
-  today:'<path d="M3 12h4l3 8 4-16 3 8h4"/>',
-  map:'<path d="M9 4 3 7v13l6-3 6 3 6-3V4l-6 3z"/><path d="M9 4v13M15 7v13"/>',
-  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/>',
-  money:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
-  ads:'<path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M17 9a4 4 0 0 1 0 6"/>',
-  social:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/>',
-  box:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
-  branch:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><path d="M6 9v6M9 18h3a3 3 0 0 0 3-3v-1"/>',
-  team:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  risk:'<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>',
-  bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.5 1 2.5h6c0-1 .4-1.9 1-2.5A6 6 0 0 0 12 3z"/>',
-  flag:'<path d="M5 21V4M5 4h13l-3 4 3 4H5"/>',
-  hand:'<path d="M9 15 15 9"/><path d="M11 6.5 13 4.5a3.5 3.5 0 1 1 5 5l-2 2"/><path d="M13 17.5l-2 2a3.5 3.5 0 1 1-5-5l2-2"/>'
-};
-const NAV=[
-  ['today','Сегодня',I.today],['projects','Проекты',I.branch],['map','Карта',I.map],
-  ['clients','Клиенты',I.users],['money','Деньги',I.money],['ads','Реклама',I.ads],
-  ['social','Соцсети',I.social],['products','Продукты',I.box],['partners','Партнёры',I.hand],
-  ['team','Команда',I.team],['risks','Риски',I.risk],['ideas','Идеи',I.bulb],['goals','Цели',I.flag]
-];
-let VIEW=localStorage.getItem('aku.view')||'today';
-
-function buildNav(){
-  document.getElementById('rail-nav').innerHTML=NAV.map(([k,l,ic])=>{
-    const bad=k==='risks'?'<span class="badge">'+S.risks.filter(r=>r.lvl==='Высокий').length+'</span>':'';
-    return '<button class="navlink'+(VIEW===k?' on':'')+'" onclick="go(\''+k+'\')"><svg viewBox="0 0 24 24">'+ic+'</svg>'+l+bad+'</button>';
-  }).join('');
-  const tb=document.getElementById('tabs');
-  tb.innerHTML=NAV.map(([k,l])=>'<button class="tab'+(VIEW===k?' on':'')+'" onclick="go(\''+k+'\')">'+l+'</button>').join('');
-  const act=tb.querySelector('.tab.on');
-  if(act)requestAnimationFrame(()=>act.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}));
-}
-function go(k){VIEW=k;localStorage.setItem('aku.view',k);render();window.scrollTo({top:0,behavior:'smooth'});}
-
-/* ---------- РЕНДЕР ---------- */
-function render(){
-  buildNav();
-  document.getElementById('main').innerHTML='<div class="view on">'+({
-    today:vToday,projects:vProjects,map:vMap,clients:vClients,money:vMoney,ads:vAds,social:vSocial,
-    products:vProducts,partners:vPartners,team:vTeam,risks:vRisks,ideas:vIdeas,goals:vGoals
-  })[VIEW]()+'</div>';
-  const d=today();
-  document.getElementById('rf-date').textContent=d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();
-  animateAll();
-}
-
-/* ---- СЕГОДНЯ ---- */
-function vToday(){
-  const inc=monthIncome(),g=S.goal.net,pct=Math.min(100,inc/g*100);
-  const bd=daysTo('2026-10-01'),hz=daysTo('2030-01-01');
-  const d=today(),h=d.getHours();
-  const hi=h<5?'Ночь':h<12?'Доброе утро':h<18?'День':'Вечер';
-  const words=(hi+', Алексей.').split(' ').map((w,i)=>'<span class="w" style="animation-delay:'+(i*.09)+'s">'+w+'</span>').join(' ');
-  const line2=('Сегодня '+d.getDate()+' '+MON[d.getMonth()]+'.').split(' ').map((w,i)=>'<span class="w" style="animation-delay:'+(.25+i*.09)+'s">'+w+'</span>').join(' ');
-
-  let say;
-  if(inc===0) say='Месяц пока без оплат. Всё, что имеет значение сегодня, — довести одного человека до «да».';
-  else if(inc<g) say='В месяце '+money(inc)+' из '+money(g)+'. До цели '+money(g-inc)+' — это '+Math.ceil((g-inc)/S.goal.subPrice)+' подписки или одно внедрение.';
-  else say='Цель месяца закрыта: '+money(inc)+'. Теперь вопрос не «сколько», а «повторяется ли».';
-
-  const need=Math.max(0,g-inc);
-  const dleft=new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate()+1;
-  const lastCheck=daysTo(S.socialsChecked);
-  const needSocial=S.socials.length>0&&lastCheck<-28;
-  const needBackup=(S.income.length+S.clients.length)>0&&(!S.lastExport||daysTo(S.lastExport)<-14);
-
-  const touch=S.clients.filter(c=>c.next&&c.stage!=='sub').slice(0,4);
-  const highRisk=S.risks.filter(r=>r.lvl==='Высокий');
-
-  return `
-  <div class="hero">
-    <div class="line">${words}<br><em>${line2}</em></div>
-    <div class="say">${say}</div>
-  </div>
-
-  ${needSocial?`<div class="note" style="margin-top:22px">Прошло больше месяца с последнего обновления соцсетей. Кинь мне скрины статистики — пересчитаю и обновлю цифры.</div>`:''}
-  ${needBackup?`<div class="note clay" style="margin-top:12px">Копия данных давно не скачивалась. Данные живут только в этом браузере — нажми «Скачать копию данных» в меню.</div>`:''}
-
-  <div class="sechead"><div class="h2">Пульс месяца</div><div class="sub">${dleft} ${plural(dleft,'день','дня','дней')} до конца месяца${S.streak>1?' · заходишь '+S.streak+' '+plural(S.streak,'день','дня','дней')+' подряд':''}</div></div>
-  <div class="grid g4">
-    <div class="card stat"><div class="lbl">Доход месяца</div><div class="val" data-count="${inc}">—</div><div class="hint">цель ${money(g)}</div></div>
-    <div class="card stat"><div class="lbl">Подписки (MRR)</div><div class="val" data-count="${mrr()}">—</div><div class="hint">цель ${money(mrrTarget())}</div></div>
-    <div class="card stat"><div class="lbl">Прибыль месяца</div><div class="val" data-count="${profit()}" style="color:${profit()>=0?'var(--sage)':'var(--clay)'}">—</div><div class="hint">расходы ${money(monthExpense())}</div></div>
-    <div class="card stat"><div class="lbl">Резерв</div><div class="val" data-count="${S.reserve}">—</div><div class="hint">хватит на ${runway().toFixed(1)} мес</div></div>
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    <div class="between" style="margin-bottom:10px"><div style="font-weight:700;font-size:14px">Путь к ${money(g)}</div><div class="sub">${Math.round(pct)}%</div></div>
-    <div class="bar"><i data-w="${pct}"></i></div>
-    <div class="sub" style="margin-top:10px">Не хватает ${money(need)}. Это ${Math.ceil(need/S.goal.subPrice)} подписки по ${money(S.goal.subPrice)} или одно внедрение.</div>
-  </div>
-
-  ${taskBlock()}
-
-  ${focusBlock()}
-
-  <div class="grid g2" style="margin-top:12px">
-    <div class="card">
-      <div class="between" style="margin-bottom:12px"><div class="h2">Кому написать</div><button class="btn sm" onclick="go('clients')">Клиенты</button></div>
-      <div class="list">
-        ${touch.length?touch.map(c=>`<div class="item"><div class="body"><div class="t">${esc(c.name)}</div><div class="d">${esc(c.next)}</div></div><span class="pill ${stagePill(c.stage)}">${STAGES[c.stage]}</span></div>`).join(''):'<div class="empty">Все шаги закрыты.</div>'}
-      </div>
-    </div>
-    <div class="card">
-      <div class="between" style="margin-bottom:12px"><div class="h2">Красные флаги</div><button class="btn sm" onclick="go('risks')">Все риски</button></div>
-      <div class="list">
-        ${highRisk.length?highRisk.slice(0,3).map(r=>`<div class="item"><div class="body"><div class="t">${esc(r.t)}</div><div class="d">${esc(r.act)}</div></div></div>`).join(''):'<div class="empty">Высоких рисков нет.</div>'}
-      </div>
-    </div>
-  </div>
-
-  <div class="grid g2" style="margin-top:12px">
-    <div class="card stat"><div class="lbl">До дня рождения</div><div class="val">${bd} ${plural(bd,'день','дня','дней')}</div><div class="hint">1 октября 2026 — 21 год</div></div>
-    <div class="card stat"><div class="lbl">До 1 января 2030</div><div class="val">${hz.toLocaleString('ru-RU')} ${plural(hz,'день','дня','дней')}</div><div class="hint">своя IT-компания или стартап</div></div>
-  </div>`;
-}
-function taskDone(t){return t.rep? t.doneOn===iso(today()) : !!t.done;}
-function toggleTask(id){
-  const t=S.tasks.find(x=>x.id===id),d=iso(today());
-  if(t.rep)t.doneOn=t.doneOn===d?'':d; else t.done=!t.done;
-  save();render();
-}
-function pullTails(){const d=iso(today());S.tasks.forEach(t=>{if(!t.rep&&t.d&&t.d<d&&!t.done)t.d=d;});save();render();toast('Перенёс на сегодня');}
-function taskBlock(){
-  const d=iso(today());
-  const now=S.tasks.filter(t=>t.rep||!t.d||t.d===d);
-  const tails=S.tasks.filter(t=>!t.rep&&t.d&&t.d<d&&!t.done);
-  const left=now.filter(t=>!taskDone(t)).length;
-  const row=t=>`<div class="item">
-      <input type="checkbox" ${taskDone(t)?'checked':''} onchange="toggleTask('${t.id}')">
-      <div class="body"><div class="t ${taskDone(t)?'done':''}">${esc(t.t)}</div>${t.rep?'<div class="d">каждый день</div>':''}</div>
-      <div class="acts"><button class="btn sm" onclick="edit('tasks','${t.id}')">Правка</button><button class="btn sm danger" onclick="del('tasks','${t.id}')">Удалить</button></div>
-    </div>`;
-  return `<div class="sechead"><div class="h2">Сегодня делаю</div>
-    <div class="row"><span class="sub">${now.length?(left?'осталось '+left:'всё закрыто'):''}</span><button class="btn sm" onclick="edit('tasks')">Добавить</button></div></div>
-  <div class="list">${now.length?now.map(row).join(''):'<div class="empty">Пусто. Напиши одно дело, которое двигает деньги.</div>'}</div>
-  ${tails.length?`<div class="sechead"><div class="h2">Хвосты с прошлых дней</div><button class="btn sm" onclick="pullTails()">Перенести на сегодня</button></div>
-  <div class="list">${tails.map(t=>`<div class="item"><div class="body"><div class="t">${esc(t.t)}</div><div class="d">с ${ru(t.d)}</div></div><div class="acts"><button class="btn sm danger" onclick="del('tasks','${t.id}')">Удалить</button></div></div>`).join('')}</div>`:''}`;
-}
-
-/* ---- КАРТА ---- */
-function vMap(){
-  const byYear={};
-  S.roadmap.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(m=>{(byYear[m.date.slice(0,4)]=byYear[m.date.slice(0,4)]||[]).push(m);});
-  const done=S.roadmap.filter(m=>m.st==='done').length;
-  return `
-  <div class="sechead"><div><div class="h1">Дорожная карта</div><div class="sub" style="margin-top:6px">От 16 сентября 2026 до 1 января 2030 — ${done} из ${S.roadmap.length} вех пройдено</div></div>
-  <button class="btn gold" onclick="edit('roadmap')">Добавить веху</button></div>
-  ${!S.roadmap.length?'<div class="empty">Карта пустая. Добавь первую веху — или загрузи данные из файла через меню.</div>':''}
-  ${Object.keys(byYear).sort().map(y=>`
-    <div class="year">${y}</div>
-    <div class="tl">${byYear[y].map(m=>`
-      <div class="mile ${m.st}">
-        <div class="when">${ru(m.date)}</div>
-        <div class="ttl">${esc(m.t)}</div>
-        <div class="txt">${esc(m.note||'')}</div>
-        <div class="row" style="margin-top:8px;gap:6px">
-          <span class="pill ${m.st==='done'?'sage':m.st==='now'?'gold':'mute'}">${m.st==='done'?'Сделано':m.st==='now'?'Сейчас':'Впереди'}</span>
-          <button class="btn sm" onclick="edit('roadmap','${m.id}')">Правка</button>
-          <button class="btn sm danger" onclick="del('roadmap','${m.id}')">Удалить</button>
-        </div>
-      </div>`).join('')}</div>`).join('')}`;
-}
-
-/* ---- КЛИЕНТЫ ---- */
-const STAGES={lead:'Лид',contact:'Написал',call:'Созвон',kp:'КП',deal:'Сделка',sub:'Подписка'};
-const stagePill=s=>s==='sub'?'sage':s==='deal'?'sage':s==='kp'?'gold':'mute';
-function vClients(){
-  const total=S.clients.reduce((a,b)=>a+ +(b.value||0),0);
-  return `
-  <div class="sechead"><div><div class="h1">Клиенты</div><div class="sub" style="margin-top:6px">${S.clients.length} в работе · ${activeClients()} платят · ${money(total)} суммой сделок</div></div>
-  <button class="btn gold" onclick="edit('clients')">Добавить клиента</button></div>
-  <div class="pipe">
-    ${Object.keys(STAGES).map(k=>{
-      const col=S.clients.filter(c=>c.stage===k);
-      return `<div class="col"><h4>${STAGES[k]}<span>${col.length}</span></h4>
-        ${col.map(c=>`<div class="chip" onclick="edit('clients','${c.id}')">
-          <div class="n">${esc(c.name)}</div>
-          <div class="m">${esc(c.company||c.country||'')}</div>
-          ${c.value?`<div class="m" style="color:var(--brass)">${money(c.value)}${c.mrr?' + '+money(c.mrr)+'/мес':''}</div>`:''}
-        </div>`).join('')}
-      </div>`;
-    }).join('')}
-  </div>
-  <div class="sechead"><div class="h2">Карточки</div></div>
-  ${!S.clients.length?'<div class="empty">Клиентов пока нет. Добавь первого — хотя бы лида, с которым уже переписываешься.</div>':''}
-  <div class="list">
-    ${S.clients.map(c=>`<div class="item">
-      <div class="body">
-        <div class="t">${esc(c.name)} <span class="pill ${stagePill(c.stage)}" style="margin-left:6px">${STAGES[c.stage]}</span></div>
-        <div class="d">${esc([c.company,c.country].filter(Boolean).join(' · '))}</div>
-        ${c.next?`<div class="d" style="color:var(--brass)">Следующий шаг: ${esc(c.next)}</div>`:''}
-        ${c.note?`<div class="d">${esc(c.note)}</div>`:''}
-      </div>
-      <div class="acts"><button class="btn sm" onclick="edit('clients','${c.id}')">Правка</button><button class="btn sm danger" onclick="del('clients','${c.id}')">Удалить</button></div>
-    </div>`).join('')}
-  </div>`;
-}
-
-/* ---- ДЕНЬГИ ---- */
-function vMoney(){
-  const months=[];const d=today();
-  for(let i=5;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);months.push({k:iso(m).slice(0,7),l:MONS[m.getMonth()]});}
-  const vals=months.map(m=>monthIncome(m.k));
-  const max=Math.max(...vals,S.goal.net);
-  const all=S.income.reduce((a,b)=>a+ +b.amt,0);
-  return `
-  <div class="sechead"><div><div class="h1">Деньги</div><div class="sub" style="margin-top:6px">Всего заработано ${money(all)} · резерв ${money(S.reserve)}</div></div>
-  <div class="row"><button class="btn" onclick="editReserve()">Резерв</button><button class="btn gold" onclick="edit('income')">Добавить доход</button></div></div>
-
-  <div class="card">
-    <div class="between" style="margin-bottom:16px"><div style="font-weight:700">Доход по месяцам</div><div class="sub">линия — цель ${money(S.goal.net)}</div></div>
-    <div style="display:flex;align-items:flex-end;gap:10px;height:150px;position:relative">
-      <div style="position:absolute;left:0;right:0;bottom:${22+(S.goal.net/max)*112}px;border-top:1px dashed rgba(200,162,74,.5)"></div>
-      ${months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
-        <div class="sub" style="font-size:11px">${vals[i]?money(vals[i]):''}</div>
-        <div style="width:100%;max-width:54px;height:${Math.max(3,(vals[i]/max)*112)}px;border-radius:7px 7px 3px 3px;background:${vals[i]>=S.goal.net?'linear-gradient(180deg,var(--sage),rgba(127,168,139,.35))':'linear-gradient(180deg,var(--brass),rgba(200,162,74,.25))'};transition:height .8s cubic-bezier(.22,1,.36,1)"></div>
-        <div class="sub" style="font-size:11px">${m.l}</div>
-      </div>`).join('')}
-    </div>
-  </div>
-
-  <div class="grid g4" style="margin-top:12px">
-    <div class="card stat"><div class="lbl">Этот месяц</div><div class="val" data-count="${monthIncome()}">—</div></div>
-    <div class="card stat"><div class="lbl">Подписки в месяц</div><div class="val" data-count="${mrr()}">—</div><div class="hint">цель ${money(mrrTarget())}</div></div>
-    <div class="card stat"><div class="lbl">Расходы в месяц</div><div class="val" data-count="${monthExpense()}">—</div></div>
-    <div class="card stat"><div class="lbl">Прибыль</div><div class="val" data-count="${profit()}" style="color:${profit()>=0?'var(--sage)':'var(--clay)'}">—</div></div>
-  </div>
-
-  <div class="sechead"><div class="h2">Поступления</div></div>
-  ${!S.income.length?'<div class="empty" style="margin-bottom:10px">Ни одной оплаты не записано.</div>':''}
-  <div class="card tight tscroll"><table>
-    <thead><tr><th>Дата</th><th>Откуда</th><th>Тип</th><th style="text-align:right">Сумма</th><th></th></tr></thead>
-    <tbody>${S.income.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(i=>`<tr>
-      <td class="sub">${ru(i.date)}</td><td>${esc(i.src)}</td>
-      <td><span class="pill mute">${i.kind==='sub'?'Подписка':i.kind==='project'?'Проект':'Другое'}</span></td>
-      <td style="text-align:right" class="num">${money(i.amt)}</td>
-      <td style="text-align:right"><button class="btn sm" onclick="edit('income','${i.id}')">Правка</button></td></tr>`).join('')}
-    </tbody></table></div>
-
-  <div class="sechead"><div class="h2">Постоянные расходы</div><button class="btn sm" onclick="edit('expenses')">Добавить</button></div>
-  ${!S.expenses.length?'<div class="empty" style="margin-bottom:10px">Постоянные расходы не записаны.</div>':''}
-  <div class="list">
-    ${S.expenses.map(e=>`<div class="item"><div class="body"><div class="t">${esc(e.name)}</div><div class="d">${e.per==='year'?money(e.amt)+' в год · '+money(e.amt/12)+' в месяц':money(e.amt)+' в месяц'}</div></div>
-    <div class="acts"><button class="btn sm" onclick="edit('expenses','${e.id}')">Правка</button><button class="btn sm danger" onclick="del('expenses','${e.id}')">Удалить</button></div></div>`).join('')}
-  </div>
-  <div class="note" style="margin-top:12px">Резерв ${money(S.reserve)} при расходах ${money(monthExpense())} в месяц живёт ${runway().toFixed(1)} месяца. Хотелки покупаются с прибыли, не из резерва.</div>`;
-}
-function editReserve(){
-  openModal('Резерв',[{k:'reserve',l:'Сколько отложено ($)',t:'number',v:S.reserve}],v=>{S.reserve=+v.reserve;save();render();toast('Резерв обновлён');});
-}
-
-/* ---- РЕКЛАМА ---- */
-function vAds(){
-  const sp=totalAds(),cl=S.ads.reduce((a,b)=>a+ +b.clicks,0),ld=S.ads.reduce((a,b)=>a+ +b.leads,0);
-  return `
-  <div class="sechead"><div><div class="h1">Реклама</div><div class="sub" style="margin-top:6px">Бюджет 100 $ в месяц. Увеличиваем только когда видно цену клиента.</div></div>
-  <button class="btn gold" onclick="edit('ads')">Добавить запуск</button></div>
-  <div class="grid g4">
-    <div class="card stat"><div class="lbl">Потрачено всего</div><div class="val" data-count="${sp}">—</div></div>
-    <div class="card stat"><div class="lbl">Переходов</div><div class="val" data-count="${cl}" data-mode="n">—</div></div>
-    <div class="card stat"><div class="lbl">Заявок</div><div class="val" data-count="${ld}" data-mode="n">—</div></div>
-    <div class="card stat"><div class="lbl">Цена клиента</div><div class="val">${adClients()?money(cac()):'—'}</div><div class="hint">${adClients()?adClients()+' клиентов':'клиентов пока нет'}</div></div>
-  </div>
-  <div class="sechead"><div class="h2">Запуски</div></div>
-  ${!S.ads.length?'<div class="empty" style="margin-bottom:10px">Запусков ещё не было.</div>':''}
-  <div class="card tight tscroll"><table>
-    <thead><tr><th>Дата</th><th>Канал</th><th style="text-align:right">Потрачено</th><th style="text-align:right">Показы</th><th style="text-align:right">Переходы</th><th style="text-align:right">Заявки</th><th style="text-align:right">Клиенты</th><th></th></tr></thead>
-    <tbody>${S.ads.map(a=>`<tr>
-      <td class="sub">${ru(a.date)}</td><td>${esc(a.ch)}<div class="sub">${esc(a.note||'')}</div></td>
-      <td style="text-align:right" class="num">${money(a.spend)}</td>
-      <td style="text-align:right" class="sub">${(+a.imp).toLocaleString('ru-RU')}</td>
-      <td style="text-align:right">${a.clicks}</td>
-      <td style="text-align:right">${a.leads}</td>
-      <td style="text-align:right;color:var(--sage)">${a.cl}</td>
-      <td style="text-align:right"><button class="btn sm" onclick="edit('ads','${a.id}')">Правка</button></td></tr>`).join('')}
-    </tbody></table></div>
-  <div class="note ${adClients()?'':'clay'}" style="margin-top:12px">${adClients()?'Цена клиента '+money(cac())+'. Пока она ниже среднего чека — можно лить больше.':'Пока ни один клиент не пришёл с рекламы. Прежде чем увеличивать бюджет, нужен хотя бы один — иначе увеличиваем убыток, а не охват.'}</div>`;
-}
-
-/* ---- СОЦСЕТИ ---- */
-function vSocial(){
-  const total=S.socials.reduce((a,b)=>a+ +b.subs,0);
-  const last=daysTo(S.socialsChecked);
-  return `
-  <div class="sechead"><div><div class="h1">Соцсети</div><div class="sub" style="margin-top:6px">${total.toLocaleString('ru-RU')} подписчиков на шести площадках · обновлено ${ru(S.socialsChecked)}</div></div>
-  <div class="row"><button class="btn" onclick="markSocials()">Отметить обновление</button><button class="btn gold" onclick="edit('socials')">Добавить площадку</button></div></div>
-  ${last<-28?'<div class="note clay" style="margin-bottom:14px">Пора обновить: прошло больше месяца. Кинь скрины статистики — посчитаю сам.</div>':''}
-  ${!S.socials.length?'<div class="empty">Площадки не добавлены.</div>':''}
-  <div class="grid g2">
-    ${S.socials.map(s=>{
-      const h=s.hist.slice(-8),grow=h.length>1?h[h.length-1].v-h[0].v:0;
-      return `<div class="card">
-        <div class="between"><div><div style="font-weight:700;font-size:14.5px">${esc(s.name)}</div><div class="sub">${esc(s.handle)}</div></div>
-        <div style="text-align:right"><div class="num" style="font-size:25px">${(+s.subs).toLocaleString('ru-RU')}</div>${grow?`<div class="sub" style="color:${grow>0?'var(--sage)':'var(--clay)'}">${grow>0?'+':''}${grow}</div>`:''}</div></div>
-        ${spark(h)}
-        ${Object.keys(s.m||{}).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${Object.entries(s.m).map(([k,v])=>`<span class="pill mute">${k}: ${v}</span>`).join('')}</div>`:''}
-        <div class="row wrap" style="margin-top:12px;gap:6px"><button class="btn sm" onclick="bumpSocial('${s.id}')">Новая цифра</button><button class="btn sm" onclick="editMetrics('${s.id}')">Показатели</button><button class="btn sm danger" onclick="del('socials','${s.id}')">Удалить</button></div>
-      </div>`;
-    }).join('')}
-  </div>
-  <div class="note" style="margin-top:14px">Telegram и YouTube потом подключим на автообновление. TikTok, Instagram и Threads закрыты — раз в месяц кидаешь скрины, я считаю и обновляю.</div>`;
-}
-function spark(h){
-  if(h.length<2)return '<div class="sub" style="margin-top:10px;font-size:11.5px">График появится со второй отметкой</div>';
-  const vs=h.map(x=>x.v),mn=Math.min(...vs),mx=Math.max(...vs),rg=mx-mn||1;
-  const pts=vs.map((v,i)=>[(i/(vs.length-1))*100,34-((v-mn)/rg)*28]);
-  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-  return `<svg class="spark" viewBox="0 0 100 38" preserveAspectRatio="none" style="margin-top:12px"><path d="${d}" fill="none" stroke="var(--brass)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg>`;
-}
-function bumpSocial(id){
-  const s=S.socials.find(x=>x.id===id);
-  openModal(s.name,[{k:'v',l:'Подписчиков сейчас',t:'number',v:s.subs}],v=>{
-    s.subs=+v.v;s.hist.push({d:iso(today()),v:+v.v});if(s.hist.length>24)s.hist.shift();
-    S.socialsChecked=iso(today());save();render();toast('Записал');
-  });
-}
-function editMetrics(id){
-  const s=S.socials.find(x=>x.id===id);
-  const txt=Object.entries(s.m||{}).map(([k,v])=>k+': '+v).join('\n');
-  openModal(s.name+' — показатели',[{k:'m',l:'По строке на показатель, через двоеточие',t:'textarea',v:txt}],v=>{
-    const o={};v.m.split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)o[l.slice(0,i).trim()]=l.slice(i+1).trim();});
-    s.m=o;save();render();toast('Обновил');
-  });
-}
-function markSocials(){S.socialsChecked=iso(today());save();render();toast('Отмечено сегодняшним днём');}
-
-/* ---- ПРОДУКТЫ ---- */
-function vProducts(){
-  return `
-  <div class="sechead"><div><div class="h1">Продукты и цены</div><div class="sub" style="margin-top:6px">Чтобы не вспоминать цену в переписке и не называть разную</div></div>
-  <button class="btn gold" onclick="edit('products')">Добавить</button></div>
-  ${!S.products.length?'<div class="empty">Прайс пустой. Запиши свои продукты, чтобы не называть разные цены.</div>':''}
-  <div class="grid g2">${S.products.map(p=>`<div class="card">
-    <div style="font-weight:700;font-size:15px">${esc(p.name)}</div>
-    <div class="sub" style="margin-top:4px">${esc(p.note||'')}</div>
-    <div class="row wrap" style="margin-top:12px;gap:8px">
-      <span class="pill gold">Внедрение: ${esc(p.setup)}</span>
-      ${p.mo&&p.mo!=='—'?`<span class="pill sage">Подписка: ${esc(p.mo)}</span>`:''}
-    </div>
-    <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm" onclick="edit('products','${p.id}')">Правка</button><button class="btn sm danger" onclick="del('products','${p.id}')">Удалить</button></div>
-  </div>`).join('')}</div>
-  <div class="note" style="margin-top:14px">Подписка идёт в каждое КП по умолчанию. Клиент может отказаться — но предложение должно прозвучать всегда, иначе повторяющегося дохода не будет.</div>`;
-}
-
-/* ---- ПРОЕКТЫ ---- */
-const PSTAT={active:'В работе',queue:'Очередь',sell:'Продать',frozen:'Заморожен',done:'Сделано'};
-function vProjects(){
-  const act=S.projects.filter(p=>p.st==='active');
-  return `
-  <div class="sechead"><div><div class="h1">Проекты</div><div class="sub" style="margin-top:6px">У каждого написано, зачем он. Если «зачем» не пишется — проект не нужен.</div></div>
-  <button class="btn gold" onclick="edit('projects')">Добавить проект</button></div>
-  ${act.length>2?`<div class="note clay" style="margin-bottom:14px">В работе ${act.length} проекта разом. Договорились держать один, максимум два — остальное в очередь, иначе ни один не дойдёт до конца.</div>`:''}
-  ${!S.projects.length?'<div class="empty">Проектов нет. Загрузи данные через меню или добавь первый.</div>':''}
-  ${['active','queue','sell','frozen','done'].map(st=>{
-    const g=S.projects.filter(p=>p.st===st);
-    if(!g.length)return '';
-    return `<div class="sechead"><div class="h2">${PSTAT[st]}</div><div class="sub">${g.length}</div></div>
-    <div class="grid g2">${g.map(pcard).join('')}</div>`;
-  }).join('')}`;
-}
-function pcard(p){
-  const steps=p.steps||[],dn=steps.filter(s=>s.done).length;
-  return `<div class="card">
-    <div class="between"><div style="font-weight:700;font-size:15.5px">${esc(p.name)}</div>
-    <span class="pill ${p.st==='active'?'gold':p.st==='sell'?'clay':'mute'}">${PSTAT[p.st]||''}</span></div>
-    <div style="margin-top:10px;font-size:13px"><span style="color:var(--paper-mute)">Зачем: </span>${esc(p.why||'')}</div>
-    ${p.gives?`<div style="font-size:13px;margin-top:4px"><span style="color:var(--paper-mute)">Что даёт: </span>${esc(p.gives)}</div>`:''}
-    ${p.next?`<div style="font-size:13px;margin-top:8px;color:var(--brass)">Следующий шаг: ${esc(p.next)}</div>`:''}
-    ${steps.length?`<div class="bar" style="margin-top:12px"><i data-w="${dn/steps.length*100}"></i></div>
-      <div class="sub" style="margin-top:6px">${dn} из ${steps.length} шагов</div>
-      <div class="list" style="margin-top:10px">${steps.map((s,i)=>`<div class="item" style="padding:9px 11px">
-        <input type="checkbox" ${s.done?'checked':''} onchange="stepToggle('${p.id}',${i})">
-        <div class="body"><div class="t ${s.done?'done':''}" style="font-size:13px;font-weight:500">${esc(s.t)}</div></div>
-        <div class="acts"><button class="btn sm danger" onclick="stepDel('${p.id}',${i})">Убрать</button></div></div>`).join('')}</div>`:''}
-    <div class="row wrap" style="margin-top:12px;gap:6px">
-      <button class="btn sm" onclick="stepAdd('${p.id}')">Добавить шаг</button>
-      <button class="btn sm" onclick="edit('projects','${p.id}')">Правка</button>
-      <button class="btn sm danger" onclick="del('projects','${p.id}')">Удалить</button>
-    </div></div>`;
-}
-function stepToggle(id,i){const p=S.projects.find(x=>x.id===id);p.steps[i].done=!p.steps[i].done;save();render();}
-function stepDel(id,i){const p=S.projects.find(x=>x.id===id);p.steps.splice(i,1);save();render();}
-function stepAdd(id){
-  const p=S.projects.find(x=>x.id===id);
-  openModal('Шаг проекта',[{k:'t',l:'Что сделать',t:'text'}],v=>{
-    if(!v.t)return;p.steps=p.steps||[];p.steps.push({t:v.t,done:false});save();render();
-  });
-}
-function focusBlock(){
-  const act=(S.projects||[]).filter(p=>p.st==='active');
-  if(!act.length)return '';
-  return `<div class="sechead"><div class="h2">В фокусе</div><button class="btn sm" onclick="go('projects')">Все проекты</button></div>
-  <div class="grid g2">${act.map(p=>{
-    const st=(p.steps||[]).filter(s=>!s.done).slice(0,3);
-    return `<div class="card">
-      <div style="font-weight:700">${esc(p.name)}</div>
-      <div class="sub" style="margin-top:4px">${esc(p.why||'')}</div>
-      ${st.length?`<div class="list" style="margin-top:10px">${st.map(s=>`<div class="item" style="padding:9px 11px"><div class="body"><div class="t" style="font-size:13px;font-weight:500">${esc(s.t)}</div></div></div>`).join('')}</div>`
-      :'<div class="sub" style="margin-top:8px">Шаги закончились. Либо проект готов, либо пора дописать следующие.</div>'}
-    </div>`;}).join('')}</div>`;
-}
-
-/* ---- ПАРТНЁРЫ ---- */
-function vPartners(){
-  const earned=S.partners.reduce((a,b)=>a+ +(b.earned||0),0);
-  return `
-  <div class="sechead"><div><div class="h1">Партнёры</div><div class="sub" style="margin-top:6px">С кем зарабатываю вместе · получено всего ${money(earned)}</div></div>
-  <button class="btn gold" onclick="edit('partners')">Добавить партнёра</button></div>
-  ${!S.partners.length?'<div class="empty">Партнёров не записано.</div>':''}
-  <div class="grid g2">${S.partners.map(p=>`<div class="card">
-    <div class="between"><div style="font-weight:700;font-size:15px">${esc(p.name)}</div><span class="pill ${p.st==='Работает'?'sage':'mute'}">${esc(p.st||'')}</span></div>
-    <div class="sub" style="margin-top:6px">${esc(p.what||'')}</div>
-    <div style="font-size:13px;margin-top:8px;color:var(--brass)">Моя выгода: ${esc(p.terms||'')}</div>
-    ${p.link?`<div class="sub" style="margin-top:6px;word-break:break-all;font-size:11.5px">${esc(p.link)}</div>`:''}
-    <div class="num" style="font-size:23px;margin-top:10px">${money(p.earned||0)}</div>
-    <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm" onclick="edit('partners','${p.id}')">Правка</button><button class="btn sm danger" onclick="del('partners','${p.id}')">Удалить</button></div>
-  </div>`).join('')}</div>
-  <div class="note" style="margin-top:14px">Партнёрка приносит проценты, клиент на автоматизации приносит чек. Партнёрки — приятный фон, а не замена продажам.</div>`;
-}
-
-/* ---- КОМАНДА ---- */
-function vTeam(){
-  return `
-  <div class="sechead"><div><div class="h1">Команда</div><div class="sub" style="margin-top:6px">Кто есть сейчас и кто нужен дальше</div></div>
-  <button class="btn gold" onclick="edit('team')">Добавить</button></div>
-  ${!S.team.length?'<div class="empty">Пока ты один. Запиши, кто нужен следующим.</div>':''}
-  <div class="list">${S.team.map(t=>`<div class="item">
-    <div class="body"><div class="t">${esc(t.name)} <span class="pill ${t.status==='В работе'?'sage':'mute'}" style="margin-left:6px">${esc(t.status)}</span></div>
-    <div class="d">${esc(t.role)} · ${esc(t.terms)}</div></div>
-    <div class="acts"><button class="btn sm" onclick="edit('team','${t.id}')">Правка</button><button class="btn sm danger" onclick="del('team','${t.id}')">Удалить</button></div>
-  </div>`).join('')}</div>
-  <div class="note" style="margin-top:14px">Нанимать только под поток, а не «чтобы была команда». Продажник окупает себя процентом, исполнитель — когда заявок больше, чем рук.</div>`;
-}
-
-/* ---- РИСКИ ---- */
-function vRisks(){
-  return `
-  <div class="sechead"><div><div class="h1">Риски</div><div class="sub" style="margin-top:6px">То, что может обнулить месяц</div></div>
-  <button class="btn gold" onclick="edit('risks')">Добавить</button></div>
-  ${!S.risks.length?'<div class="empty">Рисков не записано. Это не значит, что их нет.</div>':''}
-  <div class="list">${S.risks.map(r=>`<div class="item">
-    <span class="pill ${r.lvl==='Высокий'?'clay':r.lvl==='Средний'?'gold':'mute'}">${esc(r.lvl)}</span>
-    <div class="body"><div class="t">${esc(r.t)}</div><div class="d">Что делать: ${esc(r.act)}</div></div>
-    <div class="acts"><button class="btn sm" onclick="edit('risks','${r.id}')">Правка</button><button class="btn sm danger" onclick="del('risks','${r.id}')">Удалить</button></div>
-  </div>`).join('')}</div>`;
-}
-
-/* ---- ИДЕИ ---- */
-function vIdeas(){
-  return `
-  <div class="sechead"><div><div class="h1">Идеи</div><div class="sub" style="margin-top:6px">Парковка. Идея записана — значит не потеряется и не украдёт неделю.</div></div>
-  <button class="btn gold" onclick="edit('ideas')">Записать идею</button></div>
-  <div class="list">${S.ideas.length?S.ideas.map(i=>`<div class="item">
-    <span class="pill ${i.st==='В работе'?'sage':i.st==='Следующее'?'gold':'mute'}">${esc(i.st)}</span>
-    <div class="body"><div class="t">${esc(i.t)}</div><div class="d">${esc(i.note||'')}</div></div>
-    <div class="acts"><button class="btn sm" onclick="edit('ideas','${i.id}')">Правка</button><button class="btn sm danger" onclick="del('ideas','${i.id}')">Удалить</button></div>
-  </div>`).join(''):'<div class="empty">Пока пусто.</div>'}</div>`;
-}
-
-/* ---- ЦЕЛИ ---- */
-function vGoals(){
-  const left=S.wishes.filter(w=>!w.bought).reduce((a,b)=>a+ +b.price,0);
-  const got=S.wishes.filter(w=>w.bought).reduce((a,b)=>a+ +b.price,0);
-  const p=profit();
-  return `
-  <div class="sechead"><div><div class="h1">Цели</div><div class="sub" style="margin-top:6px">Куда идут деньги, когда бизнес их приносит</div></div>
-  <div class="row"><button class="btn" onclick="editGoal()">Цель месяца</button><button class="btn gold" onclick="edit('wishes')">Добавить</button></div></div>
-
-  <div class="grid g3">
-    <div class="card stat"><div class="lbl">Цель по доходу</div><div class="val" data-count="${S.goal.net}">—</div><div class="hint">чистыми в месяц</div></div>
-    <div class="card stat"><div class="lbl">Подписки</div><div class="val">${S.goal.subs} × ${money(S.goal.subPrice)}</div><div class="hint">= ${money(mrrTarget())} повторяющихся</div></div>
-    <div class="card stat"><div class="lbl">Не куплено</div><div class="val" data-count="${left}">—</div><div class="hint">куплено на ${money(got)}</div></div>
-  </div>
-
-  <div class="sechead"><div class="h2">Хотелки</div></div>
-  ${!S.wishes.length?'<div class="empty">Целей не записано.</div>':''}
-  <div class="grid g2">${S.wishes.map(w=>`<div class="card" style="${w.bought?'opacity:.45':''}">
-    <div class="between"><div style="font-weight:700">${esc(w.name)}</div><span class="pill ${w.pri==='Высокий'?'gold':'mute'}">${esc(w.pri)}</span></div>
-    <div class="num" style="font-size:26px;color:var(--brass);margin-top:8px">${money(w.price)}</div>
-    ${!w.bought?`<div class="bar" style="margin-top:10px"><i data-w="${Math.min(100,Math.max(0,p)/w.price*100)}"></i></div>
-    <div class="sub" style="margin-top:8px">${p>=w.price?'Прибыль месяца это покрывает.':'Нужно ещё '+money(w.price-Math.max(0,p))+' прибыли.'}</div>`:''}
-    <div class="row" style="margin-top:12px;gap:6px">
-      <button class="btn sm" onclick="buyWish('${w.id}')">${w.bought?'Вернуть':'Куплено'}</button>
-      <button class="btn sm" onclick="edit('wishes','${w.id}')">Правка</button>
-      <button class="btn sm danger" onclick="del('wishes','${w.id}')">Удалить</button>
-    </div>
-  </div>`).join('')}</div>`;
-}
-function buyWish(id){const w=S.wishes.find(x=>x.id===id);w.bought=!w.bought;save();render();}
-function editGoal(){
-  openModal('Цель месяца',[
-    {k:'net',l:'Чистыми в месяц ($)',t:'number',v:S.goal.net},
-    {k:'subs',l:'Сколько подписок',t:'number',v:S.goal.subs},
-    {k:'subPrice',l:'Цена подписки ($)',t:'number',v:S.goal.subPrice}
-  ],v=>{S.goal={net:+v.net,subs:+v.subs,subPrice:+v.subPrice};save();render();toast('Цель обновлена');});
-}
-
-/* ---------- ФОРМЫ ---------- */
-const SCHEMA={
-  tasks:{title:'Дело',f:[{k:'t',l:'Что сделать',t:'text'},{k:'d',l:'На какой день',t:'date'},{k:'rep',l:'Повтор',t:'select',o:[{v:'',l:'Один раз'},{v:'1',l:'Каждый день'}]}],mk:v=>({id:uid(),t:v.t,d:v.d||iso0(),rep:!!v.rep,done:false,doneOn:''})},
-  clients:{title:'Клиент',f:[
-    {k:'name',l:'Имя',t:'text'},{k:'company',l:'Компания / система',t:'text'},{k:'country',l:'Страна',t:'text'},
-    {k:'stage',l:'Стадия',t:'select',o:Object.entries(STAGES).map(([v,l])=>({v,l}))},
-    {k:'value',l:'Сумма сделки ($)',t:'number'},{k:'mrr',l:'Подписка в месяц ($)',t:'number'},
-    {k:'next',l:'Следующий шаг',t:'text'},{k:'note',l:'Заметка',t:'textarea'}]},
-  income:{title:'Поступление',f:[
-    {k:'date',l:'Дата',t:'date'},{k:'src',l:'Откуда',t:'text'},{k:'amt',l:'Сумма ($)',t:'number'},
-    {k:'kind',l:'Тип',t:'select',o:[{v:'project',l:'Проект'},{v:'sub',l:'Подписка'},{v:'other',l:'Другое'}]}]},
-  expenses:{title:'Расход',f:[{k:'name',l:'Название',t:'text'},{k:'amt',l:'Сумма ($)',t:'number'},
-    {k:'per',l:'Период',t:'select',o:[{v:'month',l:'В месяц'},{v:'year',l:'В год'}]}]},
-  ads:{title:'Рекламный запуск',f:[
-    {k:'date',l:'Дата',t:'date'},{k:'ch',l:'Канал',t:'text'},{k:'spend',l:'Потрачено ($)',t:'number'},
-    {k:'imp',l:'Показы',t:'number'},{k:'clicks',l:'Переходы',t:'number'},
-    {k:'leads',l:'Заявки',t:'number'},{k:'cl',l:'Клиенты',t:'number'},{k:'note',l:'Заметка',t:'textarea'}]},
-  products:{title:'Продукт',f:[{k:'name',l:'Название',t:'text'},{k:'setup',l:'Цена внедрения',t:'text'},
-    {k:'mo',l:'Подписка',t:'text'},{k:'note',l:'Что входит',t:'textarea'}]},
-  projects:{title:'Проект',f:[
-    {k:'name',l:'Название',t:'text'},
-    {k:'why',l:'Зачем я его делаю',t:'textarea'},
-    {k:'gives',l:'Что он даёт',t:'text'},
-    {k:'next',l:'Следующий шаг',t:'text'},
-    {k:'st',l:'Статус',t:'select',o:[{v:'active',l:'В работе'},{v:'queue',l:'Очередь'},{v:'sell',l:'Продать'},{v:'frozen',l:'Заморожен'},{v:'done',l:'Сделано'}]}],
-    mk:v=>Object.assign({id:uid(),steps:[]},v)},
-  partners:{title:'Партнёр',f:[
-    {k:'name',l:'Кто',t:'text'},{k:'what',l:'В чём партнёрство',t:'text'},
-    {k:'terms',l:'Моя выгода',t:'text'},{k:'link',l:'Ссылка или промокод',t:'text'},
-    {k:'earned',l:'Получено всего ($)',t:'number'},
-    {k:'st',l:'Статус',t:'select',o:[{v:'Работает',l:'Работает'},{v:'Тестирую',l:'Тестирую'},{v:'Пауза',l:'Пауза'}]}]},
-  team:{title:'Человек',f:[{k:'name',l:'Имя',t:'text'},{k:'role',l:'Роль',t:'text'},{k:'terms',l:'Условия',t:'text'},
-    {k:'status',l:'Статус',t:'select',o:[{v:'В работе',l:'В работе'},{v:'План',l:'План'},{v:'Пауза',l:'Пауза'}]}]},
-  risks:{title:'Риск',f:[{k:'t',l:'В чём риск',t:'text'},
-    {k:'lvl',l:'Уровень',t:'select',o:[{v:'Высокий',l:'Высокий'},{v:'Средний',l:'Средний'},{v:'Низкий',l:'Низкий'}]},
-    {k:'act',l:'Что делать',t:'text'}]},
-  ideas:{title:'Идея',f:[{k:'t',l:'Идея',t:'text'},
-    {k:'st',l:'Статус',t:'select',o:[{v:'Парковка',l:'Парковка'},{v:'Следующее',l:'Следующее'},{v:'В работе',l:'В работе'}]},
-    {k:'note',l:'Заметка',t:'textarea'}]},
-  wishes:{title:'Хотелка',f:[{k:'name',l:'Что',t:'text'},{k:'price',l:'Цена ($)',t:'number'},
-    {k:'pri',l:'Важность',t:'select',o:[{v:'Высокий',l:'Высокий'},{v:'Средний',l:'Средний'},{v:'Низкий',l:'Низкий'}]}]},
-  socials:{title:'Площадка',f:[{k:'name',l:'Название',t:'text'},{k:'handle',l:'Ник или адрес',t:'text'},{k:'subs',l:'Подписчиков',t:'number'}],mk:v=>({id:uid(),name:v.name,handle:v.handle,subs:+v.subs||0,hist:[{d:iso0(),v:+v.subs||0}],m:{}})},
-  roadmap:{title:'Веха',f:[{k:'date',l:'Дата',t:'date'},{k:'t',l:'Что произойдёт',t:'text'},{k:'note',l:'Описание',t:'textarea'},
-    {k:'st',l:'Статус',t:'select',o:[{v:'plan',l:'Впереди'},{v:'now',l:'Сейчас'},{v:'done',l:'Сделано'}]}]}
-};
-const LIST={tasks:'tasks',clients:'clients',income:'income',expenses:'expenses',ads:'ads',products:'products',projects:'projects',partners:'partners',team:'team',risks:'risks',ideas:'ideas',wishes:'wishes',roadmap:'roadmap',socials:'socials'};
-
-function edit(type,id){
-  const sc=SCHEMA[type],arr=S[LIST[type]];
-  const rec=id?arr.find(x=>x.id===id):null;
-  const fields=sc.f.map(f=>Object.assign({},f,{v:rec?rec[f.k]:(f.t==='date'?iso(today()):'')}));
-  openModal(rec?sc.title+' — правка':sc.title,fields,v=>{
-    sc.f.forEach(f=>{if(f.t==='number')v[f.k]=+v[f.k]||0;});
-    if(rec)Object.assign(rec,v);
-    else arr.push(sc.mk?sc.mk(v):Object.assign({id:uid()},v));
-    save();render();toast(rec?'Сохранено':'Добавлено');
-  },rec?()=>{del(type,id,true);}:null);
-}
-function del(type,id,silent){
-  if(!silent&&!confirm('Удалить запись?'))return;
-  const k=LIST[type];S[k]=S[k].filter(x=>x.id!==id);save();closeModal();render();toast('Удалено');
-}
-function openModal(title,fields,onSave,onDelete){
-  const m=document.getElementById('modal');
-  m.innerHTML='<div class="between" style="margin-bottom:16px"><div class="h2">'+esc(title)+'</div><button class="btn sm" onclick="closeModal()">Закрыть</button></div>'
-    +fields.map(f=>{
-      const v=f.v===undefined||f.v===null?'':f.v;
-      if(f.t==='select')return '<div class="field"><label>'+f.l+'</label><select id="f_'+f.k+'">'+f.o.map(o=>'<option value="'+o.v+'"'+(String(v)===String(o.v)?' selected':'')+'>'+o.l+'</option>').join('')+'</select></div>';
-      if(f.t==='textarea')return '<div class="field"><label>'+f.l+'</label><textarea id="f_'+f.k+'">'+esc(String(v))+'</textarea></div>';
-      return '<div class="field"><label>'+f.l+'</label><input id="f_'+f.k+'" type="'+f.t+'" value="'+esc(String(v))+'"></div>';
-    }).join('')
-    +'<div class="row" style="margin-top:16px;gap:8px"><button class="btn gold" style="flex:1" id="msave">Сохранить</button>'
-    +(onDelete?'<button class="btn danger" id="mdel">Удалить</button>':'')+'</div>';
-  document.getElementById('msave').onclick=()=>{
-    const v={};fields.forEach(f=>v[f.k]=document.getElementById('f_'+f.k).value);
-    closeModal();onSave(v);
-  };
-  if(onDelete)document.getElementById('mdel').onclick=onDelete;
-  document.getElementById('mask').classList.add('on');
-  setTimeout(()=>{const i=m.querySelector('input,textarea,select');if(i&&window.innerWidth>720)i.focus();},60);
-}
-function closeModal(){document.getElementById('mask').classList.remove('on');}
-document.getElementById('mask').addEventListener('click',e=>{if(e.target.id==='mask')closeModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-
-/* ---------- УТИЛИТЫ ---------- */
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;if(n1>1&&n1<5)return b;if(n1===1)return a;return c;}
-function exportData(){
-  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='aku-hq-'+iso(today())+'.json';a.click();
-  S.lastExport=iso(today());save();toast('Копия скачана');
-}
-function lockNow(){sessionStorage.removeItem('aku.ok');location.reload();}
-
-/* ---------- ВХОД ---------- */
-const PINKEY='aku.pin';
-async function sha(s){
-  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('aku-hq|'+s));
-  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
-}
-function greet(){const x=today().getHours();return x<5?'Ночь на дворе':x<12?'Доброе утро':x<18?'Добрый день':'Добрый вечер';}
-function makeManifest(){
-  try{
-    const ic=document.querySelector('link[rel="icon"]').href;
-    const m={name:'Штаб — AKU Automation',short_name:'Штаб',start_url:location.pathname,scope:location.pathname,
-      display:'standalone',orientation:'portrait',background_color:'#121110',theme_color:'#121110',
-      icons:[{src:ic,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
-    document.getElementById('mf').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
-  }catch(e){}
-}
-function unlock(){
-  document.getElementById('lock').style.display='none';
-  document.getElementById('shell').classList.add('on');
-  CUR=localStorage.getItem('aku.cur')||'USD';
-  const t=iso(today()),y=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  if(S.lastOpen!==t){S.streak=S.lastOpen===y?(S.streak||0)+1:1;S.lastOpen=t;VIEW='today';localStorage.setItem('aku.view','today');save();}
-  makeManifest();paintCur();rates();render();
-  setTimeout(()=>toast(greet()+', Алексей'),450);
-}
-function lockMode(){
-  const has=localStorage.getItem(PINKEY);
-  document.getElementById('pwhint').textContent=has?'AKU Automation':'Придумай код — он сохранится на этом устройстве';
-  document.getElementById('pw').placeholder=has?'Код доступа':'Новый код, от 4 знаков';
-  document.getElementById('pwgo').textContent=has?'Войти':'Сохранить код';
-  document.getElementById('pwreset').style.display=has?'block':'none';
-}
-async function tryEnter(){
-  const el=document.getElementById('pw'),v=el.value,err=document.getElementById('pwerr'),has=localStorage.getItem(PINKEY);
-  if(!has){
-    if(v.length<4){err.textContent='Минимум 4 знака';return;}
-    localStorage.setItem(PINKEY,await sha(v));sessionStorage.setItem('aku.ok','1');unlock();return;
+  function icon(g, size) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${g.tint}"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[g.icon]||''}</svg>`;
   }
-  if(await sha(v)===has){sessionStorage.setItem('aku.ok','1');unlock();}
-  else{err.textContent='Код не подошёл';el.value='';}
-}
-document.getElementById('pwgo').onclick=tryEnter;
-document.getElementById('pwreset').onclick=()=>{
-  if(!confirm('Код сбрасывается только вместе с данными этого устройства. Если копия не скачана, всё пропадёт. Продолжить?'))return;
-  if(!confirm('Точно удалить данные и код?'))return;
-  localStorage.removeItem(PINKEY);localStorage.removeItem(KEY);location.reload();
-};
-document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryEnter();});
-document.getElementById('imp').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const d=JSON.parse(r.result);
-      if(!confirm('Заменить все данные в штабе содержимым файла?')){e.target.value='';return;}
-      S=Object.assign(structuredClone(SEED),d);save();render();toast('Данные загружены');
-    }catch(err){alert('Файл не читается — нужен .json, скачанный из штаба');}
-    e.target.value='';
-  };
-  r.readAsText(f);
-});
-lockMode();
-if(sessionStorage.getItem('aku.ok'))unlock();
+  function markTile(g, s) {
+    s = s || 46;
+    return `<div class="tile shrink-0 grid place-items-center rounded-xl"
+      style="width:${s}px;height:${s}px;background:linear-gradient(140deg,${g.tint}26,${g.tint}0D);
+             border:1px solid ${g.tint}3D">${icon(g, Math.round(s*0.5))}</div>`;
+  }
+
+  let cart = {};
+  const cartList  = () => Object.keys(cart).map(k => ({ key:k, ...cart[k] }));
+  const cartQty   = () => cartList().reduce((s,i) => s + i.qty, 0);
+  const cartTotal = () => cartList().reduce((s,i) => s + priceFor(G(i.id), i.months) * i.qty, 0);
+
+  function addToCart(id, months) {
+    const key = id + ':' + months;
+    cart[key] = { id, months, qty:(cart[key]?cart[key].qty:0) + 1 };
+    syncCart(); toast(G(id));
+  }
+  function setQty(key, q) {
+    if (q <= 0) delete cart[key]; else cart[key].qty = q;
+    syncCart(); if (location.hash.startsWith('#/cart')) render();
+  }
+  function syncCart() {
+    const el = document.getElementById('cartCount');
+    el.textContent = cartQty();
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  }
+  let toastTimer;
+  function toast(g) {
+    const box = document.getElementById('toast');
+    document.getElementById('toastText').textContent = g.name + ' — в корзине';
+    document.getElementById('toastDot').style.background = g.tint;
+    box.classList.remove('hidden');
+    box.firstElementChild.classList.remove('toast-in'); void box.offsetWidth;
+    box.firstElementChild.classList.add('toast-in');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => box.classList.add('hidden'), 3200);
+  }
+
+  function goodCard(g, i) {
+    const href = g.external ? extLink(g) : '#/p/' + g.id;
+    const ext  = g.external ? ' target="_blank" rel="noopener"' : '';
+    const p    = g.usd ? priceFor(g,1) : null;
+    return `
+      <a href="${href}"${ext} class="card rise block bg-board border border-edge rounded-2xl p-4 sm:p-5"
+         style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
+        <div class="flex items-start justify-between gap-3 mb-4">
+          ${markTile(g)}
+          ${(g.tag||g.hit) ? `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+             style="background:${g.tint}1F;color:${g.tint}">${esc(g.tag||'Часто берут')}</span>` : ''}
+        </div>
+        <h3 class="font-display font-bold text-[15px] leading-snug mb-2">${esc(g.name)}</h3>
+        <p class="text-faded text-[13px] leading-relaxed mb-4 sm:mb-5 sm:min-h-[52px]">${esc(g.short)}</p>
+        <div class="tech text-faded/70 flex items-center gap-2 mb-3">
+          <span>${g.noLogin ? '[ без пароля ]' : '[ ' + esc(cat(g.cat)) + ' ]'}</span>
+          <span style="color:${g.tint}">/</span>
+          <span>${p ? '30 дней' : g.external==='GUIDE' ? 'pdf' : 'по ссылке'}</span>
+        </div>
+        <div class="pt-4 border-t border-edge">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-display font-bold text-base">${p ? money(p) : g.priceLabel}</span>
+            <span class="text-xs text-faded">${p ? 'в месяц' : ''}</span>
+          </div>
+          ${p ? `<div class="text-xs text-sage mt-1.5">криптой ${money(crypto(p))}</div>` : ''}
+        </div>
+      </a>`;
+  }
+
+  function faqBlock(items) {
+    return items.map(([q,a]) => `
+      <details class="border-b border-edge">
+        <summary class="flex items-center justify-between gap-4 py-5">
+          <span class="font-semibold text-[15px]">${esc(q)}</span>
+          <span class="chev text-brass text-xl leading-none shrink-0">+</span>
+        </summary>
+        <p class="text-faded text-sm leading-relaxed pb-5 pr-8">${a}</p>
+      </details>`).join('');
+  }
+
+  const FAQ = [
+    ['Вы получите доступ к моему аккаунту?',
+     'По Claude — нет. Подписку оформляем по ID вашего аккаунта, пароль не нужен вообще. По остальным сервисам доступ нужен только на время оплаты: вы ставите временный пароль и меняете его сразу после активации. Переписку и файлы мы не открываем.'],
+    ['Почему нельзя оплатить самому?',
+     'Можно, и это дешевле. Нужна зарубежная карта — в каталоге есть два проверенных сервиса, где её выпускают за несколько минут. Мы нужны тем, кому не хочется в этом разбираться.'],
+    ['Почему у других дешевле?',
+     'Обычно потому, что там общий аккаунт на несколько человек либо подписка через студенческую или региональную схему. Такие живут до ближайшей проверки. Мы оформляем обычным способом на ваш личный аккаунт.'],
+    ['Аккаунт могут заблокировать?',
+     'Такое случается: сервисы проверяют, из какой страны вы заходите. Риск сохраняется и после оплаты, поэтому обязательно пользуйтесь корректно настроенным VPN. Если подписка слетит в течение оплаченного месяца — восстанавливаем за свой счёт либо возвращаем деньги за оставшиеся дни.'],
+    ['Как оплатить?',
+     'Криптой (со скидкой ' + CONFIG.cryptoOff + '%), переводом на ЮMoney или картой. Принимаем рубли, тенге и белорусские рубли. Способ выбираем в переписке.'],
+    ['Подписка продлится сама?',
+     'Нет, автосписания не будет. За три дня до окончания мы напишем и спросим, продлевать ли. Не ответите — просто ничего не произойдёт.'],
+    ['Нужен VPN?',
+     'Для большинства сервисов — да, чтобы открыть сайт и чтобы аккаунт не выглядел подозрительно. Если не пользовались раньше, подскажем варианты.'],
+    ['Работаете ночью?',
+     'Заявки принимаем круглосуточно, оформляем с ' + CONFIG.openFrom + ':00 до ' + CONFIG.openTo + ':00. Ночной заказ уйдёт в работу утром.']
+  ];
+
+  function marquee() {
+    const items = ['подписки на нейросети','Claude без пароля','оформление на ваш аккаунт',
+                   'крипта · ЮMoney · карта','гарантия замены','отвечаем лично'];
+    const row = items.map(t => `<span class="px-6 text-faded">${t}</span><span class="text-brass">✦</span>`).join('');
+    return `<div class="marquee border-y border-edge py-3.5 text-sm"><div class="marquee-track">${row}${row}</div></div>`;
+  }
+
+  function viewHome() {
+    const h = new Date().getHours();
+    const open = h >= CONFIG.openFrom && h < CONFIG.openTo;
+    return `
+    <section class="lamp relative overflow-hidden">
+      <div class="orb" style="width:400px;height:400px;background:rgba(224,162,83,.15);top:-160px;left:4%"></div>
+      <div class="orb" style="width:300px;height:300px;background:rgba(108,140,245,.10);top:0;right:2%;animation-delay:-9s"></div>
+      <div class="orb" style="width:240px;height:240px;background:rgba(240,134,74,.08);bottom:-80px;left:42%;animation-delay:-15s"></div>
+      <div class="relative max-w-6xl mx-auto px-5 pt-10 pb-10 sm:pt-16 sm:pb-16">
+        <div class="tech text-faded flex flex-wrap items-center gap-x-3 gap-y-2 mb-8">
+          <span>[ 01 — витрина ]</span><span class="text-brass">/</span>
+          <span>оформление на ваш аккаунт</span><span class="text-brass">/</span>
+          <span>${new Date().getFullYear()}</span>
+        </div>
+        <h1 class="font-display font-black huge">ПОДПИСКИ<br>НА НЕЙРО<span class="text-brass">СЕТИ</span></h1>
+        <div class="mt-8 sm:mt-10 grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-end">
+          <div>
+            <p class="text-faded leading-relaxed max-w-md text-[15px]">
+              Claude оформляем по ID аккаунта — пароль передавать не нужно вообще.
+              Остальные сервисы — на ваш собственный аккаунт, который остаётся только вашим
+              вместе со всей перепиской и файлами.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+              <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors text-center">Открыть каталог</a>
+              <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl text-center">Подобрать за 3 вопроса</a>
+              <a href="" data-lnk="guide" class="text-sm text-sage hover:text-paper transition-colors px-2 py-3.5 text-center">Бесплатный гайд по Claude</a>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-center gap-2.5 mb-4">
+              <span class="w-2 h-2 rounded-full ${open?'bg-sage animate-pulse':'bg-faded'}"></span>
+              <span class="tech ${open?'text-sage':'text-faded'}">${open?'лавка открыта':'лавка закрыта'}</span>
+            </div>
+            <p class="text-[15px] leading-relaxed text-faded mb-5">
+              ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заявку можно оставить — ответим с '+CONFIG.openFrom+':00.'}
+            </p>
+            <a href="" data-lnk="ask" class="block text-center border border-edge2 hover:border-brass transition-colors rounded-xl py-3 text-sm">Написать в Telegram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 pb-12 sm:pb-14">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-edge border border-edge rounded-2xl overflow-hidden">
+        ${[['15–40','минут на оформление'],
+           [CONFIG.goods.filter(g=>g.usd).length+'','сервисов оформляем'],
+           ['−'+CONFIG.cryptoOff+'%','при оплате криптой'],
+           [CONFIG.openFrom+'–'+CONFIG.openTo,'часы работы лавки']
+        ].map(([n,l])=>`<div class="bg-ink p-4 sm:p-6">
+            <div class="font-display font-black stat text-paper mb-1.5 sm:mb-2">${n}</div>
+            <div class="tech text-faded leading-relaxed">${l}</div></div>`).join('')}
+      </div>
+    </section>
+
+    ${marquee()}
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16">
+      <div class="tech text-faded mb-4">[ 02 — на полке ]</div>
+      <div class="flex items-end justify-between gap-4 mb-8">
+        <h2 class="font-display font-extrabold text-2xl sm:text-4xl tracking-tight">Что есть сейчас</h2>
+        <a href="#/shop" class="text-sm text-brass hover:text-paper transition-colors shrink-0">Весь каталог</a>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${shown().map(goodCard).join('')}</div>
+      <div class="mt-6 bg-board border border-edge rounded-2xl p-5 sm:p-6">
+        <div class="tech text-faded mb-3">[ под заказ ]</div>
+        <p class="text-faded text-sm leading-relaxed mb-4">Эти оформляем по запросу — напишите, ответим по срокам и цене:</p>
+        <div class="flex flex-wrap gap-2">
+          ${onRequest().map(g=>`<span class="tech border border-edge2 rounded-full px-3.5 py-2" style="color:${g.tint}">${esc(g.name)}</span>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
+      <a href="" data-lnk="guide" class="group block rounded-2xl border p-6 sm:p-9 relative overflow-hidden"
+         style="border-color:#8AA87244;background:linear-gradient(135deg,rgba(138,168,114,.10),rgba(32,28,24,.4))">
+        <div class="orb" style="width:220px;height:220px;background:rgba(138,168,114,.14);top:-70px;right:6%"></div>
+        <div class="relative grid lg:grid-cols-[1fr_auto] gap-7 items-center">
+          <div>
+            <div class="tech text-sage mb-4">[ бесплатно · без почты ]</div>
+            <h2 class="font-display font-extrabold text-2xl sm:text-3xl leading-tight mb-3">Гайд «Claude с нуля»</h2>
+            <p class="text-faded leading-relaxed max-w-lg text-[15px]">
+              Чтобы подписка окупилась, а не пылилась. Как устроен Claude, как формулировать
+              запросы и какие задачи ему отдавать. Написан нами, открывается сразу.
+            </p>
+          </div>
+          <span class="shrink-0 bg-sage text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl group-hover:bg-paper transition-colors text-center">Читать бесплатно</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
+      <h2 class="font-display font-bold text-2xl mb-3">Окупится или нет</h2>
+      <p class="text-faded mb-8 max-w-lg leading-relaxed">Подписка стоит денег, но экономит часы. Посчитайте, за сколько дней она вернётся именно вам.</p>
+      <div id="calc" class="bg-board border border-edge rounded-2xl p-5 sm:p-8 max-w-2xl"></div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
+      <h2 class="font-display font-bold text-2xl mb-10">Три шага до подписки</h2>
+      <div class="grid sm:grid-cols-3 gap-8">
+        ${[['Выбираете в каталоге','Складываете нужное в корзину и оформляете заказ. Он придёт нам в Telegram, мы подтверждаем сумму и способ оплаты.'],
+           ['Даёте данные','Для Claude — только ID аккаунта. Для остальных сервисов — временный пароль, который вы меняете сразу после активации.'],
+           ['Пользуетесь','Проверяете, что всё работает. За три дня до конца месяца напомним про продление.']
+        ].map(([t,d],i)=>`<div>
+            <div class="font-display font-extrabold text-2xl text-brass mb-4">${i+1}</div>
+            <h3 class="font-display font-bold text-[15px] mb-2.5">${t}</h3>
+            <p class="text-faded text-sm leading-relaxed">${d}</p></div>`).join('')}
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
+      <div class="grid lg:grid-cols-2 gap-10">
+        <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7">
+          <h2 class="font-display font-bold text-xl mb-5">Чего мы не продаём</h2>
+          <ul class="space-y-4">
+            ${[['Общие аккаунты на несколько человек','Дешевле, но их регулярно блокируют, а переписку видят посторонние.'],
+               ['Студенческие и промо-подписки','Живут до первой проверки. Потом доступ пропадает, а деньги уже потрачены.'],
+               ['Готовые аккаунты «под ключ»','Формально такой аккаунт остаётся за продавцом. Через месяц начинаются споры, чей он.']
+            ].map(([t,d])=>`<li class="flex gap-3">
+                <span class="text-rust shrink-0 mt-0.5">✕</span>
+                <div><p class="font-semibold text-[15px] mb-1">${t}</p>
+                <p class="text-faded text-sm leading-relaxed">${d}</p></div></li>`).join('')}
+          </ul>
+        </div>
+        <div>
+          <h2 class="font-display font-bold text-xl mb-5">Кто за прилавком</h2>
+          <div class="space-y-4 text-faded leading-relaxed text-[15px]">
+            <p>Лавку основал Алексей — он занимается внедрением ИИ в бизнес: собирает автоматизации,
+               ботов и внутренние сервисы для компаний. Нейросетями мы пользуемся каждый день по работе,
+               поэтому и подписки на них держим для себя.</p>
+            <p>Заказы обрабатываем вручную, без колл-центра. Ночная заявка уйдёт в работу утром —
+               зато ответит живой человек.</p>
+            <p class="text-paper">Лавка открылась недавно, отзывов пока мало, и выдумывать их мы не будем.
+               Вот что можно проверить прямо сейчас:</p>
+          </div>
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
+            <a href="" data-lnk="channel" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Канал про нейросети</a>
+            <a href="" data-lnk="site" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Что мы делаем для бизнеса</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
+      <div class="grid lg:grid-cols-[1fr_1.1fr] gap-10">
+        <div>
+          <h2 class="font-display font-bold text-2xl mb-4">Вопросы</h2>
+          <p class="text-faded leading-relaxed">Не нашли свой — просто спросите. Ответим без оплаты и без «оставьте заявку».</p>
+          <a href="" data-lnk="ask" class="inline-block mt-6 bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">Написать в Telegram</a>
+        </div>
+        <div>${faqBlock(FAQ.slice(0,5))}
+          <a href="#/help" class="inline-block mt-6 text-sm text-brass hover:text-paper transition-colors">Все вопросы и условия</a>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  let calcRate = 800, calcHours = 4;
+  function drawCalc() {
+    const box = document.getElementById('calc'); if (!box) return;
+    const price = priceFor(G('claude'),1), saved = calcHours*calcRate;
+    const days = saved>0 ? Math.max(1, Math.ceil(price/(saved/30))) : 0;
+    const profit = saved - price;
+    box.innerHTML = `
+      <div class="grid sm:grid-cols-2 gap-7 mb-7">
+        <label class="block"><span class="text-sm text-faded">Сколько стоит ваш час работы</span>
+          <div class="flex items-baseline gap-2 mt-2 mb-3"><span class="font-display font-extrabold text-2xl">${money(calcRate)}</span></div>
+          <input type="range" id="cRate" min="200" max="5000" step="100" value="${calcRate}" class="w-full cursor-pointer"></label>
+        <label class="block"><span class="text-sm text-faded">Сколько часов в месяц сэкономит</span>
+          <div class="flex items-baseline gap-2 mt-2 mb-3"><span class="font-display font-extrabold text-2xl">${calcHours} ч</span></div>
+          <input type="range" id="cHours" min="1" max="40" step="1" value="${calcHours}" class="w-full cursor-pointer"></label>
+      </div>
+      <div class="border-t border-edge pt-6 grid sm:grid-cols-3 gap-5">
+        <div><p class="text-sm text-faded mb-1">Подписка стоит</p><p class="font-display font-bold text-lg">${money(price)}</p></div>
+        <div><p class="text-sm text-faded mb-1">Экономит в месяц</p><p class="font-display font-bold text-lg">${money(saved)}</p></div>
+        <div><p class="text-sm text-faded mb-1">${profit>=0?'Окупается за':'Пока не окупается'}</p>
+          <p class="font-display font-bold text-lg ${profit>=0?'text-sage':'text-faded'}">${profit>=0?days+(days===1?' день':days<5?' дня':' дней'):'—'}</p></div>
+      </div>
+      <p class="text-xs text-faded mt-5 leading-relaxed">Считаем по цене Claude Pro за месяц. Цифры примерные.</p>`;
+  }
+
+  let activeCat = 'all';
+  function viewShop() {
+    const all = shown();
+    const list = activeCat==='all' ? all : all.filter(g => g.cat===activeCat);
+    const cats = CONFIG.cats.filter(c => all.some(g => g.cat===c.id));
+    const chip = (id,name) => `<button data-cat="${id}" class="px-4 py-2 rounded-full text-sm border transition-colors whitespace-nowrap shrink-0 ${activeCat===id?'bg-brass text-ink border-brass font-semibold':'border-edge2 text-faded hover:text-paper hover:border-faded'}">${name}</button>`;
+    return `
+    <section class="max-w-6xl mx-auto px-5 py-10 sm:py-16">
+      <div class="tech text-faded mb-4">[ каталог / ${String(all.length).padStart(2,'0')} позиций ]</div>
+      <h1 class="font-display font-black text-[38px] sm:text-6xl leading-none tracking-tight mb-4">КАТАЛОГ</h1>
+      <p class="text-faded mb-8 max-w-lg leading-relaxed">Нужного сервиса нет в списке — напишите, посмотрим и посчитаем. Берём почти всё, что оплачивается зарубежной картой.</p>
+      <a href="#/pick" class="inline-flex items-center gap-3 bg-board border border-edge2 hover:border-brass transition-colors rounded-xl px-5 py-3.5 mb-8 text-sm">
+        <span class="text-brass">✦</span><span>Не знаете, что выбрать — подберём за три вопроса</span></a>
+      <div class="flex gap-2.5 mb-8 sm:mb-9 overflow-x-auto pb-1 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap">
+        ${chip('all','Всё')}${cats.map(c=>chip(c.id,c.name)).join('')}
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${list.map(goodCard).join('')}</div>
+      <div class="mt-10 bg-board border border-edge rounded-2xl p-5 sm:p-7">
+        <div class="tech text-faded mb-3">[ под заказ ]</div>
+        <p class="text-faded text-sm leading-relaxed mb-4">Эти сервисы оформляем по запросу — напишите, ответим по срокам и цене:</p>
+        <div class="flex flex-wrap gap-2">
+          ${onRequest().map(g=>`<span class="tech border border-edge2 rounded-full px-3.5 py-2" style="color:${g.tint}">${esc(g.name)}</span>`).join('')}
+        </div>
+      </div>
+      <div class="mt-6 bg-board border border-edge rounded-2xl p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
+        <div><h3 class="font-display font-bold text-base mb-1.5">Нет и в этом списке?</h3>
+          <p class="text-faded text-sm">Напишите название — ответим, сможем ли оформить, и назовём цену.</p></div>
+        <a href="" data-lnk="ask" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3 rounded-xl hover:bg-paper transition-colors text-center shrink-0">Спросить</a>
+      </div>
+    </section>`;
+  }
+
+  const QUIZ = [
+    { q:'Для чего в первую очередь?', a:[['Текст, учёба, работа с документами','chat'],['Картинки и видео','image'],['Программирование','code'],['Музыка и озвучка','sound']] },
+    { q:'Насколько важна цена?', a:[['Хочу подешевле','cheap'],['Хочу лучшее качество','best'],['Что-то среднее','mid']] },
+    { q:'Опыт работы с нейросетями?', a:[['Первая подписка','new'],['Пользуюсь регулярно','pro']] }
+  ];
+  let quizStep = 0, quizAns = [];
+  function pickResult() {
+    const [c,price,lvl] = quizAns;
+    let pool = shown().filter(g => g.cat===c && g.usd);
+    if (!pool.length) pool = shown().filter(g => g.usd);
+    if (lvl==='new' && c==='chat') pool.sort(a => a.id==='gpt' ? -1 : 1);
+    else if (price==='cheap') pool.sort((a,b)=>a.usd-b.usd);
+    else if (price==='best')  pool.sort((a,b)=>b.usd-a.usd);
+    return pool[0];
+  }
+  function viewPick() {
+    if (quizStep >= QUIZ.length) {
+      const g = pickResult();
+      return `
+      <section class="max-w-2xl mx-auto px-5 py-12 sm:py-24">
+        <p class="text-sm text-faded mb-4">Судя по ответам, вам подойдёт</p>
+        <div class="bg-board border rounded-2xl p-7 mb-8" style="border-color:${g.tint}44">
+          <div class="flex items-center gap-4 mb-5">${markTile(g,56)}
+            <div><h1 class="font-display font-extrabold text-xl sm:text-2xl">${esc(g.name)}</h1>
+              <p class="text-faded text-sm mt-1">${esc(g.for)}</p></div></div>
+          <p class="text-faded text-[15px] leading-relaxed mb-6">${esc(g.about)}</p>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="#/p/${g.id}" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">Смотреть подробнее</a>
+            <span class="font-display font-bold text-lg">${money(priceFor(g,1))} <span class="text-faded text-sm font-ui font-normal">в месяц</span></span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <button id="quizReset" class="text-faded hover:text-paper transition-colors">Пройти заново</button>
+          <a href="#/shop" class="text-brass hover:text-paper transition-colors">Смотреть весь каталог</a>
+        </div>
+      </section>`;
+    }
+    const step = QUIZ[quizStep];
+    return `
+    <section class="max-w-2xl mx-auto px-5 py-12 sm:py-24">
+      <div class="flex gap-2 mb-9">${QUIZ.map((_,i)=>`<span class="h-1 flex-1 rounded-full ${i<=quizStep?'bg-brass':'bg-edge2'}"></span>`).join('')}</div>
+      <p class="text-sm text-faded mb-3">Вопрос ${quizStep+1} из ${QUIZ.length}</p>
+      <h1 class="font-display font-extrabold text-[22px] sm:text-3xl leading-snug mb-7 sm:mb-8">${step.q}</h1>
+      <div class="space-y-3">
+        ${step.a.map(([l,v])=>`<button data-quiz="${v}" class="w-full text-left bg-board border border-edge hover:border-brass transition-colors rounded-xl px-5 py-4 text-[15px]">${l}</button>`).join('')}
+      </div>
+      ${quizStep>0?`<button id="quizBack" class="mt-7 text-sm text-faded hover:text-paper transition-colors">Назад</button>`:''}
+    </section>`;
+  }
+
+  let pickedTerm = 1;
+  function viewProduct(id) {
+    const g = G(id); if (!g) return viewNotFound();
+    const isExt = !!g.external;
+    const p = isExt ? 0 : priceFor(g, pickedTerm);
+    const t = term(pickedTerm);
+    const near = shown().filter(x => x.cat===g.cat && x.id!==g.id).slice(0,3);
+    const termBtn = t2 => `<button data-term="${t2.months}" class="flex-1 min-w-0 px-2 py-3 rounded-xl border text-[13px] sm:text-sm transition-colors ${pickedTerm===t2.months?'border-brass bg-brass/10 text-paper font-semibold':'border-edge2 text-faded hover:border-faded'}">
+        <span class="block whitespace-nowrap">${t2.label}</span>${t2.off?`<span class="block text-xs text-sage mt-0.5">−${t2.off}%</span>`:''}</button>`;
+    return `
+    <section class="max-w-6xl mx-auto px-5 py-8 sm:py-14">
+      <nav class="text-sm text-faded mb-8 flex items-center gap-2 flex-wrap">
+        <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
+        <span class="text-edge2">/</span><span>${esc(cat(g.cat))}</span></nav>
+      <div class="grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
+        <div>
+          <div class="flex items-center gap-4 mb-6">${markTile(g,64)}
+            <div><h1 class="font-display font-extrabold text-xl sm:text-3xl leading-tight tracking-tight">${esc(g.name)}</h1>
+              <p class="text-faded text-sm mt-1.5">${esc(g.for||cat(g.cat))}</p></div></div>
+          <p class="text-[15px] leading-relaxed text-faded mb-9 max-w-lg">${esc(g.about)}</p>
+          <h2 class="font-display font-bold text-base mb-4">Что входит</h2>
+          <ul class="space-y-3 mb-10 max-w-lg">
+            ${g.inc.map(x=>`<li class="flex gap-3 text-[15px] text-faded">
+              <span class="shrink-0 mt-[7px] w-1.5 h-1.5 rounded-full" style="background:${g.tint}"></span>
+              <span>${esc(x)}</span></li>`).join('')}
+          </ul>
+          ${isExt?'':`
+          <div class="grid sm:grid-cols-2 gap-4 max-w-lg">
+            <div class="bg-board border border-edge rounded-2xl p-5">
+              <h3 class="font-display font-bold text-[15px] mb-2">Если подписка слетит</h3>
+              <p class="text-faded text-sm leading-relaxed">Восстанавливаем за свой счёт. Не выходит — возвращаем деньги за неиспользованные дни.</p></div>
+            <div class="bg-board border rounded-2xl p-5" style="border-color:${g.noLogin?g.tint+'55':'#2E2822'}">
+              <h3 class="font-display font-bold text-[15px] mb-2">${g.noLogin?'Пароль не нужен':'Аккаунт остаётся вашим'}</h3>
+              <p class="text-faded text-sm leading-relaxed">${g.noLogin
+                ?'Оформляем по ID вашего аккаунта. Вы не передаёте ни почту с паролем, ни коды входа — только номер аккаунта.'
+                :'Оформляем на ваш логин. После активации меняете пароль — доступа у нас не остаётся.'}</p></div>
+          </div>`}
+        </div>
+        <aside class="lg:sticky lg:top-24 bg-board border rounded-2xl p-5 sm:p-6" style="border-color:${g.tint}33">
+          ${isExt?`
+            <div class="font-display font-extrabold text-2xl mb-2">${esc(g.priceLabel)}</div>
+            <p class="text-faded text-sm leading-relaxed mb-6">${
+              g.external==='CARD' ? 'Выпуск на стороне сервиса, занимает несколько минут.'
+            : g.external==='CARD2'? 'Выпуск на стороне сервиса. Промокод <span class="text-brass font-semibold">'+CONFIG.promo+'</span> даёт скидку.'
+            : g.external==='LEXY' ? 'Работает в Telegram. Оформлять ничего не нужно.'
+            : 'Открывается сразу, без почты и регистрации.'}</p>
+            <a href="${extLink(g)}" target="_blank" rel="noopener" class="block text-center bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">Открыть</a>
+          `:`
+            <p class="text-sm text-faded mb-3">Срок подписки</p>
+            <div class="flex gap-2 mb-6">${CONFIG.terms.map(termBtn).join('')}</div>
+            <div class="flex items-baseline gap-3 mb-1">
+              <span class="font-display font-black text-3xl sm:text-4xl">${money(p)}</span>
+              ${t.off?`<span class="text-faded text-sm line-through">${money(base(g)*t.months)}</span>`:''}</div>
+            <p class="text-sage text-sm mb-1">криптой ${money(crypto(p))}</p>
+            <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · ${g.noLogin?'по ID аккаунта':'на ваш аккаунт'}</p>
+            <button id="addBtn" class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">Добавить в корзину</button>
+            <a href="" data-lnk="ask" class="block text-center text-sm text-faded hover:text-paper transition-colors mt-4">Сначала спросить</a>
+          `}
+        </aside>
+      </div>
+      ${near.length?`<div class="mt-16 pt-12 border-t border-edge">
+        <h2 class="font-display font-bold text-xl mb-6">Из этой же категории</h2>
+        <div class="grid sm:grid-cols-3 gap-4">${near.map(goodCard).join('')}</div></div>`:''}
+    </section>`;
+  }
+
+  function viewCart() {
+    const items = cartList();
+    if (!items.length) return `
+      <section class="max-w-6xl mx-auto px-5 py-20 text-center"><div class="max-w-sm mx-auto">
+        <div class="w-16 h-16 rounded-2xl border border-edge2 grid place-items-center mx-auto mb-7 text-2xl text-faded">▤</div>
+        <h1 class="font-display font-extrabold text-2xl mb-3">В корзине пусто</h1>
+        <p class="text-faded leading-relaxed mb-8">Выберите подписку в каталоге — или пройдите подбор, если не уверены, какая нужна.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">Открыть каталог</a>
+          <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-7 py-3.5 rounded-xl">Подобрать за 3 вопроса</a>
+        </div></div></section>`;
+    const rows = items.map(i => {
+      const g = G(i.id), line = priceFor(g,i.months)*i.qty;
+      return `<div class="flex items-start gap-3 sm:gap-4 py-5 sm:py-6 border-b border-edge">
+        ${markTile(g,44)}
+        <div class="flex-1 min-w-0">
+          <a href="#/p/${g.id}" class="font-display font-bold text-[15px] hover:text-brass transition-colors">${esc(g.name)}</a>
+          <p class="text-faded text-sm mt-1">${term(i.months).label} · ${money(priceFor(g,i.months))}</p>
+          <div class="flex items-center gap-3 mt-3">
+            <button data-qty="${i.key}" data-v="${i.qty-1}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">−</button>
+            <span class="text-sm w-4 text-center">${i.qty}</span>
+            <button data-qty="${i.key}" data-v="${i.qty+1}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">+</button>
+            <button data-qty="${i.key}" data-v="0" class="text-sm text-faded hover:text-rust transition-colors ml-2">Убрать</button>
+          </div></div>
+        <div class="font-display font-bold text-[14px] sm:text-[15px] shrink-0 whitespace-nowrap">${money(line)}</div></div>`;
+    }).join('');
+    return `
+    <section class="max-w-6xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">КОРЗИНА</h1>
+      <div class="grid lg:grid-cols-[1fr_340px] gap-10 items-start">
+        <div class="border-t border-edge">${rows}</div>
+        <aside class="lg:sticky lg:top-24 bg-board border border-edge rounded-2xl p-5 sm:p-6">
+          <div class="flex items-baseline justify-between mb-2"><span class="text-faded text-sm">Позиций</span><span class="text-sm">${cartQty()}</span></div>
+          <div class="flex items-baseline justify-between mb-2"><span class="text-faded text-sm">К оплате</span>
+            <span class="font-display font-extrabold text-2xl">${money(cartTotal())}</span></div>
+          <div class="flex items-baseline justify-between pb-5 mb-5 border-b border-edge">
+            <span class="text-sage text-sm">Криптой (−${CONFIG.cryptoOff}%)</span>
+            <span class="text-sage font-semibold">${money(crypto(cartTotal()))}</span></div>
+          <p class="text-faded text-sm leading-relaxed mb-6">Нажмите кнопку — состав заказа откроется у нас в Telegram. Там подтвердим сумму и выберем способ оплаты.</p>
+          <button id="checkout" class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-paper transition-colors">Оформить заказ</button>
+          <p class="text-faded text-xs leading-relaxed mt-4">Деньги на сайте не списываются. Оплата — только после того, как мы подтвердим заказ.</p>
+        </aside></div></section>`;
+  }
+
+  function viewHelp() {
+    return `
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[34px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">КАК ЭТО РАБОТАЕТ</h1>
+      <div class="space-y-10 mb-16">
+        ${[['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Состав заказа приходит нам в Telegram. Мы отвечаем, доступен ли сервис сейчас, и называем итоговую сумму — скрытых комиссий сверху не появится.'],
+           ['Оплачиваете удобным способом','Крипта (со скидкой '+CONFIG.cryptoOff+'%), ЮMoney или перевод на карту. Принимаем рубли, тенге и белорусские рубли.'],
+           ['Даёте данные для оформления','<b class="text-paper">Claude</b> — присылаете только ID аккаунта, пароль не нужен вообще.<br><b class="text-paper">Остальные сервисы</b> — регистрируете аккаунт на свою почту, ставите временный пароль и присылаете его. Подскажем, как безопасно передать.'],
+           ['Проверяете','Убеждаетесь, что подписка активна. Если передавали пароль — меняете его обратно на свой, и доступа у нас не остаётся.'],
+           ['Продлеваете, если нужно','За три дня до окончания мы напишем. Автосписания нет: не ответите — просто ничего не произойдёт.']
+        ].map(([t,d],i)=>`<div class="flex gap-5">
+            <span class="font-display font-extrabold text-xl text-brass shrink-0 w-7">${i+1}</span>
+            <div><h2 class="font-display font-bold text-[16px] mb-2">${t}</h2>
+            <p class="text-faded text-[15px] leading-relaxed">${d}</p></div></div>`).join('')}
+      </div>
+      <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7 mb-14 sm:mb-16">
+        <h2 class="font-display font-bold text-xl mb-5">Возврат и гарантия</h2>
+        <div class="space-y-4 text-faded text-[15px] leading-relaxed">
+          <p><span class="text-paper font-semibold">Что мы делаем.</span> Подписка не активировалась или слетела в течение оплаченного месяца — восстанавливаем за свой счёт. Если восстановить не выходит, возвращаем деньги за неиспользованные дни, пропорционально остатку.</p>
+          <p><span class="text-paper font-semibold">Полный возврат.</span> Если мы не смогли оформить подписку вообще — возвращаем всю сумму тем же способом, которым вы платили, в течение суток.</p>
+          <p><span class="text-paper font-semibold">Чего мы не можем.</span> Повлиять на решения самих сервисов. Сервисы проверяют, из какой страны вы заходите, и могут ограничить аккаунт — поэтому обязательно пользуйтесь корректно настроенным VPN. Также мы не возвращаем деньги за месяц, которым вы уже пользовались, и не чиним доступ, если вы сменили данные аккаунта и не сказали нам.</p>
+        </div></div>
+      <h2 class="font-display font-bold text-xl mb-4">Вопросы</h2>
+      ${faqBlock(FAQ)}
+      <div class="mt-14 text-center">
+        <p class="text-faded mb-6">Не нашли ответ — просто спросите.</p>
+        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">Написать в Telegram</a>
+      </div></section>`;
+  }
+
+  function viewAbout() {
+    return `
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">О ЛАВКЕ</h1>
+      <div class="space-y-5 text-[15px] leading-relaxed text-faded mb-12">
+        <p>Лавку основал Алексей — он занимается внедрением ИИ в бизнес: собирает автоматизации, ботов и внутренние сервисы для компаний. Нейросетями мы пользуемся каждый день по работе, поэтому и подписки на них держим для себя.</p>
+        <p>Лавка появилась потому, что у нас постоянно спрашивали, где взять доступ к нейросетям. Сначала отвечали в личке по одному человеку, потом решили собрать всё в одном месте.</p>
+        <p>Заказы мы обрабатываем вручную — без колл-центра и ботов-автоответчиков. Ночная заявка уйдёт в работу утром, зато ответит живой человек, который разберётся, а не отправит в раздел помощи.</p>
+        <p class="text-paper">Принципиально не продаём общие аккаунты и промо-подписки. Они дешевле, но живут до первой проверки, а переписка в общем аккаунте видна посторонним. Здесь только оформление на ваш собственный аккаунт.</p>
+      </div>
+      <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7 mb-12">
+        <h2 class="font-display font-bold text-lg mb-3">Лавка открылась недавно</h2>
+        <p class="text-faded text-[15px] leading-relaxed mb-6">Отзывов пока мало, и выдумывать их мы не будем. Вместо этого — то, что можно проверить сейчас:</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="" data-lnk="channel" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Канал про нейросети</a>
+          <a href="" data-lnk="site" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Что мы делаем для бизнеса</a>
+        </div></div>
+      <div class="text-center">
+        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">Написать нам</a>
+      </div></section>`;
+  }
+
+  function viewTerms() {
+    return `
+    <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
+      <h1 class="font-display font-black text-[38px] sm:text-5xl leading-none tracking-tight mb-4">УСЛОВИЯ</h1>
+      <p class="text-faded text-sm mb-10">Публичная оферта и политика конфиденциальности</p>
+      <div class="space-y-8 text-[15px] leading-relaxed text-faded">
+        ${[['Предмет','AKU Лавка оказывает услугу по оформлению оплаты подписки на аккаунт заказчика в стороннем сервисе. Аккаунты, логины, пароли и общий доступ не продаются. Права на сами сервисы принадлежат их владельцам.'],
+           ['Заключение договора','Оформляя заказ и производя оплату, заказчик подтверждает согласие с настоящими условиями. Заказ считается принятым после письменного подтверждения исполнителем в Telegram.'],
+           ['Порядок оказания услуги','Для сервисов, поддерживающих оформление по идентификатору аккаунта, заказчик передаёт только ID. Для остальных заказчик самостоятельно регистрирует аккаунт и предоставляет временный доступ для проведения платежа, после чего обязан сменить пароль. Срок оформления — как правило, в течение рабочего дня.'],
+           ['Стоимость и оплата','Стоимость указана на сайте и подтверждается при оформлении. Оплата производится до оказания услуги. Цены могут меняться вслед за курсом валют и тарифами сервисов; уже подтверждённый заказ пересчёту не подлежит.'],
+           ['Возврат','Если услуга не оказана — возврат полной суммы в течение суток тем же способом оплаты. Если подписка перестала работать в течение оплаченного периода — восстановление за счёт исполнителя либо возврат за неиспользованные дни. Возврат за использованный период не производится.'],
+           ['Ответственность','Исполнитель не отвечает за решения сторонних сервисов, включая ограничение аккаунта по их инициативе, в том числе связанное с регионом входа заказчика, изменение тарифов и прекращение работы сервиса в отдельных странах. Исполнитель не отвечает за утрату доступа, вызванную действиями самого заказчика.'],
+           ['Данные','Собираются только данные, необходимые для оказания услуги: контакт в Telegram и сведения, переданные заказчиком добровольно. Данные не передаются третьим лицам, кроме случаев, предусмотренных законом. Содержимое аккаунта заказчика не просматривается и не сохраняется. Сайт не использует рекламные трекеры.'],
+           ['Контакты','Все вопросы, претензии и запросы на возврат принимаются в Telegram по контакту, указанному на сайте. Срок ответа — в течение рабочего дня.']
+        ].map(([t,d],i)=>`<div class="pb-8 border-b border-edge">
+            <h2 class="font-display font-bold text-[16px] text-paper mb-3">${i+1}. ${t}</h2><p>${d}</p></div>`).join('')}
+      </div>
+      <p class="text-faded text-xs leading-relaxed mt-10">AKU Лавка — независимый сервис. Не связан с Anthropic, OpenAI, Google, HeyGen и другими упомянутыми брендами. Названия используются исключительно для описания услуг.</p>
+    </section>`;
+  }
+
+  function viewNotFound() {
+    return `<section class="max-w-3xl mx-auto px-5 py-24 text-center">
+      <h1 class="font-display font-extrabold text-3xl mb-4">Такой полки нет</h1>
+      <p class="text-faded mb-8">Возможно, товар убрали или в ссылке опечатка.</p>
+      <a href="#/shop" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">В каталог</a></section>`;
+  }
+
+  function render() {
+    const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+    let html;
+    if (!seg.length)             html = viewHome();
+    else if (seg[0]==='shop')    html = viewShop();
+    else if (seg[0]==='pick')    html = viewPick();
+    else if (seg[0]==='p')       html = viewProduct(seg[1]);
+    else if (seg[0]==='cart')    html = viewCart();
+    else if (seg[0]==='help')    html = viewHelp();
+    else if (seg[0]==='about')   html = viewAbout();
+    else if (seg[0]==='terms')   html = viewTerms();
+    else                         html = viewNotFound();
+    app.innerHTML = '<div class="view-in">' + html + '</div>';
+    wireLinks(app); drawCalc();
+  }
+
+  function wireLinks(scope) {
+    scope.querySelectorAll('[data-lnk]').forEach(el => {
+      const k = el.dataset.lnk;
+      el.href = k==='channel' ? CONFIG.channel
+              : k==='site'    ? CONFIG.siteLink
+              : k==='guide'   ? CONFIG.guideLink
+              : k==='ask'     ? tg + '?text=' + encodeURIComponent('Здравствуйте! Вопрос по Лавке: ')
+              : tg;
+      el.target = '_blank'; el.rel = 'noopener';
+    });
+  }
+
+  document.addEventListener('click', e => {
+    const c = e.target.closest('[data-cat]');
+    if (c) { activeCat = c.dataset.cat; render(); return; }
+    const t = e.target.closest('[data-term]');
+    if (t) { pickedTerm = +t.dataset.term; render(); return; }
+    const q = e.target.closest('[data-qty]');
+    if (q) { setQty(q.dataset.qty, +q.dataset.v); return; }
+    const z = e.target.closest('[data-quiz]');
+    if (z) { quizAns[quizStep] = z.dataset.quiz; quizStep++; render(); window.scrollTo({top:0}); return; }
+    if (e.target.closest('#quizBack'))  { quizStep = Math.max(0,quizStep-1); render(); return; }
+    if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
+    if (e.target.closest('#addBtn'))    { addToCart(location.hash.split('/')[2], pickedTerm); return; }
+    if (e.target.closest('#checkout')) {
+      const lines = cartList().map(i => {
+        const g = G(i.id);
+        return '• ' + g.name + ' — ' + term(i.months).label + (i.qty>1?' ×'+i.qty:'') + ' — ' + money(priceFor(g,i.months)*i.qty);
+      }).join('\n');
+      const msg = 'Здравствуйте! Заказ из Лавки:\n\n' + lines + '\n\nИтого: ' + money(cartTotal()) +
+                  '\nКриптой: ' + money(crypto(cartTotal())) + '\n\nКак оплатить?';
+      window.open(tg + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+    }
+  });
+
+  document.addEventListener('input', e => {
+    if (e.target.id==='cRate')  { calcRate  = +e.target.value; drawCalc(); }
+    if (e.target.id==='cHours') { calcHours = +e.target.value; drawCalc(); }
+  });
+
+  window.addEventListener('hashchange', () => {
+    if (!location.hash.startsWith('#/p/'))   pickedTerm = 1;
+    if (!location.hash.startsWith('#/pick')) { quizStep = 0; quizAns = []; }
+    render(); window.scrollTo({ top:0, behavior:'instant' });
+  });
+
+  wireLinks(document);
+  if (!location.hash) location.hash = '#/';
+  render(); syncCart();
+})();
 </script>
 </body>
 </html>
