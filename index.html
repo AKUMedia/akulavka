@@ -57,6 +57,15 @@ tailwind.config = { theme: { extend: {
   input[type=range]{ -webkit-appearance:none; appearance:none; height:4px; border-radius:4px; background:#3D352C; outline:none }
   input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#E0A253; cursor:pointer; border:3px solid #100E0C }
   input[type=range]::-moz-range-thumb{ width:20px; height:20px; border-radius:50%; background:#E0A253; cursor:pointer; border:3px solid #100E0C }
+  .dock { position:fixed; left:0; right:0; bottom:0; z-index:45; background:rgba(16,14,12,.94);
+          backdrop-filter:blur(14px); border-top:1px solid #2E2822;
+          padding:10px 16px calc(10px + env(safe-area-inset-bottom)) }
+  .dock.hidden { display:none }
+  @media (min-width:1024px){ .dock{ display:none } }
+  @media (max-width:1023px){ body{ padding-bottom:76px } }
+  .hero-char { filter:drop-shadow(0 24px 48px rgba(0,0,0,.55)) }
+  .float { animation:fl 6s ease-in-out infinite }
+  @keyframes fl { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
   @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} html{scroll-behavior:auto} }
 </style>
 </head>
@@ -206,7 +215,15 @@ const ICONS = {
 
 <header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
   <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
-    <a href="#/" class="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight shrink-0">AKU<span class="text-brass">.</span>Лавка</a>
+    <a href="#/" class="flex items-center gap-2.5 shrink-0">
+      <svg viewBox="0 0 100 100" class="w-8 h-8 shrink-0">
+      <rect x="6" y="6" width="88" height="88" rx="21" fill="#E0A253"/>
+      <g fill="#100E0C">
+        <path d="M22 50 L50 28 L78 50 v5.5 H22 Z"/>
+        <rect x="30" y="62" width="17" height="17" rx="2.6"/>
+        <rect x="53" y="62" width="17" height="17" rx="2.6" opacity=".5"/>
+      </g></svg>
+      <span class="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight">AKU<span class="text-brass">·</span>Лавка</span></a>
     <nav class="hidden sm:flex items-center gap-7 text-sm text-faded">
       <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
       <a href="#/help" class="hover:text-paper transition-colors">Как это работает</a>
@@ -230,7 +247,13 @@ const ICONS = {
   <div class="max-w-6xl mx-auto px-5 py-10 sm:py-12">
     <div class="grid sm:grid-cols-3 gap-8 sm:gap-9 mb-9 sm:mb-10">
       <div>
-        <a href="#/" class="font-display font-extrabold text-base tracking-tight">AKU<span class="text-brass">.</span>Лавка</a>
+        <a href="#/" class="flex items-center gap-2.5">
+          <svg viewBox="0 0 100 100" class="w-7 h-7 shrink-0">
+            <rect x="6" y="6" width="88" height="88" rx="21" fill="#E0A253"/>
+            <g fill="#100E0C"><path d="M22 50 L50 28 L78 50 v5.5 H22 Z"/>
+            <rect x="30" y="62" width="17" height="17" rx="2.6"/>
+            <rect x="53" y="62" width="17" height="17" rx="2.6" opacity=".5"/></g></svg>
+          <span class="font-display font-extrabold text-base tracking-tight">AKU<span class="text-brass">·</span>Лавка</span></a>
         <p class="text-faded text-sm mt-3 leading-relaxed">Подписки на нейросети, оформленные на ваш собственный аккаунт.</p>
       </div>
       <div class="text-sm space-y-2.5">
@@ -253,7 +276,9 @@ const ICONS = {
   </div>
 </footer>
 
-<div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 hidden">
+<div id="dock" class="dock hidden"></div>
+
+<div id="toast" class="fixed bottom-24 lg:bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 hidden">
   <div class="bg-panel border border-edge2 rounded-xl px-5 py-3.5 shadow-2xl flex items-center gap-3">
     <span id="toastDot" class="w-2.5 h-2.5 rounded-full bg-brass shrink-0"></span>
     <span id="toastText" class="text-sm flex-1 min-w-0"></span>
@@ -310,6 +335,7 @@ const ICONS = {
     const el = document.getElementById('cartCount');
     el.textContent = cartQty();
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    drawDock();
   }
   let toastTimer;
   function toast(g) {
@@ -426,6 +452,67 @@ const ICONS = {
               ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заявку можно оставить — ответим с '+CONFIG.openFrom+':00.'}
             </p>
             <a href="" data-lnk="ask" class="block text-center border border-edge2 hover:border-brass transition-colors rounded-xl py-3 text-sm">Написать в Telegram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-5 pb-10">
+      <div class="relative bg-board border border-edge rounded-2xl overflow-hidden">
+        <div class="orb" style="width:300px;height:300px;background:rgba(224,162,83,.13);top:-90px;right:8%"></div>
+        <div class="relative grid sm:grid-cols-[1fr_auto] gap-6 items-center p-6 sm:p-8">
+          <div>
+            <div class="tech text-brass mb-3">[ хозяин лавки ]</div>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl mb-3">Знакомьтесь, Еня</h2>
+            <p class="text-faded text-[15px] leading-relaxed max-w-md">
+              Он достаёт доступ к любой нейросети, пока вы занимаетесь делами.
+              Знает, где что подешевле, какой сервис под какую задачу и что делать,
+              если карта не проходит.
+            </p>
+            <div class="mt-5 flex flex-wrap gap-2.5">
+              <a href="#/pick" class="bg-brass text-ink font-display font-bold text-sm px-5 py-3 rounded-xl hover:bg-paper transition-colors">Спросить у Ени</a>
+              <a href="" data-lnk="channel" class="border border-edge2 hover:border-brass transition-colors text-sm px-5 py-3 rounded-xl">Смотреть видео</a>
+            </div>
+          </div>
+          <div class="justify-self-center sm:justify-self-end">
+            <img src="raccoon.png" alt="Еня — хозяин AKU Лавки" loading="lazy" decoding="async"
+                 class="hero-char float w-[165px] sm:w-[240px] h-auto select-none pointer-events-none"
+                 onerror="this.style.display='none';document.getElementById('enyaSvg').style.display='block'">
+            <svg id="enyaSvg" viewBox="0 0 240 240" style="display:none"
+                 class="hero-char float w-[165px] sm:w-[240px] h-auto select-none pointer-events-none"
+                 role="img" aria-label="Еня — хозяин AKU Лавки">
+              <defs><clipPath id="enyaClip"><circle cx="120" cy="120" r="106"/></clipPath></defs>
+              <circle cx="120" cy="120" r="106" fill="#1A1613"/>
+              <g clip-path="url(#enyaClip)">
+                <!-- тело и фартук -->
+                <path d="M62 240c0-38 26-64 58-64s58 26 58 64z" fill="#3E3730"/>
+                <path d="M92 196c0-9 12-15 28-15s28 6 28 15v44H92z" fill="#E0A253"/>
+                <path d="M120 178v12" stroke="#2A241F" stroke-width="3" stroke-linecap="round"/>
+                <!-- лапа с картой -->
+                <g transform="rotate(-14 182 170)">
+                  <rect x="158" y="156" width="46" height="30" rx="6" fill="#E0A253"/>
+                  <rect x="165" y="165" width="14" height="10" rx="2.5" fill="#1A1613" opacity=".5"/>
+                </g>
+                <ellipse cx="164" cy="192" rx="17" ry="14" fill="#5C5248"/>
+                <!-- уши -->
+                <circle cx="76" cy="76" r="24" fill="#352E28"/><circle cx="77" cy="79" r="12" fill="#2A241F"/>
+                <circle cx="164" cy="76" r="24" fill="#352E28"/><circle cx="163" cy="79" r="12" fill="#2A241F"/>
+                <!-- голова -->
+                <circle cx="120" cy="112" r="58" fill="#5C5248"/>
+                <path d="M120 54c-24 0-38 16-38 16 10 7 24 11 38 11s28-4 38-11c0 0-14-16-38-16z" fill="#6E6358"/>
+                <!-- маска -->
+                <path d="M68 106c4-16 22-24 30-14 5 7 3 16-5 21-10 7-28 5-25-7z" fill="#241F1A"/>
+                <path d="M172 106c-4-16-22-24-30-14-5 7-3 16 5 21 10 7 28 5 25-7z" fill="#241F1A"/>
+                <!-- глаза -->
+                <circle cx="96" cy="107" r="11" fill="#FAF6EF"/><circle cx="99" cy="108" r="5.5" fill="#140F0C"/>
+                <circle cx="144" cy="107" r="11" fill="#FAF6EF"/><circle cx="147" cy="108" r="5.5" fill="#140F0C"/>
+                <!-- морда -->
+                <ellipse cx="120" cy="138" rx="27" ry="21" fill="#D8CFC4"/>
+                <path d="M120 130l-9.5 7.5c0 5 4.5 8.5 9.5 8.5s9.5-3.5 9.5-8.5z" fill="#241F1A"/>
+                <path d="M120 146v6M120 152c-5.5 0-9-2.5-11-5.5M120 152c5.5 0 9-2.5 11-5.5" stroke="#241F1A" stroke-width="3" stroke-linecap="round" fill="none"/>
+              </g>
+              <circle cx="120" cy="120" r="106" fill="none" stroke="#E0A253" stroke-opacity=".35" stroke-width="2"/>
+            </svg>
           </div>
         </div>
       </div>
@@ -661,7 +748,7 @@ const ICONS = {
     const termBtn = t2 => `<button data-term="${t2.months}" class="flex-1 min-w-0 px-2 py-3 rounded-xl border text-[13px] sm:text-sm transition-colors ${pickedTerm===t2.months?'border-brass bg-brass/10 text-paper font-semibold':'border-edge2 text-faded hover:border-faded'}">
         <span class="block whitespace-nowrap">${t2.label}</span>${t2.off?`<span class="block text-xs text-sage mt-0.5">−${t2.off}%</span>`:''}</button>`;
     return `
-    <section class="max-w-6xl mx-auto px-5 py-8 sm:py-14">
+    <section class="max-w-6xl mx-auto px-5 py-8 sm:py-14 pb-24 lg:pb-14">
       <nav class="text-sm text-faded mb-8 flex items-center gap-2 flex-wrap">
         <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
         <span class="text-edge2">/</span><span>${esc(cat(g.cat))}</span></nav>
@@ -841,6 +928,37 @@ const ICONS = {
       <a href="#/shop" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:bg-paper transition-colors">В каталог</a></section>`;
   }
 
+  function drawDock() {
+    const d = document.getElementById('dock');
+    if (!d) return;
+    const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+    const g = seg[0]==='p' ? G(seg[1]) : null;
+    if (g && !g.external) {
+      const p = priceFor(g, pickedTerm);
+      d.className = 'dock';
+      d.innerHTML =
+        '<div class="flex items-center gap-3">' +
+          '<div class="flex-1 min-w-0">' +
+            '<div class="font-display font-bold text-lg leading-none">' + money(p) + '</div>' +
+            '<div class="text-xs text-faded mt-1">криптой ' + money(crypto(p)) + '</div>' +
+          '</div>' +
+          '<button id="dockAdd" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3 rounded-xl shrink-0">В корзину</button>' +
+        '</div>';
+      return;
+    }
+    if (cartQty() > 0 && !location.hash.startsWith('#/cart')) {
+      d.className = 'dock';
+      d.innerHTML =
+        '<a href="#/cart" class="flex items-center justify-between bg-brass text-ink rounded-xl px-5 py-3">' +
+          '<span class="text-sm">' + cartQty() + ' в корзине · <b>' + money(cartTotal()) + '</b></span>' +
+          '<span class="font-display font-bold text-sm">Оформить →</span>' +
+        '</a>';
+      return;
+    }
+    d.className = 'dock hidden';
+    d.innerHTML = '';
+  }
+
   function render() {
     const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
     let html;
@@ -854,7 +972,7 @@ const ICONS = {
     else if (seg[0]==='terms')   html = viewTerms();
     else                         html = viewNotFound();
     app.innerHTML = '<div class="view-in">' + html + '</div>';
-    wireLinks(app); drawCalc();
+    wireLinks(app); drawCalc(); drawDock();
   }
 
   function wireLinks(scope) {
@@ -880,7 +998,7 @@ const ICONS = {
     if (z) { quizAns[quizStep] = z.dataset.quiz; quizStep++; render(); window.scrollTo({top:0}); return; }
     if (e.target.closest('#quizBack'))  { quizStep = Math.max(0,quizStep-1); render(); return; }
     if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
-    if (e.target.closest('#addBtn'))    { addToCart(location.hash.split('/')[2], pickedTerm); return; }
+    if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
       const lines = cartList().map(i => {
         const g = G(i.id);
