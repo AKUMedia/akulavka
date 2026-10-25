@@ -797,6 +797,16 @@ tailwind.config = { theme: { extend: {
     d.innerHTML = '';
   }
 
+  /* реферальная метка: akulavka.com/?ref=123 — запоминаем и передаём боту при оформлении */
+  function refFromSite() {
+    try {
+      const q = new URLSearchParams(location.search).get('ref');
+      if (q && /^\d{4,15}$/.test(q)) localStorage.setItem('aku-ref', q);
+      return localStorage.getItem('aku-ref');
+    } catch (_) { return null; }
+  }
+  refFromSite();
+
   function render() {
     // Telegram дописывает к адресу свой хвост (#tgWebAppData=...) — это не маршрут
     const raw = /^#?tgWebApp/i.test(location.hash.replace(/^#/,'')) ? '' : location.hash;
@@ -840,13 +850,8 @@ tailwind.config = { theme: { extend: {
     if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
     if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
-      const lines = cartList().map(i => {
-        const g = G(i.id);
-        return '• ' + g.name + ' — ' + term(i.months, G(i.id)).label + (i.qty>1?' ×'+i.qty:'') + ' — ' + money(priceFor(g,i.months)*i.qty);
-      }).join('\n');
-      const msg = 'Здравствуйте! Заказ из Лавки:\n\n' + lines + '\n\nИтого: ' + money(cartTotal()) +
-                  '\nКриптой: ' + money(crypto(cartTotal())) + '\n\nКак оплатить?';
-      window.open(tg + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+      const items = cartList().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
+      window.open(CART_LINK.url(items, refFromSite()), '_blank', 'noopener');
     }
   });
 
