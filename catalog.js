@@ -3,6 +3,7 @@
 
 const CONFIG = {
   telegram : 'hipnohop',
+  bot      : 'akulavka_bot',
   channel  : 'https://t.me/Alekseii_AI',
   siteLink : 'https://aku-automation.io',
   guideLink: 'https://aku-automation.io/guide/?utm_source=lavka&utm_medium=site&utm_campaign=guide',
@@ -44,19 +45,19 @@ const CONFIG = {
   ],
 
   goods: [
-    { id:'claude', cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, hit:true, noLogin:true,
+    { id:'claude', n:1, cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, hit:true, noLogin:true,
       short:'Сильнее всех в тексте, коде и работе с документами.',
       for:'Тексты, аналитика, программирование',
       about:'Подписка Anthropic. Продвинутые модели, длинные диалоги, загрузка файлов. Лучший выбор для работы с текстом и кодом: пишет аккуратнее конкурентов и реже выдумывает. Единственная позиция, которую мы оформляем вообще без доступа к вашему аккаунту — только по ID.',
       inc:['Оформляем по ID — пароль не нужен','Продвинутые модели вместо базовой','Загрузка документов и картинок','Проекты и сохранённые инструкции'] },
 
-    { id:'gpt', cat:'chat', name:'ChatGPT Plus', icon:'gpt', tint:'#2FBF9A', usd:20, hit:true,
+    { id:'gpt', n:2, cat:'chat', name:'ChatGPT Plus', icon:'gpt', tint:'#2FBF9A', usd:20, hit:true,
       short:'Самый универсальный. Голос, картинки, разбор файлов.',
       for:'Всё понемногу, первый выбор новичка',
       about:'Подписка OpenAI. Самый популярный сервис: помимо текста рисует картинки, говорит голосом, разбирает таблицы и ищет в интернете. Если берёте первую подписку в жизни — обычно берут эту.',
       inc:['Свежие модели без ограничений базовой версии','Генерация картинок','Голосовой режим','Анализ файлов и таблиц'] },
 
-    { id:'heygen', cat:'image', name:'HeyGen', icon:'heygen', tint:'#5B8CFF', usd:29, hit:true,
+    { id:'heygen', n:3, cat:'image', name:'HeyGen', icon:'heygen', tint:'#5B8CFF', usd:29, hit:true,
       short:'Видео с говорящим аватаром по тексту.',
       for:'Ролики без съёмки и микрофона',
       about:'Делает видео, где аватар произносит ваш текст на нужном языке. Берут для обучающих роликов, рекламы и контента в соцсети, когда снимать себя не хочется или некогда.',
@@ -66,62 +67,62 @@ const CONFIG = {
 
 
 
-    { id:'gemini', cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20,
+    { id:'gemini', n:4, cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20,
       short:'Живёт внутри Google Документов, Почты и Диска.', for:'Работа в экосистеме Google',
       about:'Подписка Google. Помощник встроен прямо в Документы, Почту и Диск, плюс даёт дополнительное место в облаке.',
       inc:['Продвинутые модели Google','Помощник в Документах и Почте','Место на Диске','Очень длинные тексты'] },
-    { id:'gptgo', cat:'chat', name:'ChatGPT Go', icon:'gpt', tint:'#2FBF9A', rub:590,
+    { id:'gptgo', n:5, cat:'chat', name:'ChatGPT Go', icon:'gpt', tint:'#2FBF9A', rub:590,
       short:'Урезанный ChatGPT за треть цены.', for:'Первая подписка, попробовать',
       about:'Облегчённый тариф OpenAI: те же свежие модели, но с лимитами пониже, чем в Plus. Берут, чтобы попробовать нейросеть на небольшой сумме и понять, нужен ли полный тариф.',
       inc:['Свежие модели вместо базовой','Генерация картинок','Анализ файлов','Лимиты ниже, чем в Plus'] },
 
-    { id:'spotify', cat:'sound', name:'Spotify Premium', icon:'suno', tint:'#4BC27A',
+    { id:'spotify', n:6, cat:'sound', name:'Spotify Premium', icon:'suno', tint:'#4BC27A',
       terms:[{ months:3, label:'3 месяца', price:650 },{ months:6, label:'6 месяцев', price:1190 }],
       short:'Музыка без рекламы и с офлайном.', for:'Не нейросеть, но спрашивают часто',
       about:'Подписка Spotify на ваш аккаунт: музыка без рекламы, загрузка треков на телефон и нормальное качество звука. Оформляем так же, как и остальное.',
       inc:['Без рекламы','Загрузка на телефон','Высокое качество','На ваш аккаунт'] },
 
-    { hidden:true, id:'perplexity', cat:'chat', name:'Perplexity Pro', icon:'perplexity', tint:'#38B3B8', usd:20,
+    { hidden:true, id:'perplexity', n:10, cat:'chat', name:'Perplexity Pro', icon:'perplexity', tint:'#38B3B8', usd:20,
       short:'Поиск с источниками. Для research и учёбы.', for:'Проверка фактов, учёба',
       about:'Поисковик на нейросети: отвечает на вопрос и сразу показывает ссылки на источники.',
       inc:['Неограниченные подробные запросы','Ссылки на источники','Выбор модели под задачу','Загрузка своих файлов'] },
-    { hidden:true, id:'grok', cat:'chat', name:'SuperGrok', icon:'grok', tint:'#B4A8FF', usd:30,
+    { hidden:true, id:'grok', n:11, cat:'chat', name:'SuperGrok', icon:'grok', tint:'#B4A8FF', usd:30,
       short:'Свободнее конкурентов, видит происходящее в X.', for:'Свежие данные',
       about:'Подписка xAI. Отвечает свободнее большинства конкурентов и видит, что прямо сейчас обсуждают в X.',
       inc:['Режим рассуждений','Данные из X в реальном времени','Генерация картинок','Повышенные лимиты'] },
-    { id:'midjourney', cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10,
+    { id:'midjourney', n:7, cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10,
       short:'Лучшая картинка среди генераторов.', for:'Реклама, обложки, иллюстрации',
       about:'Генератор изображений с самой узнаваемой картинкой на рынке.',
       inc:['Быстрые генерации по тарифу','Работа в веб-версии','Апскейл и вариации','Свои референсы'] },
-    { hidden:true, id:'runway', cat:'image', name:'Runway', icon:'runway', tint:'#7BE3C4', usd:15,
+    { hidden:true, id:'runway', n:12, cat:'image', name:'Runway', icon:'runway', tint:'#7BE3C4', usd:15,
       short:'Видео из текста и фото, монтаж на нейросети.', for:'Ролики и обработка видео',
       about:'Оживляет фотографии, генерирует ролики по описанию, вырезает фон и объекты.',
       inc:['Видео из текста и фото','Удаление фона','Замедление и апскейл','Кредиты по тарифу'] },
-    { hidden:true, id:'kling', cat:'image', name:'Kling AI', icon:'kling', tint:'#FF9BB8', usd:10,
+    { hidden:true, id:'kling', n:13, cat:'image', name:'Kling AI', icon:'kling', tint:'#FF9BB8', usd:10,
       short:'Реалистичное видео, хорошо держит лица.', for:'Рекламные ролики с людьми',
       about:'Один из сильнейших генераторов видео. Лучше конкурентов справляется с движением людей.',
       inc:['Видео по описанию','Оживление фотографий','Повышенное качество','Приоритетная очередь'] },
-    { id:'cursor', cat:'code', name:'Cursor Pro', icon:'cursor', tint:'#A78BFA', usd:20,
+    { id:'cursor', n:8, cat:'code', name:'Cursor Pro', icon:'cursor', tint:'#A78BFA', usd:20,
       short:'Редактор кода, который пишет код за вас.', for:'Разработка проектов',
       about:'Среда разработки со встроенным ИИ. Понимает проект целиком и правит несколько файлов сразу.',
       inc:['Запросы без лимитов базовой версии','Работа с проектом целиком','Автодополнение','Агент для правок'] },
-    { hidden:true, id:'copilot', cat:'code', name:'GitHub Copilot', icon:'copilot', tint:'#9EA7B3', usd:10,
+    { hidden:true, id:'copilot', n:14, cat:'code', name:'GitHub Copilot', icon:'copilot', tint:'#9EA7B3', usd:10,
       short:'Подсказки кода прямо в вашем редакторе.', for:'Не меняя инструменты',
       about:'Дописывает код по мере набора внутри привычного редактора.',
       inc:['Автодополнение в редакторе','Чат по вашему коду','Объяснение чужого кода','Популярные редакторы'] },
-    { id:'suno', cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10,
+    { id:'suno', n:9, cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10,
       short:'Песни целиком: музыка, вокал и текст.', for:'Джинглы и треки',
       about:'Делает законченный трек с вокалом по описанию жанра и настроения.',
       inc:['Расширенный лимит','Коммерческое использование','Загрузка своего вокала','Хорошее качество'] },
-    { hidden:true, id:'seedance', cat:'image', name:'Seedance 2.5', icon:'runway', tint:'#FFB443', usd:15,
+    { hidden:true, id:'seedance', n:15, cat:'image', name:'Seedance 2.5', icon:'runway', tint:'#FFB443', usd:15,
       short:'Генератор видео нового поколения.', for:'Короткие ролики',
       about:'Свежий сервис генерации видео: делает короткие ролики по описанию и оживляет изображения.',
       inc:['Видео по описанию','Оживление картинок','Повышенное качество','Быстрая очередь'] },
-    { hidden:true, id:'lovable', cat:'code', name:'Lovable Pro', icon:'cursor', tint:'#FF7AC6', usd:25,
+    { hidden:true, id:'lovable', n:16, cat:'code', name:'Lovable Pro', icon:'cursor', tint:'#FF7AC6', usd:25,
       short:'Делает сайты и приложения по описанию.', for:'Запуск без разработчика',
       about:'Описываете словами, что должно получиться — сервис собирает рабочее приложение или сайт.',
       inc:['Приложение по описанию','Правки текстом','Публикация в один клик','Экспорт кода'] },
-    { hidden:true, id:'eleven', cat:'sound', name:'ElevenLabs', icon:'eleven', tint:'#7FD1FF', usd:22,
+    { hidden:true, id:'eleven', n:17, cat:'sound', name:'ElevenLabs', icon:'eleven', tint:'#7FD1FF', usd:22,
       short:'Озвучка и копирование голоса на русском.', for:'Озвучка роликов',
       about:'Синтез речи, которую тяжело отличить от живой. Копирует голос по короткой записи.',
       inc:['Большой лимит символов','Копирование своего голоса','Естественная русская речь','Высокое качество'] }
@@ -160,4 +161,30 @@ const PRICE = {
   money:  n => n.toLocaleString('ru-RU') + ' ₽'
 };
 
-if (typeof module !== 'undefined' && module.exports) module.exports = { CONFIG, ICONS, PRICE };
+/* ---------- корзина ⇄ ссылка на бота ----------
+   Формат: o + (номер товара ×2 + срок + кол-во) по 4 знака на позицию, затем _ и номер пригласившего.
+   Пример: o0111_fcfck5 = Claude Pro, 1 мес, 1 шт., пригласил пользователь 927864149.
+   Цены в ссылке не передаются — бот считает их сам по каталогу. Новые товары — с новым n. */
+const CART_LINK = {
+  encode(items, ref) {
+    const body = items.slice(0, 14).map(i => {
+      const g = CONFIG.goods.find(x => x.id === i.id);
+      return g ? g.n.toString(36).padStart(2, '0') + i.months.toString(36) + Math.min(9, Math.max(1, i.qty)) : '';
+    }).join('');
+    return 'o' + body + (ref ? '_' + Number(ref).toString(36) : '');
+  },
+  decode(str) {
+    const m = /^o([0-9a-z]*)(?:_([0-9a-z]+))?$/.exec(str || '');
+    if (!m) return null;
+    const items = [];
+    for (let k = 0; k + 4 <= m[1].length; k += 4) {
+      const n = parseInt(m[1].slice(k, k + 2), 36), months = parseInt(m[1][k + 2], 36), qty = +m[1][k + 3];
+      const g = CONFIG.goods.find(x => x.n === n);
+      if (g && PRICE.termsOf(g).some(t => t.months === months) && qty > 0) items.push({ id: g.id, months, qty });
+    }
+    return { items, ref: m[2] ? parseInt(m[2], 36) : null };
+  },
+  url(items, ref) { return 'https://t.me/' + CONFIG.bot + '?start=' + CART_LINK.encode(items, ref); }
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { CONFIG, ICONS, PRICE, CART_LINK };
