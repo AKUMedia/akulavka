@@ -218,7 +218,10 @@ tailwind.config = { theme: { extend: {
   function goodCard(g, i) {
     const href = g.external ? extLink(g) : '#/p/' + g.id;
     const ext  = g.external ? ' target="_blank" rel="noopener"' : '';
-    const p    = g.usd ? priceFor(g,1) : null;
+    const t0   = g.external ? null : termsOf(g)[0];
+    const p    = t0 ? priceFor(g, t0.months) : null;
+    const per  = t0 ? (t0.months === 1 ? 'в месяц' : 'за ' + t0.label.toLowerCase()) : '';
+    const days = t0 ? (t0.months === 1 ? '30 дней' : t0.label.toLowerCase()) : '';
     return `
       <a href="${href}"${ext} class="card rise block bg-board border border-edge rounded-2xl p-4 sm:p-5"
          style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
@@ -232,12 +235,12 @@ tailwind.config = { theme: { extend: {
         <div class="tech text-faded/70 flex items-center gap-2 mb-3">
           <span>${g.noLogin ? '[ без пароля ]' : '[ ' + esc(cat(g.cat)) + ' ]'}</span>
           <span style="color:${g.tint}">/</span>
-          <span>${p ? '30 дней' : g.external==='GUIDE' ? 'pdf' : 'по ссылке'}</span>
+          <span>${p ? days : 'по ссылке'}</span>
         </div>
         <div class="pt-4 border-t border-edge">
           <div class="flex items-baseline justify-between gap-2">
-            <span class="font-display font-bold text-base">${p ? money(p) : g.priceLabel}</span>
-            <span class="text-xs text-faded">${p ? 'в месяц' : ''}</span>
+            <span class="font-display font-bold text-base">${p ? money(p) : (g.priceLabel || '')}</span>
+            <span class="text-xs text-faded">${per}</span>
           </div>
           ${p ? `<div class="text-xs text-sage mt-1.5">криптой ${money(crypto(p))}</div>` : ''}
         </div>
@@ -398,23 +401,7 @@ tailwind.config = { theme: { extend: {
       </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
-      <a href="" data-lnk="guide" class="group block rounded-2xl border p-6 sm:p-9 relative overflow-hidden"
-         style="border-color:#8AA87244;background:linear-gradient(135deg,rgba(138,168,114,.10),rgba(32,28,24,.4))">
-        <div class="orb" style="width:220px;height:220px;background:rgba(138,168,114,.14);top:-70px;right:6%"></div>
-        <div class="relative grid lg:grid-cols-[1fr_auto] gap-7 items-center">
-          <div>
-            <div class="tech text-sage mb-4">[ бесплатно · без почты ]</div>
-            <h2 class="font-display font-extrabold text-2xl sm:text-3xl leading-tight mb-3">Гайд «Claude с нуля»</h2>
-            <p class="text-faded leading-relaxed max-w-lg text-[15px]">
-              Чтобы подписка окупилась, а не пылилась. Как устроен Claude, как формулировать
-              запросы и какие задачи ему отдавать. Написан нами, открывается сразу.
-            </p>
-          </div>
-          <span class="shrink-0 bg-sage text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl group-hover:opacity-90 transition-opacity text-center">Читать бесплатно</span>
-        </div>
-      </a>
-    </section>
+
 
     <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <h2 class="font-display font-bold text-2xl mb-3">Окупится или нет</h2>
