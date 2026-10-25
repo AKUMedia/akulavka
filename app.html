@@ -260,7 +260,7 @@ tailwind.config = { theme: { extend: {
         <div class="flex justify-between text-[13px]">
           <span class="text-faded">Криптой (−${CONFIG.cryptoOff}%)</span><span class="text-sage font-semibold">${money(PRICE.crypto(t))}</span></div>
       </div>
-      <div class="text-faded text-[12.5px] leading-relaxed">Нажмите кнопку внизу — реквизиты придут в чат с ботом.</div>
+      <div class="text-faded text-[12.5px] leading-relaxed">Нажмите кнопку внизу — заказ откроется в чате с ботом, там выберете оплату и получите реквизиты.</div>
       <div class="h-3"></div>`;
   }
 
@@ -287,7 +287,7 @@ tailwind.config = { theme: { extend: {
 
   function scFriends() {
     const uid = TG && TG.initDataUnsafe && TG.initDataUnsafe.user ? TG.initDataUnsafe.user.id : null;
-    const link = uid ? `https://t.me/akulavka_bot?start=ref_${uid}` : null;
+    const link = uid ? `https://t.me/${CONFIG.bot}?start=ref_${uid}` : null;
     return `
       <h1 class="font-display font-bold text-[20px] mb-2">Приводите друзей</h1>
       <p class="text-faded text-[14px] leading-relaxed mb-4">
@@ -393,11 +393,11 @@ tailwind.config = { theme: { extend: {
 
   function sendOrder() {
     if (!qty()) return;
-    const payload = { type:'order', items: list().map(i => ({
-      id:i.id, name:G(i.id).name, months:i.months, qty:i.qty, price:PRICE.priceFor(G(i.id), i.months) })),
-      total: total(), crypto: PRICE.crypto(total()) };
-    try { TG.sendData(JSON.stringify(payload)); cart = {}; sync(); }
-    catch (e) { TG.showAlert('Не получилось отправить заказ. Напишите нам в чат.'); }
+    const items = list().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
+    const url = CART_LINK.url(items, null);
+    cart = {}; sync();
+    if (TG && TG.openTelegramLink) { TG.openTelegramLink(url); setTimeout(() => { try { TG.close(); } catch (_) {} }, 300); }
+    else window.location.href = url;
   }
 
   /* ---------- события ---------- */
@@ -431,7 +431,7 @@ tailwind.config = { theme: { extend: {
     try { TG.disableVerticalSwipes && TG.disableVerticalSwipes(); } catch (_) {}
     TG.onEvent('mainButtonClicked', () => {
       if (tab === 'product') { add(openId, months); go('cart'); return; }
-      if (tab === 'cart') { sendOrder(); go('orders'); setTimeout(() => { try { TG.close(); } catch (_) {} }, 900); return; }
+      if (tab === 'cart') { sendOrder(); return; }
       go('cart');
     });
     TG.onEvent('backButtonClicked', () => go('shop'));
