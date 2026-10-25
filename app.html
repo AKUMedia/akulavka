@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AKU Лавка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { ink:'#FFFFFF', board:'#FAFAF8', panel:'#F3F3EF', edge:'#E6E6E1', edge2:'#D6D6CF',
+            paper:'#0E0E0D', faded:'#6A6A64', brass:'#F2601A', sage:'#3C8C5C', rust:'#D6402A' },
+  fontFamily: { display:['Space Grotesk','system-ui','sans-serif'], ui:['Inter','system-ui','sans-serif'],
+                mono:['JetBrains Mono','ui-monospace','monospace'] }
+}}}
+</script>
+<style>
+  html, body { background:#fff; color:#0E0E0D; overflow-x:hidden; -webkit-tap-highlight-color:transparent }
+  * { min-width:0 }
+  .tech { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase }
+  .view { animation:vin .22s ease both }
+  @keyframes vin { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .row:active { transform:scale(.985) }
+  .row { transition:transform .12s ease }
+  .pop { animation:pop .3s cubic-bezier(.3,1.6,.5,1) }
+  @keyframes pop { 0%{transform:scale(1)} 45%{transform:scale(1.3)} 100%{transform:scale(1)} }
+  .scroll-x { overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none }
+  .scroll-x::-webkit-scrollbar { display:none }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body class="font-ui antialiased pb-6">
+
+<header class="sticky top-0 z-30 bg-ink/95 backdrop-blur border-b border-edge">
+  <div class="px-4 h-13 py-2.5 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <svg viewBox="0 0 100 100" class="w-7 h-7 shrink-0">
+        <rect x="6" y="6" width="88" height="88" rx="21" fill="#F2601A"/>
+        <g fill="#fff"><path d="M22 50 L50 28 L78 50 v5.5 H22 Z"/>
+        <rect x="30" y="62" width="17" height="17" rx="2.6"/>
+        <rect x="53" y="62" width="17" height="17" rx="2.6" opacity=".5"/></g>
+      </svg>
+      <span class="font-display font-bold text-[15px] tracking-tight">AKU<span class="text-brass">·</span>Лавка</span>
+    </div>
+    <button id="cartBtn" class="flex items-center gap-1.5 border border-edge2 rounded-full pl-3 pr-2 py-1.5 text-[13px]">
+      Корзина
+      <span id="cartCount" class="min-w-[19px] h-[19px] px-1 rounded-full bg-brass text-white text-[11px] font-bold grid place-items-center">0</span>
+    </button>
+  </div>
+</header>
+
+<main id="app" class="px-4 pt-4"></main>
+
+<div id="toast" class="fixed left-4 right-4 bottom-4 z-40 hidden">
+  <div class="bg-paper text-ink rounded-xl px-4 py-3 text-sm shadow-lg flex items-center gap-2">
+    <span id="toastDot" class="w-2 h-2 rounded-full bg-brass"></span>
+    <span id="toastText" class="text-white"></span>
+  </div>
+</div>
+
+<script src="catalog.js"></script>
+<script>
+(function () {
+  'use strict';
+  const TG = window.Telegram && window.Telegram.WebApp;
+  const app = document.getElementById('app');
+
+  /* ---------- данные и расчёты ---------- */
+  const G       = id => CONFIG.goods.find(g => g.id === id);
+  const term    = m  => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
+  const money   = n  => n.toLocaleString('ru-RU') + ' ₽';
+  const esc     = s  => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const base    = g  => g.rub ? g.rub : Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
+  const priceFor= (g,m) => Math.round(base(g) * term(m).mult / 10) * 10;
+  const crypto  = n  => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
+  const shown   = () => CONFIG.goods.filter(g => !g.hidden);
+  const byReq   = () => CONFIG.goods.filter(g => g.hidden);
+
+  function icon(g, size) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${g.tint}"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[g.icon] || ''}</svg>`;
+  }
+  const tile = (g, s) => `<div class="shrink-0 grid place-items-center rounded-xl"
+      style="width:${s}px;height:${s}px;background:${g.tint}1A;border:1px solid ${g.tint}33">${icon(g, Math.round(s*.5))}</div>`;
+
+  /* ---------- корзина ---------- */
+  let cart = {};
+  const cartList  = () => Object.keys(cart).map(k => ({ key:k, ...cart[k] }));
+  const cartQty   = () => cartList().reduce((s,i) => s + i.qty, 0);
+  const cartTotal = () => cartList().reduce((s,i) => s + priceFor(G(i.id), i.months) * i.qty, 0);
+
+  function addToCart(id, months) {
+    const key = id + ':' + months;
+    cart[key] = { id, months, qty: (cart[key] ? cart[key].qty : 0) + 1 };
+    syncCart(); toast(G(id));
+    try { TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred('light'); } catch (_) {}
+  }
+  function setQty(key, q) {
+    if (q <= 0) delete cart[key]; else cart[key].qty = q;
+    syncCart(); if (view === 'cart') render();
+  }
+  function syncCart() {
+    const el = document.getElementById('cartCount');
+    el.textContent = cartQty();
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    mainButton();
+  }
+
+  let toastTimer;
+  function toast(g) {
+    const box = document.getElementById('toast');
+    document.getElementById('toastText').textContent = g.name + ' — в корзине';
+    document.getElementById('toastDot').style.background = g.tint;
+    box.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => box.classList.add('hidden'), 1900);
+  }
+
+  /* ---------- состояние ---------- */
+  let view = 'shop';          // shop | product | cart | done
+  let openId = null;
+  let months = 1;
+  let cat = 'all';
+  let lastOrder = null;
+
+  function go(v, id) {
+    view = v; openId = id || null;
+    if (v === 'product') months = 1;
+    render(); window.scrollTo({ top: 0 });
+  }
+
+  /* ---------- экраны ---------- */
+  function viewShop() {
+    const list = cat === 'all' ? shown() : shown().filter(g => g.cat === cat);
+    const chips = [{ id:'all', name:'Всё' }].concat(CONFIG.cats.filter(c => shown().some(g => g.cat === c.id)));
+    return `
+      <div class="flex gap-2 scroll-x -mx-4 px-4 pb-3">
+        ${chips.map(c => `<button data-cat="${c.id}" class="shrink-0 px-3.5 py-1.5 rounded-full text-[13px] border whitespace-nowrap
+          ${cat===c.id ? 'bg-brass text-white border-brass font-semibold' : 'border-edge2 text-faded'}">${c.name}</button>`).join('')}
+      </div>
+      <div class="space-y-2.5">
+        ${list.map(g => {
+          const p = priceFor(g, 1);
+          return `<button data-open="${g.id}" class="row w-full text-left bg-board border border-edge rounded-2xl p-3.5 flex items-center gap-3.5">
+            ${tile(g, 46)}
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="font-semibold text-[15px] truncate">${esc(g.name)}</span>
+                ${g.hit ? '<span class="tech text-brass shrink-0 ml-auto">хит</span>' : ''}
+              </div>
+              <div class="text-faded text-[13px] leading-snug mt-0.5 line-clamp-2">${esc(g.short)}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="font-display font-bold text-[15px]">${money(p)}</div>
+              <div class="text-faded text-[11px]">в месяц</div>
+            </div>
+          </button>`;
+        }).join('')}
+      </div>
+
+      ${byReq().length ? `
+      <div class="mt-5 bg-panel border border-edge rounded-2xl p-4">
+        <div class="tech text-faded mb-2">под заказ</div>
+        <div class="text-[13px] text-faded leading-relaxed mb-3">
+          Эти сервисы оформляем по запросу — напишите, назовём цену и срок.
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          ${byReq().map(g => `<span class="text-[12px] border border-edge2 rounded-full px-2.5 py-1">${esc(g.name)}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="mt-4 bg-board border border-edge rounded-2xl p-4">
+        <div class="font-semibold text-[15px] mb-1.5">Claude оформляем по ID</div>
+        <div class="text-faded text-[13px] leading-relaxed">
+          Пароль передавать не нужно вообще — только номер аккаунта.
+          Остальные сервисы оформляем на ваш аккаунт, он остаётся вашим вместе со всей перепиской.
+        </div>
+      </div>
+      <div class="h-4"></div>`;
+  }
+
+  function viewProduct() {
+    const g = G(openId);
+    if (!g) return viewShop();
+    const p = priceFor(g, months);
+    return `
+      <div class="flex items-start gap-3.5 mb-4">
+        ${tile(g, 58)}
+        <div class="min-w-0 pt-0.5">
+          <h1 class="font-display font-bold text-[20px] leading-tight">${esc(g.name)}</h1>
+          <div class="text-faded text-[13px] mt-1">${esc(g.for || '')}</div>
+        </div>
+      </div>
+
+      <p class="text-[14px] leading-relaxed text-faded mb-5">${esc(g.about || g.short)}</p>
+
+      <div class="tech text-faded mb-2">срок подписки</div>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        ${CONFIG.terms.map(t => `<button data-term="${t.months}"
+          class="py-2.5 rounded-xl border text-[13px] ${months===t.months
+            ? 'border-brass bg-brass/10 font-semibold' : 'border-edge2 text-faded'}">
+          ${t.label}${t.off ? `<div class="text-[11px] text-sage">−${t.off}%</div>` : ''}
+        </button>`).join('')}
+      </div>
+
+      <div class="bg-board border border-edge rounded-2xl p-4 mb-4">
+        <div class="font-display font-bold text-[26px] leading-none">${money(p)}</div>
+        <div class="text-sage text-[13px] mt-1.5">криптой ${money(crypto(p))}</div>
+        <div class="text-faded text-[12px] mt-1">за ${term(months).label.toLowerCase()}${g.noLogin ? ' · по ID аккаунта' : ''}</div>
+      </div>
+
+      ${g.inc && g.inc.length ? `
+      <div class="tech text-faded mb-2">что входит</div>
+      <ul class="space-y-2 mb-5">
+        ${g.inc.map(i => `<li class="flex gap-2.5 text-[14px] leading-snug">
+          <span class="shrink-0 mt-[7px] w-1.5 h-1.5 rounded-full" style="background:${g.tint}"></span>
+          <span class="text-faded">${esc(i)}</span></li>`).join('')}
+      </ul>` : ''}
+
+      <div class="bg-panel border border-edge rounded-2xl p-4 mb-2">
+        <div class="font-semibold text-[14px] mb-1">Если подписка слетит</div>
+        <div class="text-faded text-[13px] leading-relaxed">
+          Восстанавливаем за свой счёт. Не выходит — возвращаем деньги за неиспользованные дни.
+        </div>
+      </div>
+      <div class="h-4"></div>`;
+  }
+
+  function viewCart() {
+    const list = cartList();
+    if (!list.length) return `
+      <div class="text-center py-16">
+        <div class="font-display font-bold text-[20px] mb-2">Корзина пустая</div>
+        <div class="text-faded text-[14px] mb-6">Выберите подписку в каталоге.</div>
+        <button data-go="shop" class="bg-brass text-white font-semibold text-[14px] px-6 py-3 rounded-xl">В каталог</button>
+      </div>`;
+
+    const total = cartTotal();
+    return `
+      <h1 class="font-display font-bold text-[20px] mb-4">Корзина</h1>
+      <div class="space-y-2.5 mb-5">
+        ${list.map(i => {
+          const g = G(i.id), p = priceFor(g, i.months);
+          return `<div class="bg-board border border-edge rounded-2xl p-3.5">
+            <div class="flex items-center gap-3">
+              ${tile(g, 40)}
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-[14px] truncate">${esc(g.name)}</div>
+                <div class="text-faded text-[12px]">${term(i.months).label}</div>
+              </div>
+              <div class="font-display font-bold text-[14px] shrink-0">${money(p * i.qty)}</div>
+            </div>
+            <div class="flex items-center justify-between mt-3">
+              <div class="flex items-center gap-2">
+                <button data-qty="${i.key}" data-v="${i.qty-1}" class="w-8 h-8 rounded-lg border border-edge2 text-[16px] leading-none">−</button>
+                <span class="w-6 text-center text-[14px]">${i.qty}</span>
+                <button data-qty="${i.key}" data-v="${i.qty+1}" class="w-8 h-8 rounded-lg border border-edge2 text-[16px] leading-none">+</button>
+              </div>
+              <button data-qty="${i.key}" data-v="0" class="text-faded text-[13px]">Убрать</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="bg-panel border border-edge rounded-2xl p-4 mb-4">
+        <div class="flex justify-between text-[14px] mb-1.5">
+          <span class="text-faded">Итого</span><span class="font-display font-bold text-[18px]">${money(total)}</span>
+        </div>
+        <div class="flex justify-between text-[13px]">
+          <span class="text-faded">Криптой (−${CONFIG.cryptoOff}%)</span><span class="text-sage font-semibold">${money(crypto(total))}</span>
+        </div>
+      </div>
+
+      <div class="text-faded text-[12.5px] leading-relaxed mb-2">
+        После отправки заказа бот покажет реквизиты. Способ оплаты выберете там же.
+      </div>
+      <div class="h-2"></div>`;
+  }
+
+  function viewDone() {
+    return `
+      <div class="text-center py-16">
+        <div class="w-14 h-14 rounded-full bg-brass/15 grid place-items-center mx-auto mb-4">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#F2601A" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5L20 7"/></svg>
+        </div>
+        <div class="font-display font-bold text-[20px] mb-2">Заказ отправлен</div>
+        <div class="text-faded text-[14px] leading-relaxed px-4">
+          Закройте окно — реквизиты и кнопки оплаты ждут в чате с ботом.
+        </div>
+      </div>`;
+  }
+
+  function render() {
+    const html = view === 'product' ? viewProduct()
+               : view === 'cart'    ? viewCart()
+               : view === 'done'    ? viewDone()
+               : viewShop();
+    app.innerHTML = '<div class="view">' + html + '</div>';
+    mainButton(); backButton();
+  }
+
+  /* ---------- нативные кнопки Telegram ---------- */
+  function mainButton() {
+    if (!TG) return;
+    const mb = TG.MainButton;
+    if (view === 'product') {
+      const g = G(openId);
+      mb.setParams({ text: 'В корзину · ' + money(priceFor(g, months)), color:'#F2601A', text_color:'#FFFFFF', is_visible:true });
+    } else if (view === 'cart' && cartQty() > 0) {
+      mb.setParams({ text: 'Отправить заказ · ' + money(cartTotal()), color:'#F2601A', text_color:'#FFFFFF', is_visible:true });
+    } else if (view === 'shop' && cartQty() > 0) {
+      mb.setParams({ text: cartQty() + ' в корзине · ' + money(cartTotal()), color:'#F2601A', text_color:'#FFFFFF', is_visible:true });
+    } else mb.hide();
+  }
+  function backButton() {
+    if (!TG) return;
+    if (view === 'shop') TG.BackButton.hide(); else TG.BackButton.show();
+  }
+
+  function sendOrder() {
+    if (!cartQty()) return;
+    const payload = {
+      type: 'order',
+      items: cartList().map(i => ({ id:i.id, name:G(i.id).name, months:i.months, qty:i.qty,
+                                    price: priceFor(G(i.id), i.months) })),
+      total: cartTotal(), crypto: crypto(cartTotal())
+    };
+    try {
+      TG.sendData(JSON.stringify(payload));
+      lastOrder = payload; cart = {}; syncCart(); go('done');
+      setTimeout(() => { try { TG.close(); } catch (_) {} }, 1200);
+    } catch (e) {
+      TG.showAlert('Не получилось отправить заказ. Напишите нам в чат.');
+    }
+  }
+
+  /* ---------- события ---------- */
+  document.addEventListener('click', e => {
+    const open = e.target.closest('[data-open]');
+    if (open) return go('product', open.dataset.open);
+    const c = e.target.closest('[data-cat]');
+    if (c) { cat = c.dataset.cat; render(); return; }
+    const t = e.target.closest('[data-term]');
+    if (t) { months = +t.dataset.term; render(); return; }
+    const q = e.target.closest('[data-qty]');
+    if (q) { setQty(q.dataset.qty, +q.dataset.v); return; }
+    const g = e.target.closest('[data-go]');
+    if (g) return go(g.dataset.go);
+    if (e.target.closest('#cartBtn')) return go('cart');
+  });
+
+  /* ---------- запуск ---------- */
+  if (TG) {
+    try { TG.ready(); TG.expand(); } catch (_) {}
+    try { TG.setHeaderColor('#ffffff'); TG.setBackgroundColor('#ffffff'); } catch (_) {}
+    try { TG.disableVerticalSwipes && TG.disableVerticalSwipes(); } catch (_) {}
+    TG.onEvent('mainButtonClicked', () => {
+      if (view === 'product') { addToCart(openId, months); go('cart'); return; }
+      if (view === 'cart') { sendOrder(); return; }
+      go('cart');
+    });
+    TG.onEvent('backButtonClicked', () => {
+      if (view === 'product' || view === 'cart') go('shop'); else go('shop');
+    });
+  }
+  render();
+})();
+</script>
+</body>
+</html>
