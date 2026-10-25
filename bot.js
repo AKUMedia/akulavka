@@ -47,6 +47,7 @@ const CONFIG = {
 /* Товары, цены и сроки берутся из общего catalog.js — того же,
    что использует сайт и мини-приложение. Правите там — меняется везде. */
 const SHARED = require('./catalog.js').CONFIG;
+const PRICE  = require('./catalog.js').PRICE;
 const LINK_OF = { LEXY:'lexyRef', CARD:'cardRef', CARD2:'cardRef2', GUIDE:'guide' };
 
 CONFIG.rate      = SHARED.rate;
@@ -54,7 +55,7 @@ CONFIG.markup    = SHARED.markup;
 CONFIG.cryptoOff = SHARED.cryptoOff;
 CONFIG.terms     = SHARED.terms;
 CONFIG.goods = SHARED.goods.filter(g => !g.hidden).map(g => ({
-  id: g.id, name: g.name, usd: g.usd, rub: g.rub, noLogin: g.noLogin,
+  id: g.id, name: g.name, usd: g.usd, rub: g.rub, terms: g.terms, noLogin: g.noLogin,
   desc: g.short + (g.about ? '\n\n' + g.about : '')
 })).concat(SHARED.extras.map(e => ({
   id: e.id, name: e.name, link: LINK_OF[e.external], desc: e.short
@@ -81,10 +82,10 @@ let db = load();
 
 /* ---------- Хелперы ---------- */
 const G = id => CONFIG.goods.find(g => g.id === id);
-const term = m => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
+const term = (m, g) => g ? PRICE.term(g, m) : (CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0]);
 const money = n => n.toLocaleString('ru-RU') + ' ₽';
-const base = g => g.rub ? g.rub : Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
-const priceFor = (g, m) => Math.round(base(g) * term(m).mult / 10) * 10;
+const base = PRICE.base;
+const priceFor = (g, m) => PRICE.priceFor(g, m);
 const crypto = n => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
 const isOpen = () => { const h = new Date().getHours(); return h >= CONFIG.openFrom && h < CONFIG.openTo; };
 const who = u => u.username ? '@' + u.username : (u.first_name || 'клиент') + ' (id ' + u.id + ')';
@@ -132,7 +133,7 @@ function cartText(uid) {
   if (!c.length) return null;
   const lines = c.map(i => {
     const g = G(i.id);
-    return '• ' + g.name + ' — ' + term(i.months).label +
+    return '• ' + g.name + ' — ' + term(i.months, G(i.id)).label +
            (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(priceFor(g, i.months) * i.qty);
   }).join('\n');
   const t = cartTotal(uid);
@@ -252,7 +253,7 @@ bot.action(/^g:(.+)$/, async ctx => {
     );
   }
 
-  const rows = CONFIG.terms.map(t =>
+  const rows = PRICE.termsOf(g).map(t =>
     [Markup.button.callback(`${t.label} — ${money(priceFor(g, t.months))}`, `add:${g.id}:${t.months}`)]
   );
   rows.push([Markup.button.callback('◀︎ В каталог', 'shop')]);
@@ -372,7 +373,7 @@ function cartTextFromOrder(id) {
   const o = db.orders.find(x => x.id === id);
   if (!o) return '';
   return o.items.map(i =>
-    '• ' + i.name + ' — ' + term(i.months).label + (i.qty > 1 ? ' ×' + i.qty : '') +
+    '• ' + i.name + ' — ' + term(i.months, G(i.id)).label + (i.qty > 1 ? ' ×' + i.qty : '') +
     ' — ' + money(i.price * i.qty)).join('\n');
 }
 
@@ -562,7 +563,7 @@ bot.on('message', async (ctx, next) => {
   delete db.carts[uid];
   save(db);
 
-  const lines = items.map(i => '• ' + i.name + ' — ' + term(i.months).label +
+  const lines = items.map(i => '• ' + i.name + ' — ' + term(i.months, G(i.id)).label +
                    (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(i.price * i.qty)).join('\n');
   await ctx.replyWithHTML(
     `<b>Заказ №${id} принят</b>\n\n${lines}` +
