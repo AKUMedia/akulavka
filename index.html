@@ -792,7 +792,8 @@ tailwind.config = { theme: { extend: {
   function drawDock() {
     const d = document.getElementById('dock');
     if (!d) return;
-    const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+    const raw = /^#?tgWebApp/i.test(location.hash.replace(/^#/,'')) ? '' : location.hash;
+    const seg = raw.replace(/^#\/?/,'').split('/').filter(Boolean);
     const g = seg[0]==='p' ? G(seg[1]) : null;
     if (g && !g.external) {
       const p = priceFor(g, pickedTerm);
@@ -821,7 +822,9 @@ tailwind.config = { theme: { extend: {
   }
 
   function render() {
-    const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+    // Telegram дописывает к адресу свой хвост (#tgWebAppData=...) — это не маршрут
+    const raw = /^#?tgWebApp/i.test(location.hash.replace(/^#/,'')) ? '' : location.hash;
+    const seg = raw.replace(/^#\/?/,'').split('/').filter(Boolean);
     let html;
     if (!seg.length)             html = viewHome();
     else if (seg[0]==='shop')    html = viewShop();
