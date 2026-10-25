@@ -48,6 +48,7 @@ const CONFIG = {
    что использует сайт и мини-приложение. Правите там — меняется везде. */
 const SHARED = require('./catalog.js').CONFIG;
 const PRICE  = require('./catalog.js').PRICE;
+const CART_LINK = require('./catalog.js').CART_LINK;
 const LINK_OF = { LEXY:'lexyRef', CARD:'cardRef', CARD2:'cardRef2', GUIDE:'guide' };
 
 CONFIG.rate      = SHARED.rate;
@@ -175,28 +176,51 @@ const HELLO = (name) =>
   `Привет${name ? ', ' + name : ''}! Это <b>AKU Лавка</b> — подписки на нейросети.\n\n` +
   `Оформляем на ваш собственный аккаунт: переписка, файлы и история остаются у вас. ` +
   `Claude — вообще без пароля, только по номеру аккаунта.\n\n` +
-  `Нажмите <b>«${'🛍 Открыть магазин'}»</b> внизу — там каталог, цены и оформление.\n\n` +
+  `Каталог, цены и оформление — по кнопке ниже.\n\n` +
   (isOpen()
     ? '🟢 Лавка открыта, отвечаем сейчас.'
     : `🌙 Сейчас закрыто. Заявку оставить можно — ответим с ${CONFIG.openFrom}:00.`);
+
+async function setRef(ctx, u, refId) {
+  if (!refId || u.invitedBy || String(refId) === String(ctx.from.id)) return;
+  if (db.orders.some(o => o.uid === ctx.from.id)) return;   // уже покупал — не чужой реферал
+  u.invitedBy = +refId;
+  try {
+    await bot.telegram.sendMessage(u.invitedBy,
+      `👥 По вашей ссылке пришёл новый человек. Как он оформит заказ — начислим ${CONFIG.refFirst}%.`);
+  } catch (_) {}
+}
+
+function startMenu() {
+  return Markup.inlineKeyboard([
+    [Markup.button.webApp('🛍 Открыть магазин', CONFIG.webapp)],
+    [Markup.button.callback('🧾 Мои заказы', 'scr:orders'), Markup.button.callback('👥 Друзья', 'scr:friends')],
+    [Markup.button.callback('❓ Как это работает', 'scr:help'), Markup.button.callback('💬 Написать', 'scr:ask')]
+  ]);
+}
 
 bot.start(async ctx => {
   const u = userOf(ctx.from.id);
   u.name = ctx.from.first_name; u.username = ctx.from.username; u.seen = Date.now();
   const payload = (ctx.startPayload || '').trim();
-  const m = payload.match(/^ref_(\d+)$/);
-  if (m && !u.invitedBy && String(m[1]) !== String(ctx.from.id)) {
-    u.invitedBy = +m[1];
-    try {
-      await bot.telegram.sendMessage(u.invitedBy,
-        `👥 По вашей ссылке пришёл новый человек. Как он оформит заказ — начислим ${CONFIG.refFirst}%.`);
-    } catch (_) {}
+
+  // заказ, собранный на сайте или в приложении: ?start=o....
+  const cartFromLink = CART_LINK.decode(payload);
+  if (cartFromLink) {
+    await setRef(ctx, u, cartFromLink.ref);
+    save(db);
+    if (cartFromLink.items.length) return createOrder(ctx, cartFromLink.items, 'ссылка');
   }
+
+  const m = payload.match(/^ref_(\d+)$/);
+  if (m) await setRef(ctx, u, m[1]);
   save(db);
-  await ctx.replyWithHTML(HELLO(ctx.from.first_name), shopKeyboard());
+  await ctx.replyWithHTML(HELLO(ctx.from.first_name), startMenu());
 });
 
-bot.command('menu', ctx => ctx.replyWithHTML(HELLO(ctx.from.first_name), shopKeyboard()));
+bot.command('menu', ctx => ctx.replyWithHTML(HELLO(ctx.from.first_name), startMenu()));
+bot.command('orders', ctx => screenOrders(ctx));
+bot.command('help', ctx => screenHelp(ctx));
 
 /* ---------- Каталог ---------- */
 bot.action('shop', async ctx => {
@@ -496,7 +520,8 @@ async function screenFriends(ctx) {
     '<b>👥 Приводите друзей — получайте деньги</b>\n\n' +
     `${CONFIG.refFirst}% с первой покупки приглашённого и ${CONFIG.refNext}% со всех следующих. ` +
     'Бонус падает на баланс и списывается с вашего следующего заказа.\n\n' +
-    '<b>Ваша ссылка:</b>\n<code>' + link + '</code>\n\n' +
+    '<b>Ссылка на бота:</b>\n<code>' + link + '</code>\n\n' +
+    '<b>Ссылка на сайт:</b>\n<code>' + CONFIG.site + '?ref=' + ctx.from.id + '</code>\n\n' +
     `Приглашено: <b>${refCount(ctx.from.id)}</b>\nЗаработано: <b>${money(u.refEarned)}</b>\n` +
     `Баланс: <b>${money(u.balance)}</b>`,
     Markup.inlineKeyboard([[Markup.button.url('📨 Отправить другу',
@@ -533,33 +558,28 @@ bot.hears(BTN.ask, ctx => ctx.replyWithHTML(
   Markup.inlineKeyboard([[Markup.button.url('💬 Открыть чат', 'https://t.me/' + CONFIG.telegram)]])
 ));
 
-/* ---------- Заказ из мини-приложения ---------- */
-bot.on('message', async (ctx, next) => {
-  const wad = ctx.message && ctx.message.web_app_data;
-  if (!wad) return next();
-  let payload;
-  try { payload = JSON.parse(wad.data); }
-  catch { return ctx.reply('Не удалось прочитать заказ. Попробуйте ещё раз.'); }
-  if (!payload || payload.type !== 'order' || !Array.isArray(payload.items) || !payload.items.length) {
-    return ctx.reply('Корзина пустая.');
-  }
-
+/* ---------- Создание заказа (из приложения, с сайта, из старой клавиатуры) ---------- */
+async function createOrder(ctx, rawItems, source) {
   const uid = ctx.from.id;
   const u = userOf(uid);
   u.name = ctx.from.first_name; u.username = ctx.from.username;
 
-  const items = payload.items.map(i => ({
-    id: i.id, name: String(i.name).slice(0, 60), months: +i.months || 1,
-    qty: Math.max(1, Math.min(10, +i.qty || 1)), price: +i.price || 0
-  }));
+  const items = rawItems.map(i => {
+    const g = G(i.id);
+    if (!g || g.link) return null;
+    const months = PRICE.termsOf(g).some(t => t.months === +i.months) ? +i.months : PRICE.termsOf(g)[0].months;
+    return { id: g.id, name: g.name, months, qty: Math.max(1, Math.min(9, +i.qty || 1)), price: priceFor(g, months) };
+  }).filter(Boolean);
+  if (!items.length) return ctx.reply('Корзина пустая — откройте магазин и выберите подписку.');
+
   const total = items.reduce((s2, i) => s2 + i.price * i.qty, 0);
-  let due = total;
-  const usedBonus = Math.min(u.balance, Math.max(0, due - 100));
-  if (usedBonus > 0) { due -= usedBonus; u.balance -= usedBonus; }
+  const usedBonus = Math.min(u.balance, Math.max(0, total - 100));
+  if (usedBonus > 0) u.balance -= usedBonus;
+  const base = total - usedBonus;
 
   const id = ++db.seq;
-  db.orders.push({ id, uid, user: who(ctx.from), items, total, due, usedBonus,
-                   method: 'не выбран', status: 'ждёт оплаты', created: Date.now(), fromApp: true });
+  db.orders.push({ id, uid, user: who(ctx.from), items, total, base, due: base, usedBonus,
+                   method: 'не выбран', status: 'ждёт оплаты', created: Date.now(), source });
   delete db.carts[uid];
   save(db);
 
@@ -568,24 +588,47 @@ bot.on('message', async (ctx, next) => {
   await ctx.replyWithHTML(
     `<b>Заказ №${id} принят</b>\n\n${lines}` +
     (usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(usedBonus)}</b>` : '') +
-    `\n\nИтого: <b>${money(due)}</b>\nКриптой: <b>${money(crypto(due))}</b>\n\n` +
-    'Выберите, чем платить:',
+    `\n\nИтого: <b>${money(base)}</b>\nКриптой: <b>${money(crypto(base))}</b>\n\nВыберите, чем платить:`,
     Markup.inlineKeyboard([
       [Markup.button.callback('₮ Крипта USDT (−' + CONFIG.cryptoOff + '%)', 'appay:crypto:' + id)],
       [Markup.button.callback('💳 ЮMoney', 'appay:yoomoney:' + id)],
       [Markup.button.callback('💬 Написать нам', 'contact')]
     ])
   );
-  await notifyAdmin(id, '🛍 заказ из мини-приложения');
+  await notifyAdmin(id, '🛍 новый заказ (' + source + ')');
+}
+
+// старый способ: приложение, открытое кнопкой из нижней клавиатуры
+bot.on('message', async (ctx, next) => {
+  const wad = ctx.message && ctx.message.web_app_data;
+  if (!wad) return next();
+  let payload;
+  try { payload = JSON.parse(wad.data); } catch { return ctx.reply('Не удалось прочитать заказ.'); }
+  if (!payload || !Array.isArray(payload.items)) return ctx.reply('Корзина пустая.');
+  return createOrder(ctx, payload.items, 'приложение');
+});
+
+// кнопки под приветствием
+bot.action(/^scr:(orders|friends|help|ask)$/, async ctx => {
+  await ctx.answerCbQuery();
+  const k = ctx.match[1];
+  if (k === 'orders')  return screenOrders(ctx);
+  if (k === 'friends') return screenFriends(ctx);
+  if (k === 'help')    return screenHelp(ctx);
+  return ctx.replyWithHTML('Пишите сюда — отвечает человек, не автоответчик.\n\n' +
+    'Подскажем, что выбрать под задачу, посчитаем срок и поможем с оплатой.',
+    Markup.inlineKeyboard([[Markup.button.url('💬 Открыть чат', 'https://t.me/' + CONFIG.telegram)]]));
 });
 
 bot.action(/^appay:(crypto|yoomoney):(\d+)$/, async ctx => {
-  await ctx.answerCbQuery();
   const method = ctx.match[1], id = +ctx.match[2];
   const o = db.orders.find(x => x.id === id);
-  if (!o) return ctx.editMessageText('Заказ не найден.');
+  if (!o) return ctx.answerCbQuery('Заказ не найден');
+  if (o.status !== 'ждёт оплаты') return ctx.answerCbQuery('Заказ уже в работе');
+  await ctx.answerCbQuery();
   o.method = method;
-  if (method === 'crypto') o.due = crypto(o.due);
+  const base = o.base !== undefined ? o.base : o.due;
+  o.due = method === 'crypto' ? crypto(base) : base;
   save(db);
 
   const reqs = method === 'crypto'
@@ -725,6 +768,14 @@ setTimeout(checkRenewals, 30 * 1000);        // и через полминуты
 
 /* ---------- Запуск ---------- */
 bot.catch(err => console.error('Ошибка бота:', err));
+
+bot.telegram.setChatMenuButton({ menuButton: { type: 'web_app', text: 'Магазин', web_app: { url: CONFIG.webapp } } })
+  .catch(e => console.error('menu button:', e.message));
+bot.telegram.setMyCommands([
+  { command: 'start',  description: 'Открыть лавку' },
+  { command: 'orders', description: 'Мои заказы' },
+  { command: 'help',   description: 'Как это работает' }
+]).catch(() => {});
 
 bot.launch().then(() => {
   console.log('AKU Лавка запущена');
