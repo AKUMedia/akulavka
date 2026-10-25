@@ -78,8 +78,6 @@ tailwind.config = { theme: { extend: {
   .hero-char { filter:drop-shadow(var(--char-shadow)) }
   .float { animation:fl 6s ease-in-out infinite }
   @keyframes fl { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-  .lg-bg { fill:rgb(var(--c-accent)) }
-  .lg-fg { fill:rgb(var(--c-ink)) }
   @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} html{scroll-behavior:auto} }
 </style>
 </head>
@@ -91,13 +89,7 @@ tailwind.config = { theme: { extend: {
 <header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
   <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
     <a href="#/" class="flex items-center gap-2.5 shrink-0">
-      <svg viewBox="0 0 100 100" class="w-8 h-8 shrink-0">
-      <rect x="6" y="6" width="88" height="88" rx="21" class="lg-bg"/>
-      <g class="lg-fg">
-        <path d="M22 50 L50 28 L78 50 v5.5 H22 Z"/>
-        <rect x="30" y="62" width="17" height="17" rx="2.6"/>
-        <rect x="53" y="62" width="17" height="17" rx="2.6" opacity=".5"/>
-      </g></svg>
+      <img src="logo-icon.png" alt="" class="w-9 h-9 shrink-0 object-contain">
       <span class="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight">AKU<span class="text-brass">·</span>Лавка</span></a>
     <nav class="hidden sm:flex items-center gap-7 text-sm text-faded">
       <a href="#/shop" class="hover:text-paper transition-colors">Каталог</a>
@@ -125,11 +117,7 @@ tailwind.config = { theme: { extend: {
     <div class="grid sm:grid-cols-3 gap-8 sm:gap-9 mb-9 sm:mb-10">
       <div>
         <a href="#/" class="flex items-center gap-2.5">
-          <svg viewBox="0 0 100 100" class="w-7 h-7 shrink-0">
-            <rect x="6" y="6" width="88" height="88" rx="21" class="lg-bg"/>
-            <g class="lg-fg"><path d="M22 50 L50 28 L78 50 v5.5 H22 Z"/>
-            <rect x="30" y="62" width="17" height="17" rx="2.6"/>
-            <rect x="53" y="62" width="17" height="17" rx="2.6" opacity=".5"/></g></svg>
+          <img src="logo-icon.png" alt="" class="w-8 h-8 shrink-0 object-contain">
           <span class="font-display font-extrabold text-base tracking-tight">AKU<span class="text-brass">·</span>Лавка</span></a>
         <p class="text-faded text-sm mt-3 leading-relaxed">Подписки на нейросети, оформленные на ваш собственный аккаунт.</p>
       </div>
@@ -172,16 +160,17 @@ tailwind.config = { theme: { extend: {
   const shown = () => CONFIG.goods.filter(g => !g.hidden);
   const onRequest = () => CONFIG.goods.filter(g => g.hidden);
   const cat = id => (CONFIG.cats.find(c => c.id === id) || {}).name || '';
-  const term = m => CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0];
+  const termsOf = g => PRICE.termsOf(g);
+  const term = (m, g) => g ? PRICE.term(g, m) : (CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0]);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const money = n => n.toLocaleString('ru-RU') + ' ₽';
   const extLink = g => g.external === 'CARD'  ? CONFIG.cardLink
                      : g.external === 'CARD2' ? CONFIG.cardLink2
                      : g.external === 'LEXY'  ? CONFIG.lexyLink
                      : g.external === 'GUIDE' ? CONFIG.guideLink : g.external;
-  const base = g => Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10;
-  const priceFor = (g, m) => Math.round(base(g) * term(m).mult / 10) * 10;
-  const crypto = n => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
+  const base = PRICE.base;
+  const priceFor = (g, m) => PRICE.priceFor(g, m);
+  const crypto = PRICE.crypto;
 
   function icon(g, size) {
     return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${g.tint}"
@@ -604,7 +593,7 @@ tailwind.config = { theme: { extend: {
     const g = G(id); if (!g) return viewNotFound();
     const isExt = !!g.external;
     const p = isExt ? 0 : priceFor(g, pickedTerm);
-    const t = term(pickedTerm);
+    const t = term(pickedTerm, g);
     const near = shown().filter(x => x.cat===g.cat && x.id!==g.id).slice(0,3);
     const termBtn = t2 => `<button data-term="${t2.months}" class="flex-1 min-w-0 px-2 py-3 rounded-xl border text-[13px] sm:text-sm transition-colors ${pickedTerm===t2.months?'border-brass bg-brass/10 text-paper font-semibold':'border-edge2 text-faded hover:border-faded'}">
         <span class="block whitespace-nowrap">${t2.label}</span>${t2.off?`<span class="block text-xs text-sage mt-0.5">−${t2.off}%</span>`:''}</button>`;
@@ -648,7 +637,7 @@ tailwind.config = { theme: { extend: {
             <a href="${extLink(g)}" target="_blank" rel="noopener" class="block text-center bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Открыть</a>
           `:`
             <p class="text-sm text-faded mb-3">Срок подписки</p>
-            <div class="flex gap-2 mb-6">${CONFIG.terms.map(termBtn).join('')}</div>
+            <div class="flex gap-2 mb-6">${termsOf(g).map(termBtn).join('')}</div>
             <div class="flex items-baseline gap-3 mb-1">
               <span class="font-display font-black text-3xl sm:text-4xl">${money(p)}</span>
               ${t.off?`<span class="text-faded text-sm line-through">${money(base(g)*t.months)}</span>`:''}</div>
@@ -682,7 +671,7 @@ tailwind.config = { theme: { extend: {
         ${markTile(g,44)}
         <div class="flex-1 min-w-0">
           <a href="#/p/${g.id}" class="font-display font-bold text-[15px] hover:text-brass transition-colors">${esc(g.name)}</a>
-          <p class="text-faded text-sm mt-1">${term(i.months).label} · ${money(priceFor(g,i.months))}</p>
+          <p class="text-faded text-sm mt-1">${term(i.months, G(i.id)).label} · ${money(priceFor(g,i.months))}</p>
           <div class="flex items-center gap-3 mt-3">
             <button data-qty="${i.key}" data-v="${i.qty-1}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">−</button>
             <span class="text-sm w-4 text-center">${i.qty}</span>
@@ -866,7 +855,7 @@ tailwind.config = { theme: { extend: {
     if (e.target.closest('#checkout')) {
       const lines = cartList().map(i => {
         const g = G(i.id);
-        return '• ' + g.name + ' — ' + term(i.months).label + (i.qty>1?' ×'+i.qty:'') + ' — ' + money(priceFor(g,i.months)*i.qty);
+        return '• ' + g.name + ' — ' + term(i.months, G(i.id)).label + (i.qty>1?' ×'+i.qty:'') + ' — ' + money(priceFor(g,i.months)*i.qty);
       }).join('\n');
       const msg = 'Здравствуйте! Заказ из Лавки:\n\n' + lines + '\n\nИтого: ' + money(cartTotal()) +
                   '\nКриптой: ' + money(crypto(cartTotal())) + '\n\nКак оплатить?';
@@ -880,7 +869,8 @@ tailwind.config = { theme: { extend: {
   });
 
   window.addEventListener('hashchange', () => {
-    if (!location.hash.startsWith('#/p/'))   pickedTerm = 1;
+    if (!location.hash.startsWith('#/p/')) pickedTerm = 1;
+    else { const gg = G(location.hash.split('/')[2]); if (gg && !termsOf(gg).some(t => t.months === pickedTerm)) pickedTerm = termsOf(gg)[0].months; }
     if (!location.hash.startsWith('#/pick')) { quizStep = 0; quizAns = []; }
     render(); window.scrollTo({ top:0, behavior:'instant' });
   });
