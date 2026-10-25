@@ -18,6 +18,7 @@
   if (d) document.documentElement.classList.add('dark');
 } catch(e){} })();
 </script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = { darkMode:'class', theme: { extend: {
@@ -98,6 +99,10 @@ tailwind.config = { darkMode:'class', theme: { extend: {
   #themeBtn svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round }
   html:not(.dark) #icoMoon { display:none }
   html.dark #icoSun { display:none }
+  html.tgapp header nav, html.tgapp footer, html.tgapp .no-tg { display:none !important }
+  html.tgapp .dock { display:none !important }
+  html.tgapp body { padding-bottom:0 !important }
+  html.tgapp .lamp { padding-top:8px }
   @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} html{scroll-behavior:auto} }
 </style>
 </head>
@@ -374,7 +379,7 @@ const ICONS = {
     const el = document.getElementById('cartCount');
     el.textContent = cartQty();
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-    drawDock();
+    drawDock(); syncTgButtons();
   }
   let toastTimer;
   function toast(g) {
@@ -514,7 +519,7 @@ const ICONS = {
             </div>
           </div>
           <div class="justify-self-center sm:justify-self-end">
-            <img src="mascot.png" alt="Кислый — помощник AKU Лавки" loading="lazy" decoding="async"
+            <img src="mascot.webp" alt="Кислый — помощник AKU Лавки" loading="lazy" decoding="async"
                  class="hero-char float w-auto h-auto max-h-[250px] sm:max-h-[290px] select-none pointer-events-none"
                  onerror="this.closest('section').style.display='none'">
             
@@ -977,7 +982,7 @@ const ICONS = {
     else if (seg[0]==='terms')   html = viewTerms();
     else                         html = viewNotFound();
     app.innerHTML = '<div class="view-in">' + html + '</div>';
-    wireLinks(app); drawCalc(); drawDock();
+    wireLinks(app); drawCalc(); drawDock(); syncTgButtons();
   }
 
   function wireLinks(scope) {
@@ -990,6 +995,67 @@ const ICONS = {
               : tg;
       el.target = '_blank'; el.rel = 'noopener';
     });
+  }
+
+  /* ---------- Режим мини-приложения Telegram ---------- */
+  const TG = window.Telegram && window.Telegram.WebApp;
+  const inTG = !!(TG && TG.initData !== undefined && TG.platform && TG.platform !== 'unknown');
+  if (inTG) {
+    document.documentElement.classList.add('tgapp');
+    try { TG.ready(); TG.expand(); } catch (_) {}
+    const applyScheme = () => {
+      document.documentElement.classList.toggle('dark', TG.colorScheme === 'dark');
+    };
+    applyScheme();
+    TG.onEvent('themeChanged', applyScheme);
+    TG.onEvent('mainButtonClicked', () => {
+      if (location.hash.startsWith('#/cart')) { sendOrder(); return; }
+      const seg = location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+      if (seg[0] === 'p' && G(seg[1]) && !G(seg[1]).external) {
+        addToCart(seg[1], pickedTerm);
+        try { TG.HapticFeedback && TG.HapticFeedback.impactOccurred('light'); } catch (_) {}
+        location.hash = '#/cart';
+        return;
+      }
+      location.hash = '#/cart';
+    });
+    TG.onEvent('backButtonClicked', () => history.back());
+  }
+
+  function syncTgButtons() {
+    if (!inTG) return;
+    const n = cartQty();
+    const onCart = location.hash.startsWith('#/cart');
+    if (n > 0 && (onCart || !location.hash.startsWith('#/p/'))) {
+      TG.MainButton.setParams({
+        text: onCart ? 'Оформить · ' + money(cartTotal()) : n + ' в корзине · ' + money(cartTotal()),
+        is_visible: true
+      });
+    } else if (location.hash.startsWith('#/p/')) {
+      const g = G(location.hash.split('/')[2]);
+      if (g && !g.external) {
+        TG.MainButton.setParams({ text: 'В корзину · ' + money(priceFor(g, pickedTerm)), is_visible: true });
+      } else TG.MainButton.hide();
+    } else TG.MainButton.hide();
+    if (location.hash && location.hash !== '#/') TG.BackButton.show(); else TG.BackButton.hide();
+  }
+
+  function orderPayload() {
+    return {
+      type: 'order',
+      items: cartList().map(i => ({ id: i.id, name: G(i.id).name, months: i.months, qty: i.qty,
+                                    price: priceFor(G(i.id), i.months) })),
+      total: cartTotal(),
+      crypto: crypto(cartTotal())
+    };
+  }
+  function sendOrder() {
+    if (!cartQty()) return;
+    try {
+      TG.sendData(JSON.stringify(orderPayload()));
+    } catch (e) {
+      TG.showAlert('Не удалось отправить заказ. Напишите нам в чат.');
+    }
   }
 
   document.addEventListener('click', e => {
@@ -1010,6 +1076,7 @@ const ICONS = {
     if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
     if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
+      if (inTG) { sendOrder(); return; }
       const lines = cartList().map(i => {
         const g = G(i.id);
         return '• ' + g.name + ' — ' + term(i.months).label + (i.qty>1?' ×'+i.qty:'') + ' — ' + money(priceFor(g,i.months)*i.qty);
