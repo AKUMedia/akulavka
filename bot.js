@@ -54,6 +54,8 @@ const LINK_OF = { LEXY:'lexyRef', CARD:'cardRef', CARD2:'cardRef2', GUIDE:'guide
 CONFIG.rate      = SHARED.rate;
 CONFIG.markup    = SHARED.markup;
 CONFIG.cryptoOff = SHARED.cryptoOff;
+CONFIG.refFirst  = SHARED.refFirst || CONFIG.refFirst;
+CONFIG.refNext   = SHARED.refNext  || CONFIG.refNext;
 CONFIG.terms     = SHARED.terms;
 CONFIG.goods = SHARED.goods.filter(g => !g.hidden).map(g => ({
   id: g.id, name: g.name, usd: g.usd, rub: g.rub, terms: g.terms, noLogin: g.noLogin,
@@ -450,8 +452,18 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   const o = db.orders.find(x => x.id === id);
   if (!o) return ctx.answerCbQuery('Заказ не найден');
 
+  const wasCancelled = o.status === 'отменён';
   o.status = status;
   if (status === 'оплачен') payReferral(o);
+  if (status === 'отменён' && !wasCancelled) {
+    if (o.usedBonus > 0) { userOf(o.uid).balance += o.usedBonus; }
+    if (o.refPaid && !o.refPaid.revoked) {
+      const r = userOf(o.refPaid.to);
+      r.balance   = Math.max(0, r.balance - o.refPaid.bonus);
+      r.refEarned = Math.max(0, r.refEarned - o.refPaid.bonus);
+      o.refPaid.revoked = true;
+    }
+  }
   if (status === 'активна' && !o.endsAt) {
     const months = Math.max(...o.items.map(i => i.months));
     const d = new Date(); d.setMonth(d.getMonth() + months);
@@ -768,6 +780,24 @@ setTimeout(checkRenewals, 30 * 1000);        // и через полминуты
 
 /* ---------- Запуск ---------- */
 bot.catch(err => console.error('Ошибка бота:', err));
+
+/* ---------- Резервная копия базы ---------- */
+async function sendBackup(reason) {
+  try {
+    if (!fs.existsSync(DB_FILE)) return;
+    const d = new Date().toISOString().slice(0, 10);
+    await bot.telegram.sendDocument(CONFIG.adminId,
+      { source: DB_FILE, filename: `lavka-backup-${d}.json` },
+      { caption: `💾 Копия базы (${reason}). Заказов: ${db.orders.length}, пользователей: ${Object.keys(db.users).length}.\n` +
+                 'Храни этот файл. Чтобы восстановить — положи его на сервер как data.json и перезапусти бота.' });
+    db.lastBackup = d; save(db);
+  } catch (e) { console.error('backup:', e.message); }
+}
+bot.command('backup', ctx => { if (ctx.from.id === CONFIG.adminId) return sendBackup('по запросу'); });
+setInterval(() => {
+  const now = new Date(), d = now.toISOString().slice(0, 10);
+  if (now.getHours() === 3 && db.lastBackup !== d) sendBackup('ежедневная, 03:00');
+}, 10 * 60 * 1000);
 
 bot.telegram.setChatMenuButton({ menuButton: { type: 'web_app', text: 'Магазин', web_app: { url: CONFIG.webapp } } })
   .catch(e => console.error('menu button:', e.message));
