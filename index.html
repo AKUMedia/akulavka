@@ -390,27 +390,22 @@ tailwind.config = { theme: { extend: {
         </div>
       </div>
 
-      <div class="flex items-end justify-between gap-4 mt-12 mb-5">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight">Полезное рядом</h2>
-      </div>
-      <p class="text-faded text-sm leading-relaxed max-w-xl mb-1">
-        Не подписки, а инструменты, которыми пользуемся сами: карты для самостоятельной оплаты и бесплатный гайд.
-      </p>
-      <div class="mt-6 grid sm:grid-cols-2 gap-4">
-        ${CONFIG.extras.map(e => `
-          <a href="${extLink(e)}" target="_blank" rel="noopener"
-             class="card group bg-board border border-edge rounded-2xl p-5 flex items-center gap-4" style="--tint:${e.tint}">
-            <div class="tile shrink-0 grid place-items-center rounded-xl" style="width:46px;height:46px;background:${e.tint}1A;border:1px solid ${e.tint}33">
-              ${icon(e, 23)}
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-[15px]">${esc(e.name)}</span>
-                ${e.tag ? `<span class="tech shrink-0" style="color:${e.tint}">${esc(e.tag)}</span>` : ''}
-              </div>
-              <div class="text-faded text-sm leading-snug mt-0.5">${esc(e.short)}</div>
-            </div>
-          </a>`).join('')}
+      <div class="mt-12 bg-board border border-edge rounded-2xl p-6 sm:p-8">
+        <div class="grid sm:grid-cols-[1fr_auto] gap-6 items-center">
+          <div>
+            <div class="tech text-brass mb-3">[ автор лавки ]</div>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight mb-3">Канал «Лёха про ИИ»</h2>
+            <p class="text-faded text-[15px] leading-relaxed max-w-lg">
+              Лавку веду я сам. В канале показываю, что умеют нейросети на практике:
+              разборы сервисов, фишки, с чем они реально помогают в работе, а с чем нет.
+              Без курсов и продаж — просто то, чем пользуюсь каждый день.
+            </p>
+          </div>
+          <a href="" data-lnk="channel" target="_blank" rel="noopener"
+             class="justify-self-start sm:justify-self-end bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+            Читать канал
+          </a>
+        </div>
       </div>
     </section>
 
