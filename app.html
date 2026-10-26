@@ -7,13 +7,13 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = { theme: { extend: {
   colors: { ink:'#FFFFFF', board:'#FAFAF8', panel:'#F3F3EF', edge:'#E9E9E4', edge2:'#D6D6CF',
             paper:'#0E0E0D', faded:'#6A6A64', brass:'#F2601A', sage:'#3C8C5C' },
-  fontFamily: { display:['Space Grotesk','system-ui','sans-serif'], ui:['Inter','system-ui','sans-serif'],
+  fontFamily: { display:['Onest','Inter','system-ui','sans-serif'], ui:['Inter','system-ui','sans-serif'],
                 mono:['JetBrains Mono','ui-monospace','monospace'] }
 }}}
 </script>
@@ -46,6 +46,7 @@ tailwind.config = { theme: { extend: {
               font-weight:700; display:grid; place-items:center }
   .tab .dot.hidden { display:none }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+  body { font-synthesis:none }
 </style>
 </head>
 <body class="font-ui antialiased">
@@ -87,7 +88,7 @@ tailwind.config = { theme: { extend: {
   </div>
 </div>
 
-<script src="catalog.js?v=2610c"></script>
+<script src="catalog.js?v=2610d"></script>
 <script>
 (function () {
   'use strict';
