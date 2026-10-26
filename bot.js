@@ -1,541 +1,247 @@
 /* ═══════════════════════════════════════════════════════════
    AKU Лавка — бот магазина
-   Правишь только блок CONFIG ниже. Всё остальное трогать не надо.
+   Здесь правишь только блок CONFIG. Товары, цены, сроки, каналы,
+   часы работы и проценты рефералки лежат в catalog.js.
+   Токен лежит в файле token.txt рядом с ботом.
    ═══════════════════════════════════════════════════════════ */
 
-const fsBoot = require('fs');
-function readToken() {
-  if (process.env.BOT_TOKEN) return process.env.BOT_TOKEN.trim();
-  try { return fsBoot.readFileSync(__dirname + '/token.txt', 'utf8').trim(); }
-  catch { console.error('Нет токена: положите его в файл token.txt рядом с bot.js'); process.exit(1); }
-}
+process.env.TZ = 'Europe/Minsk';   // все даты и часы — по Минску, независимо от сервера
 
 const CONFIG = {
-  token   : readToken(),   // лежит в файле token.txt рядом с ботом, в код не попадает
-  adminId : 927864149,                       // твой Telegram ID — сюда падают заказы
-  site    : 'https://akumedia.github.io/akulavka/',
-  webapp  : 'https://akumedia.github.io/akulavka/app.html',  // мини-приложение (HTTPS обязателен)
-  channel : 'https://t.me/Alekseii_AI',
-  guide   : 'https://aku-automation.io/guide/?utm_source=bot&utm_medium=telegram',
-  cardRef : 'https://t.me/Cashinout_bot?start=23610',
-  cardRef2: 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
-  lexyRef : 'https://lexygpt.com/?ref=ALEKSEIAI',
-
-  usdtTrc : 'TTeBmEYoWSWGvaATRALL6hFud3hmjbaqTx',   // USDT и TRX, сеть TRC-20 (Tron)
-  usdtBep : '0xd731da2010d88d03ac8eba6bdce17b2eea8cb625', // USDT, сеть BEP-20 (BNB Smart Chain)
-  yoomoney: '4100118055761665',
-
-  rate    : 92,     // рублей за доллар на карте, со всеми комиссиями
-  markup  : 1.46,   // наценка
-  cryptoOff: 5,     // скидка за крипту, %
-  refFirst : 8,     // % рефереру с ПЕРВОЙ покупки приглашённого
-  refNext  : 5,     // % рефереру со всех последующих
-  openFrom: 9,
-  openTo  : 23,
-
-  terms: [
-    { months: 1, label: '1 месяц',   mult: 1    },
-    { months: 3, label: '3 месяца',  mult: 2.85 },
-    { months: 6, label: '6 месяцев', mult: 5.4  }
-  ],
-
+  adminId : 927864149,                                       // твой Telegram ID
+  yoomoney: '4100118055761665',                              // кошелёк ЮMoney
+  usdtTrc : 'TTeBmEYoWSWGvaATRALL6hFud3hmjbaqTx',            // USDT, сеть TRC-20 (Tron)
+  usdtBep : '0xd731da2010d88d03ac8eba6bdce17b2eea8cb625',    // USDT, сеть BEP-20 (BNB Smart Chain)
+  usdtRate: 92,      // ₽ за 1 USDT, по нему клиенту показывается сумма в USDT
+  lexyRef : 'https://lexygpt.com/?ref=ALEKSEIAI'
 };
-
 
 /* ═══════════════ ДАЛЬШЕ КОД — МЕНЯТЬ НЕ НАДО ═══════════════ */
 
-/* Товары, цены и сроки берутся из общего catalog.js — того же,
-   что использует сайт и мини-приложение. Правите там — меняется везде. */
-const SHARED = require('./catalog.js').CONFIG;
-const PRICE  = require('./catalog.js').PRICE;
-const CART_LINK = require('./catalog.js').CART_LINK;
-const LINK_OF = { LEXY:'lexyRef', CARD:'cardRef', CARD2:'cardRef2', GUIDE:'guide' };
-
-CONFIG.rate      = SHARED.rate;
-CONFIG.markup    = SHARED.markup;
-CONFIG.cryptoOff = SHARED.cryptoOff;
-CONFIG.refFirst  = SHARED.refFirst || CONFIG.refFirst;
-CONFIG.refNext   = SHARED.refNext  || CONFIG.refNext;
-CONFIG.terms     = SHARED.terms;
-CONFIG.goods = SHARED.goods.filter(g => !g.hidden).map(g => ({
-  id: g.id, name: g.name, usd: g.usd, rub: g.rub, terms: g.terms, noLogin: g.noLogin,
-  desc: g.short + (g.about ? '\n\n' + g.about : '')
-})).concat(SHARED.extras.map(e => ({
-  id: e.id, name: e.name, link: LINK_OF[e.external], desc: e.short
-})));
-CONFIG.onRequest = SHARED.goods.filter(g => g.hidden).map(g => g.name);
-
-const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
+const { Telegraf, Markup } = require('telegraf');
+const { CONFIG: CAT, PRICE, CART_LINK } = require('./catalog.js');
 
-const DB_FILE = path.join(__dirname, 'data.json');
-
-/* ---------- Хранилище: обычный JSON-файл ---------- */
-function load() {
-  try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
-  catch { return { orders: [], carts: {}, users: {}, seq: 1000 }; }
+function readToken() {
+  if (process.env.BOT_TOKEN) return process.env.BOT_TOKEN.trim();
+  try { return fs.readFileSync(path.join(__dirname, 'token.txt'), 'utf8').trim(); }
+  catch { console.error('Нет токена: положите его в файл token.txt рядом с bot.js'); process.exit(1); }
 }
-function save(db) {
+
+const SHOP_URL  = CAT.site;
+const APP_URL   = CAT.site + 'app.html';
+const CHANNEL   = CAT.shopChannel;
+const FOUNDER   = CAT.channel;
+const OPEN_FROM = CAT.openFrom, OPEN_TO = CAT.openTo;
+const GOODS     = CAT.goods.filter(g => !g.hidden);
+const ON_REQ    = CAT.goods.filter(g => g.hidden).map(g => g.name);
+
+/* ---------- база: один JSON-файл ---------- */
+const DB_FILE = path.join(__dirname, 'data.json');
+function load() {
+  if (!fs.existsSync(DB_FILE)) return { orders: [], users: {}, seq: 1000 };
+  try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
+  catch (e) {
+    // файл есть, но испорчен — не стартуем с пустой базой, иначе затрём все заказы
+    console.error('data.json повреждён, бот остановлен. Восстановите файл из бэкапа.', e.message);
+    process.exit(1);
+  }
+}
+function save() {
   const tmp = DB_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
+  fs.writeFileSync(tmp, JSON.stringify(db, null, 1));
   fs.renameSync(tmp, DB_FILE);
 }
-let db = load();
+const db = load();
+db.orders = db.orders || []; db.users = db.users || {}; db.seq = db.seq || 1000;
+db.relay = db.relay || {};       // id сообщения у админа → id клиента (для ответов реплаем)
+db.daily = db.daily || {};       // отметки ежедневных дел
 
-/* ---------- Хелперы ---------- */
-const G = id => CONFIG.goods.find(g => g.id === id);
-const term = (m, g) => g ? PRICE.term(g, m) : (CONFIG.terms.find(t => t.months === m) || CONFIG.terms[0]);
-const money = n => n.toLocaleString('ru-RU') + ' ₽';
-const base = PRICE.base;
-const priceFor = (g, m) => PRICE.priceFor(g, m);
-const crypto = n => Math.round(n * (100 - CONFIG.cryptoOff) / 100 / 10) * 10;
-const isOpen = () => { const h = new Date().getHours(); return h >= CONFIG.openFrom && h < CONFIG.openTo; };
-const who = u => u.username ? '@' + u.username : (u.first_name || 'клиент') + ' (id ' + u.id + ')';
+/* ---------- мелочи ---------- */
+const esc   = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const money = PRICE.money;
+const crypto = PRICE.crypto;
+const usdt  = rub => (Math.ceil(rub / CONFIG.usdtRate * 100) / 100).toFixed(2);
+const G     = id => GOODS.find(g => g.id === id);
+const termLabel = i => { const g = G(i.id); return g ? PRICE.term(g, i.months).label : i.months + ' мес.'; };
 const fmtDate = d => new Date(d).toLocaleDateString('ru-RU');
+const hour  = () => new Date().getHours();
+const isOpen = () => hour() >= OPEN_FROM && hour() < OPEN_TO;
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+const MIN = 60e3, HOUR = 60 * MIN, DAY = 24 * HOUR;
+
+const ACTIVE_STATUSES = ['ждёт оплаты', 'оплата заявлена', 'оплачен', 'оформляется'];
+const PAID_STATUSES   = ['оплачен', 'оформляется', 'активна', 'истекла', 'продлена'];
+const METHOD_NAME = { card: 'банковская карта (ЮMoney)', wallet: 'кошелёк ЮMoney', crypto: 'USDT',
+                      yoomoney: 'ЮMoney', 'не выбран': 'не выбран' };
 
 function userOf(uid) {
-  if (!db.users[uid]) db.users[uid] = { balance: 0, refEarned: 0, seen: Date.now() };
+  if (!db.users[uid]) db.users[uid] = { balance: 0, refEarned: 0, created: Date.now(), seen: Date.now() };
   const u = db.users[uid];
   if (u.balance === undefined)   u.balance = 0;
   if (u.refEarned === undefined) u.refEarned = 0;
   return u;
 }
-function refCount(uid) {
-  return Object.values(db.users).filter(u => String(u.invitedBy) === String(uid)).length;
+function touch(ctx) {
+  const u = userOf(ctx.from.id);
+  u.name = ctx.from.first_name || ''; u.username = ctx.from.username || ''; u.seen = Date.now();
+  return u;
 }
-function paidOrdersOf(uid) {
-  return db.orders.filter(o => o.uid === uid && o.refPaid).length;
+function clientLink(uid) {
+  const u = db.users[uid] || {};
+  const name = esc(u.name || 'клиент');
+  return `<a href="tg://user?id=${uid}">${name}</a>` + (u.username ? ' @' + esc(u.username) : '') + ` · id ${uid}`;
 }
-async function payReferral(order) {
-  const buyer = userOf(order.uid);
-  if (!buyer.invitedBy || order.refPaid) return;
-  const first  = paidOrdersOf(order.uid) === 0;
-  const pct    = first ? CONFIG.refFirst : CONFIG.refNext;
-  const bonus  = Math.round(order.due * pct / 100 / 10) * 10;
-  const ref    = userOf(buyer.invitedBy);
-  ref.balance   += bonus;
-  ref.refEarned += bonus;
-  order.refPaid  = { to: buyer.invitedBy, bonus, pct };
-  save(db);
-  try {
-    await bot.telegram.sendMessage(buyer.invitedBy,
-      `💰 <b>+${money(bonus)} на баланс</b>\n\n` +
-      `Ваш приглашённый оформил заказ. Начислено ${pct}%.\n` +
-      `Баланс: <b>${money(ref.balance)}</b> — спишется автоматически со следующей покупки.`,
-      { parse_mode: 'HTML' });
-  } catch (e) { console.error('payReferral:', e.message); }
-}
+const orderOf = id => db.orders.find(o => o.id === +id);
+const itemsText = o => o.items.map(i =>
+  '• ' + esc(i.name) + ' — ' + termLabel(i) + (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(i.price * i.qty)).join('\n');
 
-function cartOf(uid) { return db.carts[uid] || []; }
-function cartTotal(uid) {
-  return cartOf(uid).reduce((s, i) => s + priceFor(G(i.id), i.months) * i.qty, 0);
-}
-function cartText(uid) {
-  const c = cartOf(uid);
-  if (!c.length) return null;
-  const lines = c.map(i => {
-    const g = G(i.id);
-    return '• ' + g.name + ' — ' + term(i.months, G(i.id)).label +
-           (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(priceFor(g, i.months) * i.qty);
-  }).join('\n');
-  const t = cartTotal(uid);
-  return lines + '\n\nИтого: <b>' + money(t) + '</b>\nКриптой: <b>' + money(crypto(t)) + '</b>';
+/* ---------- Telegram ---------- */
+const bot = new Telegraf(readToken());
+const send = (chatId, text, extra = {}) =>
+  bot.telegram.sendMessage(chatId, text, { parse_mode: 'HTML', disable_web_page_preview: true, ...extra })
+     .catch(e => console.error('send →', chatId, e.message));
+
+function rememberRelay(adminMsgId, uid) {
+  db.relay[adminMsgId] = uid;
+  const keys = Object.keys(db.relay);
+  if (keys.length > 1500) keys.slice(0, keys.length - 1500).forEach(k => delete db.relay[k]);
 }
 
-const bot = new Telegraf(CONFIG.token);
-
-/* ---------- Главное меню ---------- */
-function mainMenu() {
-  return Markup.inlineKeyboard([
-    [Markup.button.callback('🛒 Каталог', 'shop')],
-    [Markup.button.callback('📦 Моя корзина', 'cart'),
-     Markup.button.callback('🧾 Мои заказы', 'my')],
-    [Markup.button.callback('👥 Пригласить друзей', 'ref')],
-    [Markup.button.callback('❓ Как это работает', 'help'),
-     Markup.button.callback('💬 Написать нам', 'contact')],
-    [Markup.button.url('🌐 Сайт лавки', CONFIG.site)]
-  ]);
+/* ═══════════════ ГЛАВНОЕ МЕНЮ ═══════════════ */
+function hello(name) {
+  return `Привет${name ? ', ' + esc(name) : ''}! Это <b>AKU Лавка</b> — подписки на нейросети.\n\n` +
+    'Оформляем на ваш собственный аккаунт: переписка, файлы и история остаются у вас. ' +
+    'Claude — вообще без пароля, только по номеру аккаунта.\n\n' +
+    'Каталог, цены и оформление — по кнопке ниже.\n\n' +
+    (isOpen() ? '🟢 Лавка открыта, отвечаем сейчас.'
+              : `🌙 Сейчас закрыто. Заказ оставить можно — возьмём в работу с ${OPEN_FROM}:00.`);
 }
-
-const BTN = {
-  shop   : '🛍 Открыть магазин',
-  orders : '🧾 Мои заказы',
-  friends: '👥 Пригласить друзей',
-  help   : '❓ Как это работает',
-  ask    : '💬 Написать нам'
-};
-
-function shopKeyboard() {
-  return Markup.keyboard([
-    [Markup.button.webApp(BTN.shop, CONFIG.webapp)],
-    [BTN.orders, BTN.friends],
-    [BTN.help, BTN.ask]
-  ]).resize();
-}
-
-const HELLO = (name) =>
-  `Привет${name ? ', ' + name : ''}! Это <b>AKU Лавка</b> — подписки на нейросети.\n\n` +
-  `Оформляем на ваш собственный аккаунт: переписка, файлы и история остаются у вас. ` +
-  `Claude — вообще без пароля, только по номеру аккаунта.\n\n` +
-  `Каталог, цены и оформление — по кнопке ниже.\n\n` +
-  (isOpen()
-    ? '🟢 Лавка открыта, отвечаем сейчас.'
-    : `🌙 Сейчас закрыто. Заявку оставить можно — ответим с ${CONFIG.openFrom}:00.`);
-
-async function setRef(ctx, u, refId) {
-  if (!refId || u.invitedBy || String(refId) === String(ctx.from.id)) return;
-  if (db.orders.some(o => o.uid === ctx.from.id)) return;   // уже покупал — не чужой реферал
-  u.invitedBy = +refId;
-  try {
-    await bot.telegram.sendMessage(u.invitedBy,
-      `👥 По вашей ссылке пришёл новый человек. Как он оформит заказ — начислим ${CONFIG.refFirst}%.`);
-  } catch (_) {}
-}
-
 function startMenu() {
   return Markup.inlineKeyboard([
-    [Markup.button.webApp('🛍 Открыть магазин', CONFIG.webapp)],
-    [Markup.button.callback('🧾 Мои заказы', 'scr:orders'), Markup.button.callback('👥 Друзья', 'scr:friends')],
-    [Markup.button.callback('❓ Как это работает', 'scr:help'), Markup.button.callback('💬 Написать', 'scr:ask')]
+    [Markup.button.webApp('🛍 Открыть магазин', APP_URL)],
+    [Markup.button.callback('👤 Профиль', 'scr:profile'), Markup.button.callback('👥 Друзья', 'scr:friends')],
+    [Markup.button.callback('❓ Помощь', 'scr:help'), Markup.button.callback('💬 Написать', 'scr:ask')],
+    [Markup.button.url('📣 Канал Лавки — розыгрыши', CHANNEL)]
   ]);
 }
 
+/* ---------- рефералка ---------- */
+async function setRef(ctx, u, refId) {
+  refId = +refId;
+  if (!refId || u.invitedBy || refId === ctx.from.id) return;
+  if (!u.created || Date.now() - u.created > 15 * MIN) return;        // только совсем новые люди
+  if (db.orders.some(o => o.uid === ctx.from.id)) return;             // уже покупал сам
+  const ref = db.users[refId];
+  if (!ref) return;                                                   // пригласивший должен быть в боте
+  if (ref.invitedBy === ctx.from.id) return;                          // запрет взаимной петли A↔B
+  u.invitedBy = refId;
+  send(refId, `👥 По вашей ссылке пришёл новый человек. Как только его заказ будет выполнен — начислим ${CAT.refFirst}%.`);
+}
+async function payReferral(o) {
+  const buyer = db.users[o.uid];
+  if (!buyer || !buyer.invitedBy || o.refPaid || o.source === 'розыгрыш') return;
+  const first = !db.orders.some(x => x.uid === o.uid && x.refPaid && !x.refPaid.revoked);
+  const pct = first ? CAT.refFirst : CAT.refNext;
+  const bonus = Math.round(o.due * pct / 100 / 10) * 10;
+  if (bonus <= 0) return;
+  const ref = userOf(buyer.invitedBy);
+  ref.balance += bonus; ref.refEarned += bonus;
+  o.refPaid = { to: buyer.invitedBy, bonus, pct };
+  save();
+  send(buyer.invitedBy, `💰 <b>+${money(bonus)} на баланс</b>\n\nВаш друг получил подписку — начислили ${pct}%.\n` +
+    `Баланс: <b>${money(ref.balance)}</b>. Спишется автоматически со следующего заказа.`);
+}
+function revokeReferral(o) {
+  if (!o.refPaid || o.refPaid.revoked) return;
+  const r = userOf(o.refPaid.to);
+  r.balance = Math.max(0, r.balance - o.refPaid.bonus);
+  r.refEarned = Math.max(0, r.refEarned - o.refPaid.bonus);
+  o.refPaid.revoked = true;
+}
+function returnBonus(o) {
+  if (o.usedBonus > 0 && !o.bonusReturned) { userOf(o.uid).balance += o.usedBonus; o.bonusReturned = true; }
+}
+
+/* ═══════════════ /start ═══════════════ */
 bot.start(async ctx => {
-  const u = userOf(ctx.from.id);
-  u.name = ctx.from.first_name; u.username = ctx.from.username; u.seen = Date.now();
+  const isLegacy = db.users[ctx.from.id] && !db.users[ctx.from.id].created;
+  const u = touch(ctx);
   const payload = (ctx.startPayload || '').trim();
 
-  // заказ, собранный на сайте или в приложении: ?start=o....
-  const cartFromLink = CART_LINK.decode(payload);
-  if (cartFromLink) {
-    await setRef(ctx, u, cartFromLink.ref);
-    save(db);
-    if (cartFromLink.items.length) return createOrder(ctx, cartFromLink.items, 'ссылка');
+  const fromLink = CART_LINK.decode(payload);                        // ?start=o… — корзина с сайта или из приложения
+  if (fromLink) {
+    await setRef(ctx, u, fromLink.ref); save();
+    if (fromLink.items.length) return createOrder(ctx, fromLink.items, 'сайт / приложение');
   }
-
   const m = payload.match(/^ref_(\d+)$/);
   if (m) await setRef(ctx, u, m[1]);
-  save(db);
-  await ctx.replyWithHTML(HELLO(ctx.from.first_name), startMenu());
+  if (isLegacy) { u.created = Date.now(); await ctx.reply('Обновили меню 👇', Markup.removeKeyboard()); }
+  save();
+  if (payload === 'profile') return screenProfile(ctx);             // кнопка «Профиль» из приложения
+  if (payload === 'ask')     return screenAsk(ctx);
+  return ctx.replyWithHTML(hello(ctx.from.first_name), startMenu());
+});
+bot.command('menu',    ctx => ctx.replyWithHTML(hello(ctx.from.first_name), startMenu()));
+bot.command('profile', ctx => screenProfile(ctx));
+bot.command('help',    ctx => screenHelp(ctx));
+bot.command('orders',  ctx => ctx.from.id === CONFIG.adminId ? adminLast(ctx) : screenProfile(ctx));
+
+bot.action(/^scr:(profile|friends|help|ask)$/, async ctx => {
+  await ctx.answerCbQuery();
+  const k = ctx.match[1];
+  if (k === 'profile') return screenProfile(ctx);
+  if (k === 'friends') return screenFriends(ctx);
+  if (k === 'help')    return screenHelp(ctx);
+  return screenAsk(ctx);
 });
 
-bot.command('menu', ctx => ctx.replyWithHTML(HELLO(ctx.from.first_name), startMenu()));
-bot.command('orders', ctx => screenOrders(ctx));
-bot.command('help', ctx => screenHelp(ctx));
+/* ═══════════════ ЭКРАНЫ ═══════════════ */
+async function screenProfile(ctx) {
+  const uid = ctx.from.id, u = touch(ctx);
+  const mine = db.orders.filter(o => o.uid === uid);
+  const subs = mine.filter(o => o.status === 'активна' || (o.status === 'истекла' && Date.now() - o.endsAt < 30 * DAY));
+  const open = mine.filter(o => ACTIVE_STATUSES.includes(o.status));
+  const rows = [];
 
-/* ---------- Каталог ---------- */
-bot.action('shop', async ctx => {
-  await ctx.answerCbQuery();
-  const rows = CONFIG.goods.filter(g => !g.link).map(g =>
-    [Markup.button.callback(`${g.name} — ${money(priceFor(g, 1))}`, 'g:' + g.id)]);
-  rows.push([Markup.button.callback('📋 Другие сервисы', 'more')]);
-  rows.push([Markup.button.callback('🧰 Полезное рядом', 'extras')]);
-  rows.push([Markup.button.callback('◀︎ Назад', 'home')]);
-  await ctx.editMessageText(
-    '<b>Каталог</b>\n\nЦены за месяц. При оплате криптой — минус ' + CONFIG.cryptoOff + '%.',
-    { parse_mode: 'HTML', ...Markup.inlineKeyboard(rows) }
-  );
-});
+  let t = '<b>👤 Профиль</b>\n\n';
+  if (subs.length) {
+    t += '<b>Подписки</b>\n' + subs.map(o => {
+      const left = Math.ceil((o.endsAt - Date.now()) / DAY);
+      return '• ' + o.items.map(i => esc(i.name)).join(', ') + ' — ' +
+        (o.status === 'активна' ? `до ${fmtDate(o.endsAt)} (${left} дн.)` : `закончилась ${fmtDate(o.endsAt)}`);
+    }).join('\n') + '\n\n';
+    subs.forEach(o => rows.push([Markup.button.callback('🔄 Продлить: ' + o.items.map(i => i.name).join(', ').slice(0, 40), 'renew:' + o.id)]));
+  } else t += 'Активных подписок пока нет.\n\n';
 
-bot.action('extras', async ctx => {
-  await ctx.answerCbQuery();
-  const list = CONFIG.goods.filter(g => g.link);
-  await ctx.editMessageText(
-    '<b>Полезное рядом</b>\n\nНе подписки, а инструменты, которыми пользуемся сами:\n\n' +
-    list.map(g => '• <b>' + g.name + '</b> — ' + g.desc).join('\n\n'),
-    { parse_mode: 'HTML', ...Markup.inlineKeyboard(
-        list.map(g => [Markup.button.url(g.name, CONFIG[g.link])])
-            .concat([[Markup.button.callback('◀︎ В каталог', 'shop')]])) }
-  );
-});
-
-bot.action('more', async ctx => {
-  await ctx.answerCbQuery();
-  await ctx.editMessageText(
-    '<b>Под заказ</b>\n\nЭти сервисы оформляем по запросу — напишите, ответим по срокам и цене:\n\n' +
-    CONFIG.onRequest.map(n => '• ' + n).join('\n') +
-    '\n\nНет в списке? Тоже напишите — скорее всего сможем.',
-    { parse_mode: 'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.callback('💬 Написать нам', 'contact')],
-      [Markup.button.callback('◀︎ В каталог', 'shop')]
-    ]) }
-  );
-});
-
-/* ---------- Карточка товара ---------- */
-bot.action(/^g:(.+)$/, async ctx => {
-  await ctx.answerCbQuery();
-  const g = G(ctx.match[1]);
-  if (!g) return;
-
-  if (g.link) {
-    return ctx.editMessageText(
-      `<b>${g.name}</b>\n\n${g.desc}`,
-      { parse_mode: 'HTML', ...Markup.inlineKeyboard([
-        [Markup.button.url('Открыть', CONFIG[g.link])],
-        [Markup.button.callback('◀︎ В каталог', 'shop')]
-      ]) }
-    );
+  if (open.length) {
+    t += '<b>Заказы в работе</b>\n' + open.map(o => `• №${o.id} — ${esc(o.status)}, ${money(o.due)}`).join('\n') + '\n\n';
+    open.filter(o => o.status === 'ждёт оплаты').forEach(o => rows.push([Markup.button.callback(`💳 Оплатить заказ №${o.id}`, 'payfor:' + o.id)]));
   }
+  t += `💰 Бонусный баланс: <b>${money(u.balance)}</b>` + (u.balance > 0 ? ' — спишется со следующего заказа' : '') + '\n';
+  t += `👥 Приглашено друзей: <b>${refCount(uid)}</b>, заработано <b>${money(u.refEarned)}</b>`;
 
-  const rows = PRICE.termsOf(g).map(t =>
-    [Markup.button.callback(`${t.label} — ${money(priceFor(g, t.months))}`, `add:${g.id}:${t.months}`)]
-  );
-  rows.push([Markup.button.callback('◀︎ В каталог', 'shop')]);
+  const done = mine.filter(o => !ACTIVE_STATUSES.includes(o.status)).slice(-5).reverse();
+  if (done.length) t += '\n\n<b>История</b>\n' + done.map(o => `№${o.id} · ${fmtDate(o.created)} · ${esc(o.status)} · ${money(o.due)}`).join('\n');
 
-  await ctx.editMessageText(
-    `<b>${g.name}</b>\n\n${g.desc}\n\n` +
-    (g.noLogin ? '🔒 Пароль не нужен — оформляем по ID аккаунта.\n' : '🔑 Нужен временный пароль, который вы меняете сразу после.\n') +
-    `\nВыберите срок:`,
-    { parse_mode: 'HTML', ...Markup.inlineKeyboard(rows) }
-  );
-});
-
-/* ---------- Корзина ---------- */
-bot.action(/^add:(.+):(\d+)$/, async ctx => {
-  const [, id, m] = ctx.match;
-  const months = +m;
-  const uid = ctx.from.id;
-  const c = cartOf(uid);
-  const found = c.find(i => i.id === id && i.months === months);
-  if (found) found.qty++; else c.push({ id, months, qty: 1 });
-  db.carts[uid] = c; save(db);
-  await ctx.answerCbQuery(G(id).name + ' — в корзине');
-  await showCart(ctx, true);
-});
-
-async function showCart(ctx, edit) {
-  const uid = ctx.from.id;
-  const txt = cartText(uid);
-  if (!txt) {
-    const body = '<b>Корзина пуста</b>\n\nВыберите что-нибудь в каталоге.';
-    const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('🛒 В каталог', 'shop')],
-      [Markup.button.callback('◀︎ Назад', 'home')]
-    ]);
-    return edit ? ctx.editMessageText(body, { parse_mode:'HTML', ...kb })
-                : ctx.replyWithHTML(body, kb);
-  }
-  const kb = Markup.inlineKeyboard([
-    [Markup.button.callback('✅ Оформить заказ', 'checkout')],
-    [Markup.button.callback('🗑 Очистить', 'clear'),
-     Markup.button.callback('🛒 Добавить ещё', 'shop')],
-    [Markup.button.callback('◀︎ Назад', 'home')]
-  ]);
-  const body = '<b>Корзина</b>\n\n' + txt;
-  return edit ? ctx.editMessageText(body, { parse_mode:'HTML', ...kb })
-              : ctx.replyWithHTML(body, kb);
+  rows.push([Markup.button.webApp('🛍 Открыть магазин', APP_URL)]);
+  rows.push([Markup.button.callback('👥 Пригласить друзей', 'scr:friends')]);
+  return ctx.replyWithHTML(t, Markup.inlineKeyboard(rows));
 }
 
-bot.action('cart',  async ctx => { await ctx.answerCbQuery(); await showCart(ctx, true); });
-bot.action('clear', async ctx => {
-  delete db.carts[ctx.from.id]; save(db);
-  await ctx.answerCbQuery('Корзина очищена');
-  await showCart(ctx, true);
-});
-
-/* ---------- Оформление ---------- */
-bot.action('checkout', async ctx => {
-  await ctx.answerCbQuery();
-  if (!cartOf(ctx.from.id).length) return showCart(ctx, true);
-  await ctx.editMessageText(
-    '<b>Как удобнее оплатить?</b>\n\n' +
-    `Крипта выгоднее на ${CONFIG.cryptoOff}% — сумма ниже.`,
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.callback('₮ Крипта USDT (−' + CONFIG.cryptoOff + '%)', 'pay:crypto')],
-      [Markup.button.callback('💳 ЮMoney', 'pay:yoomoney')],
-      [Markup.button.callback('◀︎ Назад', 'cart')]
-    ]) }
-  );
-});
-
-bot.action(/^pay:(crypto|yoomoney)$/, async ctx => {
-  await ctx.answerCbQuery();
-  const method = ctx.match[1];
-  const uid = ctx.from.id;
-  const items = cartOf(uid);
-  if (!items.length) return showCart(ctx, true);
-
-  const total = cartTotal(uid);
-  let due = method === 'crypto' ? crypto(total) : total;
-
-  const u = userOf(uid);
-  const usedBonus = Math.min(u.balance, Math.max(0, due - 100));   // 100 ₽ оставляем к оплате
-  if (usedBonus > 0) { due -= usedBonus; u.balance -= usedBonus; }
-
-  const id = ++db.seq;
-  db.orders.push({
-    id, uid, user: who(ctx.from),
-    items: items.map(i => ({ ...i, name: G(i.id).name, price: priceFor(G(i.id), i.months) })),
-    total, due, usedBonus, method, status: 'ждёт оплаты', created: Date.now()
-  });
-  delete db.carts[uid];
-  save(db);
-
-  const reqs = method === 'crypto'
-    ? `<b>USDT — выберите одну сеть</b>\n\n` +
-      `<b>TRC-20</b> (Tron, комиссия копеечная):\n<code>${CONFIG.usdtTrc}</code>\n\n` +
-      `<b>BEP-20</b> (BNB Smart Chain):\n<code>${CONFIG.usdtBep}</code>\n\n` +
-      `⚠️ Сеть и адрес должны совпадать. Отправите в другой сети — средства не дойдут.\n\n` +
-      `Точную сумму в USDT подтвердим в переписке по курсу на момент оплаты.`
-    : `<b>ЮMoney</b>\n<code>${CONFIG.yoomoney}</code>\n\nСумма: <b>${money(due)}</b>`;
-
-  await ctx.editMessageText(
-    `<b>Заказ №${id} создан</b>\n\n` + cartTextFromOrder(id) +
-    (usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(usedBonus)}</b>` : '') +
-    `\n\nК оплате: <b>${money(due)}</b>\n\n${reqs}\n\n` +
-    `Как отправите — нажмите кнопку ниже, и мы начнём оформлять.`,
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.callback('✅ Я оплатил', 'paid:' + id)],
-      [Markup.button.callback('💬 Написать нам', 'contact')]
-    ]) }
-  );
-
-  await notifyAdmin(id, 'новый заказ');
-});
-
-function cartTextFromOrder(id) {
-  const o = db.orders.find(x => x.id === id);
-  if (!o) return '';
-  return o.items.map(i =>
-    '• ' + i.name + ' — ' + term(i.months, G(i.id)).label + (i.qty > 1 ? ' ×' + i.qty : '') +
-    ' — ' + money(i.price * i.qty)).join('\n');
-}
-
-bot.action(/^paid:(\d+)$/, async ctx => {
-  const id = +ctx.match[1];
-  const o = db.orders.find(x => x.id === id);
-  if (!o) return ctx.answerCbQuery('Заказ не найден');
-  o.status = 'оплата заявлена'; save(db);
-  await ctx.answerCbQuery('Принято!');
-  await ctx.editMessageText(
-    `<b>Заказ №${id}</b>\n\nСпасибо! Проверим поступление и напишем вам.\n\n` +
-    (o.items.some(i => G(i.id) && G(i.id).noLogin)
-      ? 'Для Claude понадобится только <b>ID вашего аккаунта</b> — пароль не нужен.\n\n'
-      : 'Для оформления понадобится доступ к аккаунту — расскажем, как передать безопасно.\n\n') +
-    (isOpen() ? 'Обычно оформляем в течение часа.' : `Сейчас закрыто, возьмём в работу с ${CONFIG.openFrom}:00.`),
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([[Markup.button.callback('◀︎ В меню', 'home')]]) }
-  );
-  await notifyAdmin(id, '💰 КЛИЕНТ ЗАЯВИЛ ОПЛАТУ');
-});
-
-/* ---------- Уведомление админу ---------- */
-async function notifyAdmin(id, title) {
-  const o = db.orders.find(x => x.id === id);
-  if (!o) return;
-  const text =
-    `<b>${title}</b>\n\n` +
-    `Заказ №${o.id}\n` +
-    `Клиент: ${o.user}\n` +
-    `Способ: ${o.method === 'crypto' ? 'крипта USDT' : 'ЮMoney'}\n\n` +
-    cartTextFromOrder(id) +
-    `\n\nК оплате: <b>${money(o.due)}</b>\n` +
-    `Статус: ${o.status}`;
-  try {
-    await bot.telegram.sendMessage(CONFIG.adminId, text, {
-      parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([
-        [Markup.button.callback('💰 Оплачено', `st:${id}:оплачен`),
-         Markup.button.callback('⚙️ Оформляю', `st:${id}:оформляется`)],
-        [Markup.button.callback('✅ Готово', `st:${id}:активна`),
-         Markup.button.callback('❌ Отмена', `st:${id}:отменён`)],
-        [Markup.button.callback('✉️ Написать клиенту', `dm:${o.uid}`)]
-      ])
-    });
-  } catch (e) { console.error('notifyAdmin:', e.message); }
-}
-
-bot.action(/^st:(\d+):(.+)$/, async ctx => {
-  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
-  const id = +ctx.match[1], status = ctx.match[2];
-  const o = db.orders.find(x => x.id === id);
-  if (!o) return ctx.answerCbQuery('Заказ не найден');
-
-  const wasCancelled = o.status === 'отменён';
-  o.status = status;
-  if (status === 'оплачен') payReferral(o);
-  if (status === 'отменён' && !wasCancelled) {
-    if (o.usedBonus > 0) { userOf(o.uid).balance += o.usedBonus; }
-    if (o.refPaid && !o.refPaid.revoked) {
-      const r = userOf(o.refPaid.to);
-      r.balance   = Math.max(0, r.balance - o.refPaid.bonus);
-      r.refEarned = Math.max(0, r.refEarned - o.refPaid.bonus);
-      o.refPaid.revoked = true;
-    }
-  }
-  if (status === 'активна' && !o.endsAt) {
-    const months = Math.max(...o.items.map(i => i.months));
-    const d = new Date(); d.setMonth(d.getMonth() + months);
-    o.endsAt = d.getTime();
-  }
-  save(db);
-  await ctx.answerCbQuery('Статус: ' + status);
-  await ctx.editMessageText(ctx.callbackQuery.message.text.replace(/Статус:.*$/, 'Статус: ' + status) +
-    (o.endsAt ? '\nДействует до: ' + fmtDate(o.endsAt) : ''), { parse_mode: 'HTML' });
-
-  const note = {
-    'оплачен':     'Оплата получена, начинаем оформлять.',
-    'оформляется': 'Взяли в работу. Скоро напишем.',
-    'активна':     `Готово! Подписка активна${o.endsAt ? ' до ' + fmtDate(o.endsAt) : ''}.\n\nЕсли передавали пароль — поменяйте его на свой. Если что-то отвалится в течение месяца, напишите: чиним за свой счёт.`,
-    'отменён':     'Заказ отменён. Если это ошибка — напишите нам.'
-  }[status];
-  if (note) {
-    try { await bot.telegram.sendMessage(o.uid, `<b>Заказ №${id}</b>\n\n${note}`, { parse_mode:'HTML' }); }
-    catch (e) { console.error('notify client:', e.message); }
-  }
-});
-
-bot.action(/^dm:(\d+)$/, async ctx => {
-  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
-  await ctx.answerCbQuery();
-  await ctx.reply(`Напиши клиенту напрямую: tg://user?id=${ctx.match[1]}`);
-});
-
-/* ---------- Мои заказы ---------- */
-bot.action('my', async ctx => {
-  await ctx.answerCbQuery();
-  const mine = db.orders.filter(o => o.uid === ctx.from.id).slice(-8).reverse();
-  const body = mine.length
-    ? '<b>Ваши заказы</b>\n\n' + mine.map(o =>
-        `№${o.id} · ${o.status}\n${o.items.map(i => i.name).join(', ')} — ${money(o.due)}` +
-        (o.endsAt ? `\nДо ${fmtDate(o.endsAt)}` : '')).join('\n\n')
-    : '<b>Заказов пока нет</b>\n\nВыберите что-нибудь в каталоге.';
-  const bal = userOf(ctx.from.id).balance;
-  await ctx.editMessageText(
-    body + (bal > 0 ? `\n\n💰 Бонусный баланс: <b>${money(bal)}</b> — спишется со следующего заказа.` : ''),
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.callback('🛒 В каталог', 'shop')],
-      [Markup.button.callback('👥 Пригласить друзей', 'ref')],
-      [Markup.button.callback('◀︎ Назад', 'home')]
-    ]) });
-});
-
-/* ---------- Кнопки постоянного меню ---------- */
-async function screenOrders(ctx) {
-  const mine = db.orders.filter(o => o.uid === ctx.from.id).slice(-8).reverse();
-  const bal = userOf(ctx.from.id).balance;
-  const body = mine.length
-    ? '<b>Ваши заказы</b>\n\n' + mine.map(o =>
-        `№${o.id} · ${o.status}\n${o.items.map(i => i.name).join(', ')} — ${money(o.due)}` +
-        (o.endsAt ? `\nДо ${fmtDate(o.endsAt)}` : '')).join('\n\n')
-    : '<b>Заказов пока нет</b>\n\nОткройте магазин и выберите подписку.';
-  await ctx.replyWithHTML(body + (bal > 0
-    ? `\n\n💰 Бонусный баланс: <b>${money(bal)}</b> — спишется со следующего заказа.` : ''));
-}
+const refCount = uid => Object.values(db.users).filter(u => u.invitedBy === uid).length;
 
 async function screenFriends(ctx) {
-  const u = userOf(ctx.from.id);
-  const me = (ctx.botInfo && ctx.botInfo.username) || 'akulavka_bot';
-  const link = `https://t.me/${me}?start=ref_${ctx.from.id}`;
-  await ctx.replyWithHTML(
-    '<b>👥 Приводите друзей — получайте деньги</b>\n\n' +
-    `${CONFIG.refFirst}% с первой покупки приглашённого и ${CONFIG.refNext}% со всех следующих. ` +
-    'Бонус падает на баланс и списывается с вашего следующего заказа.\n\n' +
-    '<b>Ссылка на бота:</b>\n<code>' + link + '</code>\n\n' +
-    '<b>Ссылка на сайт:</b>\n<code>' + CONFIG.site + '?ref=' + ctx.from.id + '</code>\n\n' +
-    `Приглашено: <b>${refCount(ctx.from.id)}</b>\nЗаработано: <b>${money(u.refEarned)}</b>\n` +
-    `Баланс: <b>${money(u.balance)}</b>`,
+  const u = touch(ctx), uid = ctx.from.id;
+  const link = `https://t.me/${CAT.bot}?start=ref_${uid}`;
+  return ctx.replyWithHTML(
+    '<b>👥 Приводите друзей — получайте бонусы</b>\n\n' +
+    `${CAT.refFirst}% с первой покупки друга и ${CAT.refNext}% со всех следующих. ` +
+    'Бонус начисляется, когда заказ друга выполнен, и сам списывается с вашего следующего заказа.\n\n' +
+    `<b>Ссылка на бота:</b>\n<code>${link}</code>\n\n` +
+    `<b>Ссылка на сайт:</b>\n<code>${SHOP_URL}?ref=${uid}</code>\n\n` +
+    `Приглашено: <b>${refCount(uid)}</b> · заработано: <b>${money(u.refEarned)}</b> · баланс: <b>${money(u.balance)}</b>`,
     Markup.inlineKeyboard([[Markup.button.url('📨 Отправить другу',
       'https://t.me/share/url?url=' + encodeURIComponent(link) +
       '&text=' + encodeURIComponent('Подписки на нейросети на свой аккаунт — Claude, ChatGPT и другие'))]])
@@ -543,275 +249,442 @@ async function screenFriends(ctx) {
 }
 
 async function screenHelp(ctx) {
-  await ctx.replyWithHTML(
+  return ctx.replyWithHTML(
     '<b>Как это работает</b>\n\n' +
     '1. Открываете магазин и собираете заказ\n' +
-    '2. Выбираете оплату: крипта (−' + CONFIG.cryptoOff + '%) или ЮMoney\n' +
-    '3. Даёте данные: для Claude — только ID аккаунта, пароль не нужен. ' +
-    'Для остальных — временный пароль, который меняете сразу после оформления\n' +
-    '4. Пользуетесь. За три дня до конца напомним про продление\n\n' +
-    '<b>Если подписка слетит</b> в течение оплаченного срока — восстанавливаем за свой счёт ' +
-    'или возвращаем деньги за оставшиеся дни.\n\n' +
-    `Работаем с ${CONFIG.openFrom}:00 до ${CONFIG.openTo}:00.`,
+    `2. Оплачиваете: банковской картой или кошельком ЮMoney, либо USDT со скидкой ${CAT.cryptoOff}%\n` +
+    '3. Присылаете данные прямо сюда, в чат: для Claude — только ID аккаунта, пароль не нужен. ' +
+    'Для остальных — временный пароль, который вы меняете сразу после оформления\n' +
+    '4. Обычно оформляем в течение часа. За три дня до конца срока напомним про продление\n\n' +
+    '<b>Гарантия.</b> Если подписка перестала работать в оплаченный срок не по вашей вине — ' +
+    'восстановим за свой счёт или вернём деньги за оставшиеся дни. ' +
+    'Блокировка аккаунта самим сервисом за нарушение его правил (общий доступ, смена страны и т. п.) гарантией не покрывается.\n\n' +
+    (ON_REQ.length ? '<b>Под заказ:</b> ' + ON_REQ.join(', ') + '. Нужного нет в списке — просто напишите сюда.\n\n' : '') +
+    `Работаем с ${OPEN_FROM}:00 до ${OPEN_TO}:00 по Минску. Заказы ночью берём в работу утром.`,
     Markup.inlineKeyboard([
-      [Markup.button.url('📖 Бесплатный гайд по Claude', CONFIG.guide)],
-      [Markup.button.url('📣 Канал про нейросети', CONFIG.channel)],
-      [Markup.button.callback('🧰 Полезное рядом', 'extras')]
+      [Markup.button.url('📄 Условия и возврат', SHOP_URL + '#/terms')],
+      [Markup.button.url('📣 Канал Лавки', CHANNEL), Markup.button.url('🧑‍💻 Канал основателя', FOUNDER)],
+      [Markup.button.url('🎨 Картинки и видео без подписки — LexyGPT', CONFIG.lexyRef)]
     ])
   );
 }
 
-bot.hears(BTN.orders,  screenOrders);
-bot.hears(BTN.friends, screenFriends);
-bot.hears(BTN.help,    screenHelp);
-bot.hears(BTN.ask, ctx => ctx.replyWithHTML(
-  'Пишите сюда — отвечает человек, не автоответчик.\n\n' +
-  'Подскажем, что выбрать под задачу, посчитаем срок и поможем с оплатой.',
-  Markup.inlineKeyboard([[Markup.button.url('💬 Открыть чат', 'https://t.me/' + CONFIG.telegram)]])
-));
+async function screenAsk(ctx) {
+  return ctx.replyWithHTML(
+    '<b>Напишите сообщение прямо сюда</b> — его увидит основатель Лавки, ответ придёт в этот же чат.\n\n' +
+    'Подскажем, что выбрать под задачу, посчитаем срок, оформим то, чего нет в каталоге.\n\n' +
+    (isOpen() ? '🟢 Сейчас на связи.' : `🌙 Сейчас закрыто — ответим с ${OPEN_FROM}:00.`));
+}
 
-/* ---------- Создание заказа (из приложения, с сайта, из старой клавиатуры) ---------- */
-async function createOrder(ctx, rawItems, source) {
-  const uid = ctx.from.id;
-  const u = userOf(uid);
-  u.name = ctx.from.first_name; u.username = ctx.from.username;
+/* ═══════════════ ЗАКАЗ ═══════════════ */
+const sig = items => items.map(i => i.id + ':' + i.months + ':' + i.qty).sort().join('|');
 
+async function createOrder(ctx, rawItems, source, extra = {}) {
+  const uid = ctx.from.id, u = touch(ctx);
   const items = rawItems.map(i => {
     const g = G(i.id);
-    if (!g || g.link) return null;
+    if (!g) return null;
     const months = PRICE.termsOf(g).some(t => t.months === +i.months) ? +i.months : PRICE.termsOf(g)[0].months;
-    return { id: g.id, name: g.name, months, qty: Math.max(1, Math.min(9, +i.qty || 1)), price: priceFor(g, months) };
+    return { id: g.id, name: g.name, months, qty: Math.max(1, Math.min(9, +i.qty || 1)), price: PRICE.priceFor(g, months) };
   }).filter(Boolean);
   if (!items.length) return ctx.reply('Корзина пустая — откройте магазин и выберите подписку.');
 
-  const total = items.reduce((s2, i) => s2 + i.price * i.qty, 0);
+  // повторный переход по той же ссылке не плодит заказы
+  const dup = db.orders.find(o => o.uid === uid && o.status === 'ждёт оплаты' &&
+                                  Date.now() - o.created < 30 * MIN && sig(o.items) === sig(items));
+  if (dup) return showPayChoice(ctx, dup, true);
+
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
   const usedBonus = Math.min(u.balance, Math.max(0, total - 100));
   if (usedBonus > 0) u.balance -= usedBonus;
   const base = total - usedBonus;
 
-  const id = ++db.seq;
-  db.orders.push({ id, uid, user: who(ctx.from), items, total, base, due: base, usedBonus,
-                   method: 'не выбран', status: 'ждёт оплаты', created: Date.now(), source });
-  delete db.carts[uid];
-  save(db);
-
-  const lines = items.map(i => '• ' + i.name + ' — ' + term(i.months, G(i.id)).label +
-                   (i.qty > 1 ? ' ×' + i.qty : '') + ' — ' + money(i.price * i.qty)).join('\n');
-  await ctx.replyWithHTML(
-    `<b>Заказ №${id} принят</b>\n\n${lines}` +
-    (usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(usedBonus)}</b>` : '') +
-    `\n\nИтого: <b>${money(base)}</b>\nКриптой: <b>${money(crypto(base))}</b>\n\nВыберите, чем платить:`,
-    Markup.inlineKeyboard([
-      [Markup.button.callback('₮ Крипта USDT (−' + CONFIG.cryptoOff + '%)', 'appay:crypto:' + id)],
-      [Markup.button.callback('💳 ЮMoney', 'appay:yoomoney:' + id)],
-      [Markup.button.callback('💬 Написать нам', 'contact')]
-    ])
-  );
-  await notifyAdmin(id, '🛍 новый заказ (' + source + ')');
+  const o = { id: ++db.seq, uid, items, total, base, due: base, usedBonus, method: 'не выбран',
+              status: 'ждёт оплаты', created: Date.now(), source, ...extra };
+  db.orders.push(o); save();
+  await showPayChoice(ctx, o, false);
+  await notifyAdmin(o, extra.renewOf ? '🔄 Продление' : '🛍 Новый заказ');
 }
 
-// старый способ: приложение, открытое кнопкой из нижней клавиатуры
-bot.on('message', async (ctx, next) => {
-  const wad = ctx.message && ctx.message.web_app_data;
-  if (!wad) return next();
-  let payload;
-  try { payload = JSON.parse(wad.data); } catch { return ctx.reply('Не удалось прочитать заказ.'); }
-  if (!payload || !Array.isArray(payload.items)) return ctx.reply('Корзина пустая.');
-  return createOrder(ctx, payload.items, 'приложение');
-});
+function payKeyboard(o) {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('💳 Банковской картой', `pay:card:${o.id}`)],
+    [Markup.button.callback('👛 Кошельком ЮMoney', `pay:wallet:${o.id}`)],
+    [Markup.button.callback(`₮ USDT (−${CAT.cryptoOff}%)`, `pay:crypto:${o.id}`)],
+    [Markup.button.callback('✖️ Отменить заказ', `ccl:${o.id}`)]
+  ]);
+}
+async function showPayChoice(ctx, o, isRepeat) {
+  return ctx.replyWithHTML(
+    `<b>Заказ №${o.id}${isRepeat ? ' — уже создан' : ' принят'}</b>\n\n${itemsText(o)}` +
+    (o.usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(o.usedBonus)}</b>` : '') +
+    `\n\nИтого: <b>${money(o.base)}</b>\nВ USDT со скидкой: <b>${money(crypto(o.base))}</b>\n\nВыберите, чем платить:`,
+    payKeyboard(o));
+}
 
-// кнопки под приветствием
-bot.action(/^scr:(orders|friends|help|ask)$/, async ctx => {
+bot.action(/^payfor:(\d+)$/, async ctx => {
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (o.status !== 'ждёт оплаты') return ctx.answerCbQuery('Заказ уже в работе');
   await ctx.answerCbQuery();
-  const k = ctx.match[1];
-  if (k === 'orders')  return screenOrders(ctx);
-  if (k === 'friends') return screenFriends(ctx);
-  if (k === 'help')    return screenHelp(ctx);
-  return ctx.replyWithHTML('Пишите сюда — отвечает человек, не автоответчик.\n\n' +
-    'Подскажем, что выбрать под задачу, посчитаем срок и поможем с оплатой.',
-    Markup.inlineKeyboard([[Markup.button.url('💬 Открыть чат', 'https://t.me/' + CONFIG.telegram)]]));
+  return showPayChoice(ctx, o, true);
 });
 
-bot.action(/^appay:(crypto|yoomoney):(\d+)$/, async ctx => {
-  const method = ctx.match[1], id = +ctx.match[2];
-  const o = db.orders.find(x => x.id === id);
-  if (!o) return ctx.answerCbQuery('Заказ не найден');
+const quickpay = (o, type) => 'https://yoomoney.ru/quickpay/confirm?' + new URLSearchParams({
+  receiver: CONFIG.yoomoney, 'quickpay-form': 'button', paymentType: type, sum: String(o.due),
+  label: 'lavka-' + o.id, targets: 'AKU Лавка, заказ №' + o.id,
+  successURL: `https://t.me/${CAT.bot}`
+}).toString();
+
+bot.action(/^pay:(card|wallet|crypto):(\d+)$/, async ctx => {
+  const method = ctx.match[1], o = orderOf(ctx.match[2]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
   if (o.status !== 'ждёт оплаты') return ctx.answerCbQuery('Заказ уже в работе');
   await ctx.answerCbQuery();
   o.method = method;
-  const base = o.base !== undefined ? o.base : o.due;
-  o.due = method === 'crypto' ? crypto(base) : base;
-  save(db);
+  o.due = method === 'crypto' ? crypto(o.base) : o.base;
+  save();
 
-  const reqs = method === 'crypto'
-    ? `<b>USDT — выберите одну сеть</b>\n\n` +
+  let text = `<b>Заказ №${o.id}</b> · к оплате <b>${money(o.due)}</b>\n\n`;
+  const rows = [];
+  if (method === 'card') {
+    text += 'Оплата банковской картой через защищённую форму ЮMoney. Нажмите кнопку — сумма и номер заказа уже подставлены.';
+    rows.push([Markup.button.url('💳 Оплатить картой', quickpay(o, 'AC'))]);
+  } else if (method === 'wallet') {
+    text += 'Оплата с кошелька ЮMoney. Нажмите кнопку или переведите вручную на кошелёк ' +
+            `<code>${CONFIG.yoomoney}</code>, в комментарии укажите <b>заказ ${o.id}</b>.`;
+    rows.push([Markup.button.url('👛 Оплатить из ЮMoney', quickpay(o, 'PC'))]);
+  } else {
+    text += `Сумма: <b>${usdt(o.due)} USDT</b>\n\n` +
       `<b>TRC-20</b> (Tron, комиссия копеечная):\n<code>${CONFIG.usdtTrc}</code>\n\n` +
       `<b>BEP-20</b> (BNB Smart Chain):\n<code>${CONFIG.usdtBep}</code>\n\n` +
-      `⚠️ Сеть и адрес должны совпадать.\n\nТочную сумму в USDT подтвердим в переписке.`
-    : `<b>ЮMoney</b>\n<code>${CONFIG.yoomoney}</code>\n\nСумма: <b>${money(o.due)}</b>`;
-
-  await ctx.editMessageText(
-    `<b>Заказ №${id}</b>\n\nК оплате: <b>${money(o.due)}</b>\n\n${reqs}\n\n` +
-    'Как отправите — нажмите кнопку ниже.',
-    { parse_mode: 'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.callback('✅ Я оплатил', 'paid:' + id)],
-      [Markup.button.callback('💬 Написать нам', 'contact')]
-    ]) }
-  );
-  await notifyAdmin(id, 'выбран способ оплаты');
+      '⚠️ Сеть и адрес должны совпадать, иначе деньги не дойдут. ' +
+      'Сумма должна прийти полностью — комиссию сети оплачивает отправитель.';
+  }
+  text += '\n\nКак оплатите — нажмите «Я оплатил». Проверим поступление и начнём оформлять.';
+  rows.push([Markup.button.callback('✅ Я оплатил', 'paid:' + o.id)]);
+  rows.push([Markup.button.callback('↩️ Другой способ', 'payfor:' + o.id)]);
+  await ctx.replyWithHTML(text, Markup.inlineKeyboard(rows));
+  await updateAdminCard(o);
 });
 
-/* ---------- Реферальная программа ---------- */
-bot.action('ref', async ctx => {
+bot.action(/^paid:(\d+)$/, async ctx => {
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (o.status !== 'ждёт оплаты') return ctx.answerCbQuery('Уже получили, спасибо!');
+  if (o.method === 'не выбран') return ctx.answerCbQuery('Сначала выберите способ оплаты');
+  o.status = 'оплата заявлена'; o.claimedAt = Date.now(); save();
+  await ctx.answerCbQuery('Принято!');
+  const claude = o.items.some(i => G(i.id) && G(i.id).noLogin);
+  const other  = o.items.some(i => !(G(i.id) && G(i.id).noLogin));
+  await ctx.replyWithHTML(
+    `<b>Заказ №${o.id}</b> — спасибо! Проверим поступление и напишем сюда.\n\n` +
+    '<b>Пока пришлите данные следующим сообщением:</b>\n' +
+    (claude ? '• для Claude — ID аккаунта (Settings → Account) и почту, пароль не нужен\n' : '') +
+    (other ? '• для остальных сервисов — почту аккаунта. Пароль попросим, когда возьмём заказ в работу, — заранее не присылайте\n' : '') +
+    '\n' + (isOpen() ? 'Обычно оформляем в течение часа.' : `Сейчас закрыто, возьмём в работу с ${OPEN_FROM}:00.`));
+  await notifyAdmin(o, '💰 Клиент сообщил об оплате — проверь поступление');
+});
+
+bot.action(/^ccl:(\d+)$/, async ctx => {
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (o.status !== 'ждёт оплаты') return ctx.answerCbQuery('Заказ уже в работе — напишите нам');
+  o.status = 'отменён'; returnBonus(o); save();
+  await ctx.answerCbQuery('Заказ отменён');
+  await ctx.replyWithHTML(`Заказ №${o.id} отменён.` + (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : ''));
+  await updateAdminCard(o);
+});
+
+bot.action(/^renew:(\d+)$/, async ctx => {
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (!['активна', 'истекла'].includes(o.status)) return ctx.answerCbQuery('Эту подписку уже продлили');
   await ctx.answerCbQuery();
-  const u = userOf(ctx.from.id);
-  const me = ctx.botInfo && ctx.botInfo.username ? ctx.botInfo.username : 'akulavka_bot';
-  const link = `https://t.me/${me}?start=ref_${ctx.from.id}`;
-  const n = refCount(ctx.from.id);
-  await ctx.editMessageText(
-    '<b>👥 Приводите друзей — получайте деньги</b>\n\n' +
-    `${CONFIG.refFirst}% с первой покупки приглашённого и ${CONFIG.refNext}% со всех следующих. ` +
-    'Бонус падает на баланс и автоматически списывается с вашего следующего заказа.\n\n' +
-    '<b>Ваша ссылка:</b>\n<code>' + link + '</code>\n\n' +
-    `Приглашено: <b>${n}</b>\nЗаработано всего: <b>${money(u.refEarned)}</b>\n` +
-    `Баланс сейчас: <b>${money(u.balance)}</b>`,
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.url('📨 Отправить другу',
-        'https://t.me/share/url?url=' + encodeURIComponent(link) +
-        '&text=' + encodeURIComponent('Подписки на нейросети на свой аккаунт — Claude, ChatGPT и другие'))],
-      [Markup.button.callback('◀︎ Назад', 'home')]
-    ]) }
-  );
+  return createOrder(ctx, o.items, 'продление', { renewOf: o.id });
 });
 
-/* ---------- Справка и контакты ---------- */
-bot.action('help', async ctx => {
+/* ═══════════════ АДМИНКА ═══════════════ */
+const STATUS_ICON = { 'ждёт оплаты':'⏳', 'оплата заявлена':'💰', 'оплачен':'✅', 'оформляется':'⚙️',
+                      'активна':'🟢', 'отменён':'❌', 'истекла':'⚪️', 'продлена':'🔁' };
+function adminCard(o) {
+  const who = db.users[o.uid] ? clientLink(o.uid) : esc(o.user || o.uid);
+  return `<b>Заказ №${o.id}</b> · ${STATUS_ICON[o.status] || ''} ${esc(o.status)}\n` +
+    `Клиент: ${who}\n` +
+    `Создан: ${new Date(o.created).toLocaleString('ru-RU')} · ${esc(o.source || '')}\n` +
+    (o.renewOf ? `Продление заказа №${o.renewOf}\n` : '') +
+    `Оплата: ${METHOD_NAME[o.method] || esc(o.method)}\n\n${itemsText(o)}\n\n` +
+    (o.usedBonus > 0 ? `Бонусами: −${money(o.usedBonus)}\n` : '') +
+    `К оплате: <b>${money(o.due)}</b>` + (o.method === 'crypto' ? ` (${usdt(o.due)} USDT)` : '') +
+    (o.method === 'card' || o.method === 'wallet' ? `\nМетка в ЮMoney: lavka-${o.id}` : '') +
+    (o.endsAt ? `\nДействует до: ${fmtDate(o.endsAt)}` : '');
+}
+function adminKb(o) {
+  const done = ['активна', 'отменён', 'истекла', 'продлена'].includes(o.status);
+  const rows = done ? [] : [
+    [Markup.button.callback('💰 Оплачено', `st:${o.id}:оплачен`), Markup.button.callback('⚙️ Оформляю', `st:${o.id}:оформляется`)],
+    [Markup.button.callback('✅ Готово', `st:${o.id}:активна`),  Markup.button.callback('❌ Отменить', `st:${o.id}:отменён`)]
+  ];
+  rows.push([Markup.button.callback('✉️ Написать клиенту', `dm:${o.uid}`)]);
+  return Markup.inlineKeyboard(rows);
+}
+async function notifyAdmin(o, title) {
+  try {
+    const m = await bot.telegram.sendMessage(CONFIG.adminId, `<b>${esc(title)}</b>\n\n` + adminCard(o),
+      { parse_mode: 'HTML', disable_web_page_preview: true, ...adminKb(o) });
+    o.adminMsg = m.message_id; rememberRelay(m.message_id, o.uid); save();
+  } catch (e) { console.error('notifyAdmin:', e.message); }
+}
+async function updateAdminCard(o) {
+  if (!o.adminMsg) return;
+  try {
+    await bot.telegram.editMessageText(CONFIG.adminId, o.adminMsg, undefined, adminCard(o),
+      { parse_mode: 'HTML', disable_web_page_preview: true, ...adminKb(o) });
+  } catch (_) { /* не изменилось или слишком старое — не страшно */ }
+}
+
+bot.action(/^st:(\d+):(.+)$/, async ctx => {
+  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
+  const o = orderOf(ctx.match[1]), status = ctx.match[2];
+  if (!o) return ctx.answerCbQuery('Заказ не найден');
+  if (['отменён', 'активна', 'истекла', 'продлена'].includes(o.status)) return ctx.answerCbQuery('Заказ уже закрыт');
+  if (o.status === status) return ctx.answerCbQuery('Уже стоит этот статус');
+
+  o.status = status; o['at_' + status] = Date.now();
+  if (status === 'отменён') { returnBonus(o); revokeReferral(o); }
+  if (status === 'активна') {
+    const months = Math.max(...o.items.map(i => i.months));
+    const prev = o.renewOf ? orderOf(o.renewOf) : null;
+    const from = Math.max(Date.now(), prev && prev.endsAt ? prev.endsAt : 0);   // продление не съедает оставшиеся дни
+    const d = new Date(from); d.setMonth(d.getMonth() + months); o.endsAt = d.getTime();
+    if (prev && ['активна', 'истекла'].includes(prev.status)) { prev.status = 'продлена'; }
+  }
+  save();
+  await ctx.answerCbQuery('Статус: ' + status);
+  try { await ctx.editMessageText(adminCard(o), { parse_mode: 'HTML', disable_web_page_preview: true, ...adminKb(o) }); } catch (_) {}
+  if (status === 'активна') await payReferral(o);
+
+  const note = {
+    'оплачен':     'Оплата получена. Берём в работу — если для оформления что-то понадобится, напишем сюда.',
+    'оформляется': 'Оформляем прямо сейчас. Будьте, пожалуйста, на связи — может понадобиться код подтверждения.',
+    'активна':     `Готово! Подписка активна до <b>${o.endsAt ? fmtDate(o.endsAt) : ''}</b>.\n\n` +
+                   'Если передавали пароль — смените его прямо сейчас и выйдите со всех устройств. ' +
+                   'Не меняйте страну в настройках аккаунта и не делитесь им с другими — так сервисы не блокируют.\n\n' +
+                   'За три дня до конца напомним про продление. Всё ваши подписки — в разделе «Профиль».',
+    'отменён':     'Заказ отменён.' + (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : '') +
+                   ' Если оплата уже прошла — вернём её тем же способом, напишите сюда.'
+  }[status];
+  if (note) send(o.uid, `<b>Заказ №${o.id}</b>\n\n${note}`,
+    status === 'активна' ? Markup.inlineKeyboard([[Markup.button.callback('👤 Профиль', 'scr:profile')]]) : {});
+});
+
+bot.action(/^dm:(\d+)$/, async ctx => {
+  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
   await ctx.answerCbQuery();
-  await ctx.editMessageText(
-    '<b>Как это работает</b>\n\n' +
-    '1. Выбираете в каталоге и оформляете заказ\n' +
-    '2. Оплачиваете криптой или на ЮMoney\n' +
-    '3. Даёте данные: для Claude — только ID аккаунта, пароль не нужен. Для остальных — временный пароль, который меняете сразу после\n' +
-    '4. Пользуетесь. За три дня до конца месяца напомним про продление\n\n' +
-    '<b>Если подписка слетит</b> в течение оплаченного месяца — восстанавливаем за свой счёт или возвращаем деньги за оставшиеся дни.\n\n' +
-    `Работаем с ${CONFIG.openFrom}:00 до ${CONFIG.openTo}:00.`,
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.url('📖 Бесплатный гайд по Claude', CONFIG.guide)],
-      [Markup.button.callback('💬 Написать нам', 'contact')],
-      [Markup.button.callback('◀︎ Назад', 'home')]
-    ]) }
-  );
+  const uid = +ctx.match[1];
+  const m = await ctx.replyWithHTML(`✍️ Ответьте <b>реплаем на это сообщение</b> — перешлю клиенту ${clientLink(uid)}`);
+  rememberRelay(m.message_id, uid); save();
 });
 
-bot.action('contact', async ctx => {
-  await ctx.answerCbQuery();
-  await ctx.editMessageText(
-    '<b>Напишите нам</b>\n\nОтветим лично — без ботов-автоответчиков.\n\n' +
-    (isOpen() ? '🟢 Сейчас на связи.' : `🌙 Сейчас закрыто, ответим с ${CONFIG.openFrom}:00.`),
-    { parse_mode:'HTML', ...Markup.inlineKeyboard([
-      [Markup.button.url('💬 Открыть чат', 'https://t.me/hipnohop')],
-      [Markup.button.url('📢 Канал про нейросети', CONFIG.channel)],
-      [Markup.button.callback('◀︎ Назад', 'home')]
-    ]) }
-  );
+/* ---------- команды админа ---------- */
+const isAdmin = ctx => ctx.from && ctx.from.id === CONFIG.adminId;
+
+bot.command('admin', ctx => isAdmin(ctx) && ctx.replyWithHTML(
+  '<b>Команды</b>\n\n/pending — заказы, которые ждут тебя\n/o 1001 — карточка заказа с кнопками\n' +
+  '/last — последние 10 заказов\n/stats — выручка и заказы за сегодня, неделю, месяц\n/backup — копия базы\n\n' +
+  'Чтобы ответить клиенту — сделай реплай на его сообщение или на карточку заказа.'));
+
+bot.command('pending', ctx => {
+  if (!isAdmin(ctx)) return;
+  const list = db.orders.filter(o => ACTIVE_STATUSES.includes(o.status));
+  if (!list.length) return ctx.reply('Ничего не ждёт. 👌');
+  const order = { 'оплата заявлена': 0, 'оплачен': 1, 'оформляется': 2, 'ждёт оплаты': 3 };
+  list.sort((a, b) => order[a.status] - order[b.status] || a.created - b.created);
+  return ctx.replyWithHTML('<b>Ждут тебя</b>\n\n' + list.map(o =>
+    `${STATUS_ICON[o.status]} /o${o.id} · ${esc(o.status)} · ${money(o.due)}\n` +
+    `   ${o.items.map(i => esc(i.name)).join(', ')} · ${Math.round((Date.now() - (o.claimedAt || o.created)) / MIN)} мин назад`).join('\n'));
 });
 
-bot.action('home', async ctx => {
-  await ctx.answerCbQuery();
-  await ctx.editMessageText(HELLO(ctx.from.first_name), { parse_mode:'HTML', ...mainMenu() });
+bot.hears(/^\/o_?(\d+)/, async ctx => {
+  if (!isAdmin(ctx)) return;
+  const o = orderOf(ctx.match[1]);
+  if (!o) return ctx.reply('Нет такого заказа');
+  const m = await ctx.replyWithHTML(adminCard(o), adminKb(o));
+  o.adminMsg = m.message_id; rememberRelay(m.message_id, o.uid); save();
+});
+bot.command('o', async ctx => {
+  if (!isAdmin(ctx)) return;
+  const id = (ctx.message.text.split(/\s+/)[1] || '').replace(/\D/g, '');
+  const o = orderOf(id);
+  if (!o) return ctx.reply('Напиши так: /o 1001');
+  const m = await ctx.replyWithHTML(adminCard(o), adminKb(o));
+  o.adminMsg = m.message_id; rememberRelay(m.message_id, o.uid); save();
 });
 
-/* ---------- Команды для тебя ---------- */
-bot.command('stats', ctx => {
-  if (ctx.from.id !== CONFIG.adminId) return;
-  const o = db.orders;
-  const active = o.filter(x => x.status === 'активна');
-  const revenue = o.filter(x => ['оплачен','оформляется','активна'].includes(x.status))
-                   .reduce((s, x) => s + x.due, 0);
-  const soon = active.filter(x => x.endsAt && x.endsAt - Date.now() < 4 * 864e5);
-  ctx.replyWithHTML(
-    `<b>Сводка</b>\n\n` +
-    `Всего заказов: ${o.length}\n` +
-    `Ждут оплаты: ${o.filter(x => x.status.includes('ждёт') || x.status.includes('заявлена')).length}\n` +
-    `Активных подписок: ${active.length}\n` +
-    `Истекают в 3 дня: ${soon.length}\n` +
-    `Выручка: ${money(revenue)}\n` +
-    `Пользователей в боте: ${Object.keys(db.users).length}\n` +
-    `Пришли по рефералкам: ${Object.values(db.users).filter(u => u.invitedBy).length}\n` +
-    `Начислено бонусов: ${money(Object.values(db.users).reduce((s2,u)=>s2+(u.refEarned||0),0))}`
-  );
-});
-
-bot.command('orders', ctx => {
-  if (ctx.from.id !== CONFIG.adminId) return;
+function adminLast(ctx) {
   const last = db.orders.slice(-10).reverse();
   if (!last.length) return ctx.reply('Заказов пока нет.');
-  ctx.replyWithHTML('<b>Последние заказы</b>\n\n' + last.map(o =>
-    `№${o.id} · ${o.user}\n${o.items.map(i => i.name).join(', ')} — ${money(o.due)} · ${o.status}` +
-    (o.endsAt ? `\nДо ${fmtDate(o.endsAt)}` : '')).join('\n\n'));
+  return ctx.replyWithHTML('<b>Последние заказы</b>\n\n' + last.map(o =>
+    `${STATUS_ICON[o.status] || ''} /o${o.id} · ${money(o.due)} · ${esc(o.status)}\n   ${o.items.map(i => esc(i.name)).join(', ')}`).join('\n'));
+}
+bot.command('last', ctx => isAdmin(ctx) && adminLast(ctx));
+
+bot.command('stats', ctx => {
+  if (!isAdmin(ctx)) return;
+  const now = Date.now();
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const period = (from) => {
+    const os = db.orders.filter(o => o.created >= from && o.source !== 'розыгрыш');
+    const paid = os.filter(o => PAID_STATUSES.includes(o.status));
+    const rev = paid.reduce((s, o) => s + o.due, 0);
+    return `${os.length} заказов, оплачено ${paid.length}` + (os.length ? ` (${Math.round(paid.length / os.length * 100)}%)` : '') +
+           `, выручка ${money(rev)}` + (paid.length ? `, средний чек ${money(Math.round(rev / paid.length))}` : '');
+  };
+  const top = {};
+  db.orders.filter(o => PAID_STATUSES.includes(o.status)).forEach(o => o.items.forEach(i => { top[i.name] = (top[i.name] || 0) + i.qty; }));
+  const soon = db.orders.filter(o => o.status === 'активна' && o.endsAt - now < 3 * DAY);
+  return ctx.replyWithHTML(
+    '<b>Сводка</b>\n\n' +
+    `<b>Сегодня:</b> ${period(startOfDay.getTime())}\n` +
+    `<b>7 дней:</b> ${period(now - 7 * DAY)}\n` +
+    `<b>30 дней:</b> ${period(now - 30 * DAY)}\n` +
+    `<b>Всё время:</b> ${period(0)}\n\n` +
+    `Активных подписок: ${db.orders.filter(o => o.status === 'активна').length}` +
+    (soon.length ? `\nЗаканчиваются в 3 дня: ${soon.map(o => '/o' + o.id).join(', ')}` : '') + '\n\n' +
+    '<b>Что берут:</b> ' + (Object.entries(top).sort((a, b) => b[1] - a[1]).map(([n, q]) => `${esc(n)} ${q}`).join(', ') || 'пока ничего') + '\n\n' +
+    `Пользователей: ${Object.keys(db.users).length}, пришли по рефералке: ${Object.values(db.users).filter(u => u.invitedBy).length}, ` +
+    `начислено бонусов: ${money(Object.values(db.users).reduce((s, u) => s + (u.refEarned || 0), 0))}`);
 });
 
-/* ---------- Напоминания о продлении ---------- */
-async function checkRenewals() {
-  const now = Date.now();
-  for (const o of db.orders) {
-    if (o.status !== 'активна' || !o.endsAt || o.reminded) continue;
-    const daysLeft = (o.endsAt - now) / 864e5;
-    if (daysLeft > 3 || daysLeft < 0) continue;
+/* ═══════════════ ПЕРЕПИСКА КЛИЕНТ ⇄ АДМИН ═══════════════ */
+bot.on('message', async ctx => {
+  if (!ctx.chat || ctx.chat.type !== 'private') return;
+  const msg = ctx.message;
 
-    const names = o.items.map(i => i.name).join(', ');
-    try {
-      await bot.telegram.sendMessage(o.uid,
-        `<b>Напоминание о продлении</b>\n\n${names} заканчивается ${fmtDate(o.endsAt)}.\n\n` +
-        `Продление — ${money(o.total)}, криптой ${money(crypto(o.total))}. Оформим в тот же день.\n\n` +
-        `Если не нужно — просто не отвечайте, ничего списываться не будет.`,
-        { parse_mode:'HTML', ...Markup.inlineKeyboard([
-          [Markup.button.callback('🔄 Продлить', 'shop')],
-          [Markup.button.callback('💬 Написать нам', 'contact')]
-        ]) });
-      await bot.telegram.sendMessage(CONFIG.adminId,
-        `⏰ Напомнил о продлении: ${o.user}, заказ №${o.id} (${names}), до ${fmtDate(o.endsAt)}`);
-      o.reminded = true; save(db);
-    } catch (e) { console.error('renewal:', e.message); }
+  if (msg.web_app_data) {                                            // старый способ из приложения
+    let p; try { p = JSON.parse(msg.web_app_data.data); } catch { return ctx.reply('Не удалось прочитать заказ.'); }
+    return createOrder(ctx, Array.isArray(p.items) ? p.items : [], 'приложение');
   }
+
+  if (isAdmin(ctx)) {                                                // ты отвечаешь клиенту реплаем
+    const to = msg.reply_to_message && db.relay[msg.reply_to_message.message_id];
+    if (!to) return ctx.reply('Чтобы ответить клиенту, сделай реплай на его сообщение или карточку заказа. Список команд — /admin');
+    try {
+      await bot.telegram.copyMessage(to, ctx.chat.id, msg.message_id);
+      return ctx.reply('✓ Отправлено');
+    } catch (e) { return ctx.reply('Не доставлено: ' + e.message); }
+  }
+
+  // клиент пишет — пересылаем тебе с контекстом
+  const u = touch(ctx);
+  const open = db.orders.filter(o => o.uid === ctx.from.id && ACTIVE_STATUSES.includes(o.status)).pop();
+  try {
+    const head = await bot.telegram.sendMessage(CONFIG.adminId,
+      `✉️ ${clientLink(ctx.from.id)}` + (open ? `\nЗаказ /o${open.id} · ${esc(open.status)}` : '') + '\n<i>Ответь реплаем — уйдёт клиенту</i>',
+      { parse_mode: 'HTML', disable_web_page_preview: true });
+    const copy = await bot.telegram.copyMessage(CONFIG.adminId, ctx.chat.id, msg.message_id, { reply_to_message_id: head.message_id });
+    rememberRelay(head.message_id, ctx.from.id); rememberRelay(copy.message_id, ctx.from.id);
+  } catch (e) { console.error('relay:', e.message); }
+
+  if (!u.lastAck || Date.now() - u.lastAck > 30 * MIN) {
+    u.lastAck = Date.now();
+    await ctx.reply(isOpen() ? 'Получили ✓ Ответим сюда же, обычно в течение часа.'
+                             : `Получили ✓ Сейчас закрыто — ответим с ${OPEN_FROM}:00.`);
+  }
+  save();
+});
+
+/* ═══════════════ АВТОМАТИКА (каждые 5 минут) ═══════════════ */
+async function tick() {
+  const now = Date.now(), h = hour(), work = isOpen();
+  let changed = false;
+
+  for (const o of db.orders) {
+    // подписка закончилась
+    if (o.status === 'активна' && o.endsAt && o.endsAt < now) { o.status = 'истекла'; changed = true; }
+
+    // напоминание о продлении за 3 дня, только днём
+    if (o.status === 'активна' && o.endsAt && !o.reminded && o.endsAt - now < 3 * DAY && work) {
+      o.reminded = true; changed = true;
+      const names = o.items.map(i => esc(i.name)).join(', ');
+      send(o.uid, `<b>Напоминание</b>\n\n${names} — до ${fmtDate(o.endsAt)}.\n\n` +
+        'Продлить можно в одно касание: заказ соберётся сам, новый срок добавится к оставшимся дням.\n' +
+        'Не нужно — просто ничего не делайте, автосписаний нет.',
+        Markup.inlineKeyboard([[Markup.button.callback('🔄 Продлить', 'renew:' + o.id)]]));
+      send(CONFIG.adminId, `⏰ Напомнил о продлении: /o${o.id} (${names}), до ${fmtDate(o.endsAt)}`);
+    }
+
+    // неоплаченный заказ: одно напоминание через 2 часа, отмена через 48
+    if (o.status === 'ждёт оплаты') {
+      if (now - o.created > 48 * HOUR) {
+        o.status = 'отменён'; o.autoCancelled = true; returnBonus(o); changed = true;
+        send(o.uid, `Заказ №${o.id} не был оплачен и закрылся автоматически.` +
+          (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : '') + ' Собрать новый можно в магазине.');
+        updateAdminCard(o);
+      } else if (!o.payReminded && now - o.created > 2 * HOUR && work) {
+        o.payReminded = true; changed = true;
+        send(o.uid, `Заказ №${o.id} ждёт оплаты. Если остались вопросы — напишите сюда, поможем.`,
+          Markup.inlineKeyboard([[Markup.button.callback('💳 Оплатить', 'payfor:' + o.id)], [Markup.button.callback('✖️ Отменить', 'ccl:' + o.id)]]));
+      }
+    }
+
+    // клиент сообщил об оплате, а ты молчишь 30 минут — напомню тебе
+    if (o.status === 'оплата заявлена' && !o.adminPinged && work && now - (o.claimedAt || o.created) > 30 * MIN) {
+      o.adminPinged = true; changed = true;
+      notifyAdmin(o, '⏰ Клиент ждёт уже 30 минут');
+    }
+  }
+
+  // утренняя сводка в 9:00 — что пришло за ночь
+  if (h === OPEN_FROM && db.daily.morning !== today()) {
+    db.daily.morning = today(); changed = true;
+    const waiting = db.orders.filter(o => ACTIVE_STATUSES.includes(o.status) && o.status !== 'ждёт оплаты');
+    if (waiting.length) send(CONFIG.adminId, `☀️ Доброе утро. Ждут тебя: ${waiting.map(o => '/o' + o.id).join(', ')}\nВесь список — /pending`);
+  }
+
+  // копия базы в 3:00
+  if (h === 3 && db.daily.backup !== today()) { db.daily.backup = today(); changed = true; sendBackup('ежедневная'); }
+
+  if (changed) save();
 }
-setInterval(checkRenewals, 60 * 60 * 1000);  // раз в час
-setTimeout(checkRenewals, 30 * 1000);        // и через полминуты после старта
 
-/* ---------- Запуск ---------- */
-bot.catch(err => console.error('Ошибка бота:', err));
-
-/* ---------- Резервная копия базы ---------- */
 async function sendBackup(reason) {
   try {
     if (!fs.existsSync(DB_FILE)) return;
     const d = new Date().toISOString().slice(0, 10);
-    await bot.telegram.sendDocument(CONFIG.adminId,
-      { source: DB_FILE, filename: `lavka-backup-${d}.json` },
-      { caption: `💾 Копия базы (${reason}). Заказов: ${db.orders.length}, пользователей: ${Object.keys(db.users).length}.\n` +
-                 'Храни этот файл. Чтобы восстановить — положи его на сервер как data.json и перезапусти бота.' });
-    db.lastBackup = d; save(db);
+    await bot.telegram.sendDocument(CONFIG.adminId, { source: DB_FILE, filename: `lavka-backup-${d}.json` },
+      { caption: `💾 Копия базы (${reason}). Заказов: ${db.orders.length}, пользователей: ${Object.keys(db.users).length}.\n\n` +
+                 'Как восстановить: pm2 stop lavka-bot → положить файл на сервер как data.json → pm2 start lavka-bot' });
   } catch (e) { console.error('backup:', e.message); }
 }
-bot.command('backup', ctx => { if (ctx.from.id === CONFIG.adminId) return sendBackup('по запросу'); });
-setInterval(() => {
-  const now = new Date(), d = now.toISOString().slice(0, 10);
-  if (now.getHours() === 3 && db.lastBackup !== d) sendBackup('ежедневная, 03:00');
-}, 10 * 60 * 1000);
+bot.command('backup', ctx => isAdmin(ctx) && sendBackup('по запросу'));
 
-bot.telegram.setChatMenuButton({ menuButton: { type: 'web_app', text: 'Магазин', web_app: { url: CONFIG.webapp } } })
+/* ═══════════════ ЗАПУСК ═══════════════ */
+bot.catch(err => console.error('Ошибка бота:', err));
+
+bot.telegram.setChatMenuButton({ menuButton: { type: 'web_app', text: 'Магазин', web_app: { url: APP_URL } } })
   .catch(e => console.error('menu button:', e.message));
 bot.telegram.setMyCommands([
-  { command: 'start',  description: 'Открыть лавку' },
-  { command: 'orders', description: 'Мои заказы' },
-  { command: 'help',   description: 'Как это работает' }
+  { command: 'start',   description: 'Главное меню' },
+  { command: 'profile', description: 'Профиль, подписки и продление' },
+  { command: 'help',    description: 'Как это работает' }
 ]).catch(() => {});
+bot.telegram.setMyCommands([
+  { command: 'pending', description: 'Заказы, которые ждут' },
+  { command: 'last',    description: 'Последние заказы' },
+  { command: 'stats',   description: 'Сводка' },
+  { command: 'backup',  description: 'Копия базы' },
+  { command: 'admin',   description: 'Все команды' }
+], { scope: { type: 'chat', chat_id: CONFIG.adminId } }).catch(() => {});
+
+setInterval(() => tick().catch(e => console.error('tick:', e.message)), 5 * MIN);
+setTimeout(() => tick().catch(() => {}), 20 * 1000);
 
 bot.launch().then(() => {
   console.log('AKU Лавка запущена');
-  bot.telegram.sendMessage(CONFIG.adminId, '🟢 Бот AKU Лавка запущен и готов принимать заказы.')
-     .catch(() => {});
+  send(CONFIG.adminId, '🟢 Бот перезапущен. Команды — /admin');
 });
-
 process.once('SIGINT',  () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+module.exports = { bot, db, tick };   // для проверок
