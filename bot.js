@@ -57,6 +57,9 @@ const db = load();
 db.orders = db.orders || []; db.users = db.users || {}; db.seq = db.seq || 1000;
 db.relay = db.relay || {};       // id сообщения у админа → id клиента (для ответов реплаем)
 db.daily = db.daily || {};       // отметки ежедневных дел
+db.costs = db.costs || {};       // твоя себестоимость за 1 месяц товара: { claude: 1150 }
+db.expenses = db.expenses || []; // расходы: сервер, реклама, розыгрыши
+db.broadcasts = db.broadcasts || [];
 
 /* ---------- мелочи ---------- */
 const esc   = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
@@ -472,6 +475,7 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   o.status = status; o['at_' + status] = Date.now();
   if (status === 'отменён') { returnBonus(o); revokeReferral(o); }
   if (status === 'активна') {
+    o.cost = sumBy(o.items, costOf);                                 // фиксируем закупку на момент выполнения
     const months = Math.max(...o.items.map(i => i.months));
     const prev = o.renewOf ? orderOf(o.renewOf) : null;
     const from = Math.max(Date.now(), prev && prev.endsAt ? prev.endsAt : 0);   // продление не съедает оставшиеся дни
@@ -506,12 +510,348 @@ bot.action(/^dm:(\d+)$/, async ctx => {
 });
 
 /* ---------- команды админа ---------- */
+/* ═══════════════ ПАНЕЛЬ АДМИНА (/admin) ═══════════════
+   Всё в одном сообщении: кнопки переключают экраны, сообщение обновляется на месте. */
 const isAdmin = ctx => ctx.from && ctx.from.id === CONFIG.adminId;
+const sumBy  = (arr, f) => arr.reduce((s, x) => s + (f(x) || 0), 0);
+const pct    = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+const dayStart = (offsetDays = 0) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - offsetDays); return d.getTime(); };
+const monthStart = (back = 0) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(1); d.setMonth(d.getMonth() - back); return d.getTime(); };
+const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const bar = (v, max, w = 10) => max ? '▇'.repeat(Math.round(v / max * w)) || (v ? '▏' : '') : '';
+const nick = uid => { const u = db.users[uid] || {}; return esc(u.name || 'без имени') + (u.username ? ' @' + esc(u.username) : ''); };
 
-bot.command('admin', ctx => isAdmin(ctx) && ctx.replyWithHTML(
-  '<b>Команды</b>\n\n/pending — заказы, которые ждут тебя\n/o 1001 — карточка заказа с кнопками\n' +
-  '/last — последние 10 заказов\n/stats — выручка и заказы за сегодня, неделю, месяц\n/backup — копия базы\n\n' +
-  'Чтобы ответить клиенту — сделай реплай на его сообщение или на карточку заказа.'));
+/* себестоимость: что ты платишь поставщику за 1 месяц товара.
+   Пока не задана командой /cost — считается примерно из каталога. */
+function costOf(item) {
+  const g = CAT.goods.find(x => x.id === item.id);
+  const set = db.costs[item.id];
+  let perMonth;
+  if (set != null) perMonth = set;
+  else if (g && g.usd) perMonth = g.usd * CAT.rate;
+  else perMonth = Math.round(item.price / (CAT.markup || 1.46) / item.months);
+  return Math.round(perMonth * item.months * item.qty);
+}
+const orderCost   = o => o.cost != null ? o.cost : sumBy(o.items, costOf);
+const isPaid      = o => PAID_STATUSES.includes(o.status) && o.source !== 'розыгрыш';
+const paidAt      = o => o.at_оплачен || o.at_оформляется || o.at_активна || o.claimedAt || o.created;
+const paidBetween = (from, to = Infinity) => db.orders.filter(o => isPaid(o) && paidAt(o) >= from && paidAt(o) < to);
+const expBetween  = (from, to = Infinity) => db.expenses.filter(e => e.at >= from && e.at < to);
+
+function money3(os) {                        // выручка, себестоимость, прибыль
+  const rev = sumBy(os, o => o.due), cost = sumBy(os, orderCost);
+  return { rev, cost, gross: rev - cost, n: os.length };
+}
+
+/* ---------- экраны ---------- */
+const back = [Markup.button.callback('◀️ В панель', 'adm:home')];
+
+function scrHome() {
+  const t0 = dayStart(), now = Date.now();
+  const today = money3(paidBetween(t0)), month = money3(paidBetween(monthStart()));
+  const exp = sumBy(expBetween(monthStart()), e => e.sum);
+  const waiting = db.orders.filter(o => ['оплата заявлена', 'оплачен', 'оформляется'].includes(o.status));
+  const unpaid  = db.orders.filter(o => o.status === 'ждёт оплаты');
+  const active  = db.orders.filter(o => o.status === 'активна');
+  const soon    = active.filter(o => o.endsAt - now < 3 * DAY);
+  const users   = Object.values(db.users);
+  const text =
+    `<b>🛠 Панель AKU Лавки</b> · ${new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}\n\n` +
+    `<b>Сегодня</b>\n💰 ${money(today.rev)} · заказов оплачено: ${today.n} · прибыль ≈ ${money(today.gross)}\n` +
+    `👤 новых пользователей: ${users.filter(u => u.created >= t0).length}\n\n` +
+    `<b>${MONTHS[new Date().getMonth()]}</b>\n💰 ${money(month.rev)} · прибыль ≈ ${money(month.gross - exp)}` + (exp ? ` (с учётом расходов ${money(exp)})` : '') + '\n\n' +
+    `<b>Сейчас</b>\n` +
+    `🔥 ждут тебя: <b>${waiting.length}</b>` + (waiting.length ? ' — ' + waiting.slice(0, 5).map(o => '/o' + o.id).join(' ') : '') + '\n' +
+    `⏳ не оплачены: ${unpaid.length}\n` +
+    `🟢 активных подписок: ${active.length}` + (soon.length ? ` · кончаются в 3 дня: ${soon.length}` : '') + '\n' +
+    `👥 всего пользователей: ${users.length}`;
+  const kb = Markup.inlineKeyboard([
+    [Markup.button.callback('📊 Статистика', 'adm:stats'), Markup.button.callback('💰 Доход', 'adm:money')],
+    [Markup.button.callback('🔥 Ждут меня', 'adm:orders:wait:0'), Markup.button.callback('📦 Все заказы', 'adm:orders:all:0')],
+    [Markup.button.callback('👥 Клиенты', 'adm:users'), Markup.button.callback('🤝 Рефералы', 'adm:refs')],
+    [Markup.button.callback('🛍 Товары', 'adm:goods'), Markup.button.callback('🔁 Продления', 'adm:renew')],
+    [Markup.button.callback('💸 Расходы', 'adm:exp'), Markup.button.callback('📣 Рассылка', 'adm:bc')],
+    [Markup.button.callback('💾 Бэкап', 'adm:backup'), Markup.button.callback('🔄 Обновить', 'adm:home')]
+  ]);
+  return [text, kb];
+}
+
+function scrStats() {
+  const users = Object.values(db.users), uids = Object.keys(db.users).map(Number);
+  const row = (name, from, to = Infinity) => {
+    const nu = users.filter(u => u.created >= from && u.created < to).length;
+    const os = db.orders.filter(o => o.created >= from && o.created < to && o.source !== 'розыгрыш');
+    const paid = os.filter(isPaid), m = money3(paid);
+    return `<b>${name}</b>\n👤 +${nu} · 🧾 заказов ${os.length} · ✅ оплачено ${paid.length} (${pct(paid.length, os.length)})\n` +
+           `💰 ${money(m.rev)}` + (paid.length ? ` · средний чек ${money(Math.round(m.rev / paid.length))}` : '') + '\n';
+  };
+  // воронка: зашёл в бота → создал заказ → оплатил → купил повторно
+  const ordered = new Set(db.orders.filter(o => o.source !== 'розыгрыш').map(o => o.uid));
+  const payers = {}; db.orders.filter(isPaid).forEach(o => { payers[o.uid] = (payers[o.uid] || 0) + 1; });
+  const nPay = Object.keys(payers).length, nRepeat = Object.values(payers).filter(n => n > 1).length;
+  const paidAll = db.orders.filter(isPaid);
+  const by = (key, names) => { const m = {}; paidAll.forEach(o => { const k = names ? (names[o[key]] || o[key]) : o[key]; m[k] = (m[k] || 0) + 1; });
+    return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k || '—')} ${v}`).join(' · ') || '—'; };
+  const active7 = users.filter(u => u.seen >= Date.now() - 7 * DAY).length;
+  const text = '<b>📊 Статистика</b>\n\n' +
+    row('Сегодня', dayStart()) + '\n' + row('Вчера', dayStart(1), dayStart()) + '\n' +
+    row('7 дней', dayStart(6)) + '\n' + row('30 дней', dayStart(29)) + '\n' + row('Всё время', 0) + '\n' +
+    `<b>Воронка</b>\nзапустили бота ${uids.length} → сделали заказ ${ordered.size} (${pct(ordered.size, uids.length)}) → ` +
+    `оплатили ${nPay} (${pct(nPay, ordered.size)}) → купили ещё раз ${nRepeat} (${pct(nRepeat, nPay)})\n\n` +
+    `<b>Откуда заказы:</b> ${by('source')}\n<b>Чем платят:</b> ${by('method', { card:'карта', wallet:'ЮMoney', crypto:'USDT' })}\n` +
+    `<b>Заходили за 7 дней:</b> ${active7} чел.`;
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+function scrMoney() {
+  // 14 дней столбиками
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const m = money3(paidBetween(dayStart(i), dayStart(i - 1)));
+    const d = new Date(dayStart(i));
+    days.push({ label: String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0'), ...m });
+  }
+  const maxD = Math.max(...days.map(d => d.rev));
+  // 6 месяцев
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const from = monthStart(i), to = i ? monthStart(i - 1) : Infinity;
+    const m = money3(paidBetween(from, to)), exp = sumBy(expBetween(from, to), e => e.sum);
+    months.push({ label: MONTHS[new Date(from).getMonth()], ...m, exp, net: m.gross - exp });
+  }
+  const all = money3(paidBetween(0)), expAll = sumBy(db.expenses, e => e.sum);
+  const usd = r => '$' + Math.round(r / CAT.rate);
+  const text = '<b>💰 Доход</b>\n\n<b>По дням (выручка)</b>\n<code>' +
+    days.map(d => `${d.label} ${bar(d.rev, maxD).padEnd(10, ' ')} ${d.rev ? money(d.rev) : '·'}`).join('\n') + '</code>\n\n' +
+    '<b>По месяцам</b>\n' + months.filter(m => m.n || m.exp).map(m =>
+      `<b>${m.label}</b>: выручка ${money(m.rev)} · закупка ≈ ${money(m.cost)} · расходы ${money(m.exp)} → <b>${money(m.net)}</b> (${usd(m.net)})`).join('\n') +
+    (months.some(m => m.n || m.exp) ? '' : 'пока пусто') + '\n\n' +
+    `<b>За всё время</b>\nвыручка ${money(all.rev)} · закупка ≈ ${money(all.cost)} · расходы ${money(expAll)}\n` +
+    `чистыми ≈ <b>${money(all.gross - expAll)}</b> (${usd(all.gross - expAll)})\n\n` +
+    `<i>Цель $1000/мес = ${money(1000 * CAT.rate)} чистыми. В этом месяце: ${pct(Math.max(0, months[5].net), 1000 * CAT.rate)}</i>\n\n` +
+    '<i>«≈» — закупка считается по себестоимости. Точные цены поставщика задай: /cost claude 1150 (за 1 месяц)</i>';
+  return [text, Markup.inlineKeyboard([[Markup.button.callback('🧮 Себестоимость', 'adm:costs')], back])];
+}
+
+function scrCosts() {
+  const text = '<b>🧮 Себестоимость за 1 месяц</b>\n\n' + GOODS.map(g => {
+    const set = db.costs[g.id] != null;
+    const t = PRICE.termsOf(g)[0];
+    const c = costOf({ id: g.id, months: 1, qty: 1, price: PRICE.priceFor(g, t.months) / t.months });
+    const p = Math.round(PRICE.priceFor(g, t.months) / t.months);
+    return `${set ? '✅' : '≈'} <b>${esc(g.name)}</b> (<code>${g.id}</code>): ${money(c)} → продаём ${money(p)}, маржа ${pct(p - c, p)}`;
+  }).join('\n') +
+  '\n\n✅ — задано тобой, ≈ — примерно.\nЗадать: <code>/cost gpt 1400</code>\nСбросить: <code>/cost gpt -</code>';
+  return [text, Markup.inlineKeyboard([[Markup.button.callback('◀️ Доход', 'adm:money')], back])];
+}
+
+const ORDER_FILTERS = {
+  wait:   { name: '🔥 Ждут меня', f: o => ['оплата заявлена', 'оплачен', 'оформляется'].includes(o.status) },
+  unpaid: { name: '⏳ Не оплачены', f: o => o.status === 'ждёт оплаты' },
+  active: { name: '🟢 Активные', f: o => o.status === 'активна' },
+  closed: { name: '❌ Отменённые', f: o => o.status === 'отменён' },
+  all:    { name: '📦 Все', f: () => true }
+};
+function scrOrders(filter, page) {
+  const F = ORDER_FILTERS[filter] || ORDER_FILTERS.all, PER = 10;
+  const list = db.orders.filter(F.f).slice().reverse();
+  const pages = Math.max(1, Math.ceil(list.length / PER)); page = Math.min(Math.max(0, page), pages - 1);
+  const part = list.slice(page * PER, page * PER + PER);
+  const text = `<b>${F.name}</b> · ${list.length} шт.\n\n` + (part.map(o =>
+    `${STATUS_ICON[o.status] || ''} /o${o.id} · ${money(o.due)} · ${fmtDate(o.created)}\n   ${nick(o.uid)} · ${o.items.map(i => esc(i.name)).join(', ')}` +
+    (o.endsAt && o.status === 'активна' ? ` · до ${fmtDate(o.endsAt)}` : '')).join('\n') || 'пусто') +
+    '\n\n<i>Нажми /o1001 — откроется карточка с кнопками</i>';
+  const tabs = Object.keys(ORDER_FILTERS).map(k => Markup.button.callback((k === filter ? '• ' : '') + ORDER_FILTERS[k].name.split(' ')[0], `adm:orders:${k}:0`));
+  const nav = [];
+  if (page > 0) nav.push(Markup.button.callback('← Назад', `adm:orders:${filter}:${page - 1}`));
+  if (pages > 1) nav.push(Markup.button.callback(`${page + 1}/${pages}`, 'adm:noop'));
+  if (page < pages - 1) nav.push(Markup.button.callback('Дальше →', `adm:orders:${filter}:${page + 1}`));
+  return [text, Markup.inlineKeyboard([tabs, ...(nav.length ? [nav] : []), back])];
+}
+
+function clientStats() {
+  const m = {};
+  db.orders.filter(isPaid).forEach(o => { const x = m[o.uid] = m[o.uid] || { n: 0, sum: 0, last: 0 }; x.n++; x.sum += o.due; x.last = Math.max(x.last, o.created); });
+  return m;
+}
+function scrUsers() {
+  const users = Object.values(db.users), cs = clientStats(), buyers = Object.keys(cs);
+  const ltv = buyers.length ? Math.round(sumBy(Object.values(cs), x => x.sum) / buyers.length) : 0;
+  const top = Object.entries(cs).sort((a, b) => b[1].sum - a[1].sum).slice(0, 10);
+  const fresh = Object.entries(db.users).sort((a, b) => (b[1].created || 0) - (a[1].created || 0)).slice(0, 10);
+  const text = '<b>👥 Клиенты</b>\n\n' +
+    `Всего в боте: <b>${users.length}</b>\nновых: сегодня ${users.filter(u => u.created >= dayStart()).length} · 7 дн. ${users.filter(u => u.created >= dayStart(6)).length} · 30 дн. ${users.filter(u => u.created >= dayStart(29)).length}\n` +
+    `Покупали: <b>${buyers.length}</b> · больше одного раза: ${Object.values(cs).filter(x => x.n > 1).length}\n` +
+    `Средний клиент принёс: ${money(ltv)}\n` +
+    `Пришли по рефералке: ${users.filter(u => u.invitedBy).length}\n\n` +
+    '<b>Топ по сумме</b>\n' + (top.map(([uid, x], i) => `${i + 1}. ${nick(uid)} — ${money(x.sum)}, заказов ${x.n} · /u${uid}`).join('\n') || 'пока нет') + '\n\n' +
+    '<b>Последние пришедшие</b>\n' + fresh.map(([uid, u]) => `${nick(uid)} · ${u.created ? fmtDate(u.created) : '—'}` +
+      (cs[uid] ? ' · ✅ ' + money(cs[uid].sum) : '') + ` · /u${uid}`).join('\n') +
+    '\n\n<i>Карточка клиента: /u 123456789 или /u @ник</i>';
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+function userCard(uid) {
+  const u = db.users[uid]; if (!u) return null;
+  const os = db.orders.filter(o => o.uid === uid);
+  const paid = os.filter(isPaid);
+  const refs = Object.entries(db.users).filter(([, f]) => f.invitedBy === uid);
+  const text = `<b>👤 ${clientLink(uid)}</b>\n\n` +
+    `В боте с ${u.created ? fmtDate(u.created) : '—'}, последний раз ${u.seen ? new Date(u.seen).toLocaleString('ru-RU') : '—'}\n` +
+    (u.invitedBy ? `Пригласил: ${nick(u.invitedBy)} · /u${u.invitedBy}\n` : '') +
+    `Заказов: ${os.length}, оплачено ${paid.length} на <b>${money(sumBy(paid, o => o.due))}</b>\n` +
+    `Бонусный баланс: ${money(u.balance)} · заработал на друзьях: ${money(u.refEarned)} · привёл: ${refs.length}\n\n` +
+    (os.slice(-10).reverse().map(o => `${STATUS_ICON[o.status] || ''} /o${o.id} · ${money(o.due)} · ${o.items.map(i => esc(i.name)).join(', ')}`).join('\n') || 'Заказов нет');
+  return [text, Markup.inlineKeyboard([[Markup.button.callback('✉️ Написать', `dm:${uid}`)], back])];
+}
+
+function scrRefs() {
+  const m = {};
+  Object.entries(db.users).forEach(([uid, u]) => { if (u.invitedBy) { const x = m[u.invitedBy] = m[u.invitedBy] || { n: 0, buy: 0 }; x.n++; if (db.orders.some(o => o.uid === +uid && isPaid(o))) x.buy++; } });
+  const top = Object.entries(m).sort((a, b) => b[1].n - a[1].n).slice(0, 15);
+  const paidOut = sumBy(Object.values(db.users), u => u.refEarned);
+  const onBal = sumBy(Object.values(db.users), u => u.balance);
+  const refRev = sumBy(db.orders.filter(o => isPaid(o) && db.users[o.uid] && db.users[o.uid].invitedBy), o => o.due);
+  const text = '<b>🤝 Рефералы</b>\n\n' +
+    `Пришли по ссылкам: <b>${sumBy(Object.values(m), x => x.n)}</b>, из них купили ${sumBy(Object.values(m), x => x.buy)}\n` +
+    `Выручка с приглашённых: ${money(refRev)}\nНачислено бонусов: ${money(paidOut)} · ещё на балансах: ${money(onBal)}\n\n` +
+    '<b>Кто приводит</b>\n' + (top.map(([uid, x], i) => `${i + 1}. ${nick(uid)} — привёл ${x.n}, купили ${x.buy}, заработал ${money((db.users[uid] || {}).refEarned || 0)} · /u${uid}`).join('\n') || 'пока никого');
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+function scrGoods() {
+  const m = {};
+  db.orders.filter(isPaid).forEach(o => o.items.forEach(i => {
+    const x = m[i.name] = m[i.name] || { q: 0, rev: 0, cost: 0, terms: {} };
+    const share = o.total ? o.due / o.total : 1;           // скидки и бонусы делим пропорционально
+    x.q += i.qty; x.rev += Math.round(i.price * i.qty * share); x.cost += costOf(i);
+    x.terms[i.months] = (x.terms[i.months] || 0) + i.qty;
+  }));
+  const rows = Object.entries(m).sort((a, b) => b[1].rev - a[1].rev);
+  const total = sumBy(rows, r => r[1].rev);
+  const viewsLine = GOODS.filter(g => !m[g.name]).map(g => esc(g.name)).join(', ');
+  const text = '<b>🛍 Товары</b>\n\n' + (rows.map(([n, x]) =>
+    `<b>${esc(n)}</b> — ${x.q} шт. · ${money(x.rev)} (${pct(x.rev, total)}) · прибыль ≈ ${money(x.rev - x.cost)}\n   сроки: ${Object.entries(x.terms).map(([k, v]) => k + ' мес × ' + v).join(', ')}`).join('\n') || 'Продаж пока нет') +
+    (viewsLine ? `\n\n<b>Ещё не продавались:</b> ${viewsLine}` : '');
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+function scrRenew() {
+  const now = Date.now();
+  const soon = db.orders.filter(o => o.status === 'активна' && o.endsAt - now < 7 * DAY).sort((a, b) => a.endsAt - b.endsAt);
+  const ended = db.orders.filter(o => ['истекла', 'продлена'].includes(o.status));
+  const renewed = ended.filter(o => o.status === 'продлена').length;
+  const lost = db.orders.filter(o => o.status === 'истекла' && o.endsAt > now - 30 * DAY);
+  const text = '<b>🔁 Продления</b>\n\n' +
+    `Продлевают: <b>${pct(renewed, ended.length)}</b> (${renewed} из ${ended.length} закончившихся)\n\n` +
+    '<b>Кончаются в 7 дней</b>\n' + (soon.map(o => `/o${o.id} · ${nick(o.uid)} · ${o.items.map(i => esc(i.name)).join(', ')} · до ${fmtDate(o.endsAt)}${o.reminded ? ' · напомнили' : ''}`).join('\n') || 'нет') + '\n\n' +
+    '<b>Не продлили за 30 дней</b> — можно написать лично\n' + (lost.map(o => `/o${o.id} · ${nick(o.uid)} · ${o.items.map(i => esc(i.name)).join(', ')}`).join('\n') || 'нет');
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+function scrExp() {
+  const list = expBetween(monthStart()).slice().reverse();
+  const text = `<b>💸 Расходы — ${MONTHS[new Date().getMonth()]}</b>\n\n` +
+    (list.map(e => `${fmtDate(e.at)} · ${money(e.sum)} · ${esc(e.note)}`).join('\n') || 'В этом месяце пусто') +
+    `\n\nИтого за месяц: <b>${money(sumBy(list, e => e.sum))}</b>\n\n` +
+    'Добавить: <code>/spend 900 сервер</code>\nУдалить последнюю: <code>/spend -</code>\n\n' +
+    '<i>Закупку у поставщика сюда не пиши — она считается сама по себестоимости. Сюда: сервер, подписка Claude, реклама, розыгрыши, налог.</i>';
+  return [text, Markup.inlineKeyboard([back])];
+}
+
+/* ---------- рассылка ---------- */
+let bcDraft = null;          // { mode: 'wait' } или { mode: 'ready', chatId, msgId, seg }
+const BC_SEG = {
+  all:    { name: 'всем',          f: () => true },
+  buyers: { name: 'покупателям',   f: uid => db.orders.some(o => o.uid === uid && isPaid(o)) },
+  never:  { name: 'кто не покупал', f: uid => !db.orders.some(o => o.uid === uid && isPaid(o)) }
+};
+const bcCount = seg => Object.keys(db.users).map(Number).filter(uid => uid !== CONFIG.adminId && !db.users[uid].blocked && BC_SEG[seg].f(uid)).length;
+function scrBc() {
+  bcDraft = { mode: 'wait' };
+  return ['<b>📣 Рассылка</b>\n\nПришли следующим сообщением то, что нужно разослать: текст, фото с подписью или видео. ' +
+    'Я покажу превью и спрошу, кому отправить.\n\n<i>Не чаще раза-двух в неделю — иначе люди блокируют бота.</i>',
+    Markup.inlineKeyboard([[Markup.button.callback('✖️ Отмена', 'adm:bccancel')]])];
+}
+async function bcPreview(ctx) {
+  bcDraft = { mode: 'ready', chatId: ctx.chat.id, msgId: ctx.message.message_id };
+  await ctx.reply('👆 Так увидят люди. Кому отправить?', Markup.inlineKeyboard([
+    ...Object.keys(BC_SEG).map(k => [Markup.button.callback(`📣 ${BC_SEG[k].name} (${bcCount(k)})`, 'adm:bcgo:' + k)]),
+    [Markup.button.callback('✖️ Отмена', 'adm:bccancel')]]));
+}
+async function bcRun(ctx, seg) {
+  const d = bcDraft; bcDraft = null;
+  if (!d || d.mode !== 'ready') return ctx.reply('Черновик потерялся — начни заново: /admin → Рассылка');
+  const ids = Object.keys(db.users).map(Number).filter(uid => uid !== CONFIG.adminId && !db.users[uid].blocked && BC_SEG[seg].f(uid));
+  await ctx.reply(`Отправляю ${ids.length} людям…`);
+  let ok = 0, fail = 0;
+  for (const uid of ids) {
+    try { await bot.telegram.copyMessage(uid, d.chatId, d.msgId); ok++; }
+    catch (e) { fail++; if (/blocked|deactivated|not found/i.test(e.message)) db.users[uid].blocked = true; }
+    await new Promise(r => setTimeout(r, 60));               // лимит Telegram ~30 сообщений в секунду
+  }
+  db.broadcasts.push({ at: Date.now(), seg, ok, fail }); save();
+  return ctx.reply(`✅ Рассылка готова: доставлено ${ok}` + (fail ? `, не дошло ${fail} (заблокировали бота)` : ''));
+}
+
+/* ---------- маршрутизация ---------- */
+const SCREENS = { home: scrHome, stats: scrStats, money: scrMoney, costs: scrCosts, users: scrUsers,
+                  refs: scrRefs, goods: scrGoods, renew: scrRenew, exp: scrExp, bc: scrBc };
+async function show(ctx, [text, kb]) {
+  const extra = { parse_mode: 'HTML', disable_web_page_preview: true, ...kb };
+  if (ctx.callbackQuery) {
+    try { return await ctx.editMessageText(text, extra); }
+    catch (e) { if (/not modified/.test(e.message)) return; }
+  }
+  return ctx.reply(text, extra);
+}
+
+bot.command('admin', ctx => isAdmin(ctx) && show(ctx, scrHome()));
+bot.command('stats', ctx => isAdmin(ctx) && show(ctx, scrStats()));
+bot.command('money', ctx => isAdmin(ctx) && show(ctx, scrMoney()));
+
+bot.action(/^adm:(.+)$/, async ctx => {
+  if (!isAdmin(ctx)) return ctx.answerCbQuery('Не для вас');
+  const [k, a, b] = ctx.match[1].split(':');
+  if (k === 'noop') return ctx.answerCbQuery();
+  if (k === 'backup') { await ctx.answerCbQuery('Отправляю'); return sendBackup('по запросу'); }
+  if (k === 'bccancel') { bcDraft = null; await ctx.answerCbQuery('Отменено'); return show(ctx, scrHome()); }
+  if (k === 'bcgo') { await ctx.answerCbQuery(); try { await ctx.editMessageReplyMarkup(undefined); } catch (_) {} return bcRun(ctx, a); }
+  await ctx.answerCbQuery();
+  if (k === 'orders') return show(ctx, scrOrders(a, +b || 0));
+  if (SCREENS[k]) return show(ctx, SCREENS[k]());
+});
+
+bot.hears(/^\/u_?(\d+)$/, ctx => {
+  if (!isAdmin(ctx)) return;
+  const c = userCard(+ctx.match[1]); return c ? show(ctx, c) : ctx.reply('Нет такого пользователя');
+});
+bot.command('u', ctx => {
+  if (!isAdmin(ctx)) return;
+  const q = (ctx.message.text.split(/\s+/)[1] || '').replace('@', '').toLowerCase();
+  if (!q) return ctx.reply('Напиши так: /u 123456789 или /u @ник');
+  const uid = /^\d+$/.test(q) ? +q : +(Object.entries(db.users).find(([, u]) => (u.username || '').toLowerCase() === q) || [])[0];
+  const c = uid && userCard(uid); return c ? show(ctx, c) : ctx.reply('Не нашёл. Человек должен хотя бы раз запустить бота.');
+});
+
+bot.command('cost', ctx => {
+  if (!isAdmin(ctx)) return;
+  const [, id, val] = ctx.message.text.split(/\s+/);
+  if (!id || !CAT.goods.some(g => g.id === id)) return show(ctx, scrCosts());
+  if (val === '-') delete db.costs[id];
+  else { const n = Math.round(+String(val).replace(',', '.')); if (!(n >= 0)) return ctx.reply('Напиши так: /cost claude 1150'); db.costs[id] = n; }
+  save(); return show(ctx, scrCosts());
+});
+
+bot.command('spend', ctx => {
+  if (!isAdmin(ctx)) return;
+  const parts = ctx.message.text.split(/\s+/).slice(1);
+  if (parts[0] === '-') { const e = db.expenses.pop(); save(); return ctx.replyWithHTML(e ? `Удалил: ${money(e.sum)} · ${esc(e.note)}` : 'Нечего удалять'); }
+  const sum = Math.round(+String(parts[0] || '').replace(',', '.'));
+  if (!(sum > 0)) return show(ctx, scrExp());
+  db.expenses.push({ at: Date.now(), sum, note: parts.slice(1).join(' ') || 'без описания' }); save();
+  return show(ctx, scrExp());
+});
 
 bot.command('pending', ctx => {
   if (!isAdmin(ctx)) return;
@@ -548,33 +888,6 @@ function adminLast(ctx) {
 }
 bot.command('last', ctx => isAdmin(ctx) && adminLast(ctx));
 
-bot.command('stats', ctx => {
-  if (!isAdmin(ctx)) return;
-  const now = Date.now();
-  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-  const period = (from) => {
-    const os = db.orders.filter(o => o.created >= from && o.source !== 'розыгрыш');
-    const paid = os.filter(o => PAID_STATUSES.includes(o.status));
-    const rev = paid.reduce((s, o) => s + o.due, 0);
-    return `${os.length} заказов, оплачено ${paid.length}` + (os.length ? ` (${Math.round(paid.length / os.length * 100)}%)` : '') +
-           `, выручка ${money(rev)}` + (paid.length ? `, средний чек ${money(Math.round(rev / paid.length))}` : '');
-  };
-  const top = {};
-  db.orders.filter(o => PAID_STATUSES.includes(o.status)).forEach(o => o.items.forEach(i => { top[i.name] = (top[i.name] || 0) + i.qty; }));
-  const soon = db.orders.filter(o => o.status === 'активна' && o.endsAt - now < 3 * DAY);
-  return ctx.replyWithHTML(
-    '<b>Сводка</b>\n\n' +
-    `<b>Сегодня:</b> ${period(startOfDay.getTime())}\n` +
-    `<b>7 дней:</b> ${period(now - 7 * DAY)}\n` +
-    `<b>30 дней:</b> ${period(now - 30 * DAY)}\n` +
-    `<b>Всё время:</b> ${period(0)}\n\n` +
-    `Активных подписок: ${db.orders.filter(o => o.status === 'активна').length}` +
-    (soon.length ? `\nЗаканчиваются в 3 дня: ${soon.map(o => '/o' + o.id).join(', ')}` : '') + '\n\n' +
-    '<b>Что берут:</b> ' + (Object.entries(top).sort((a, b) => b[1] - a[1]).map(([n, q]) => `${esc(n)} ${q}`).join(', ') || 'пока ничего') + '\n\n' +
-    `Пользователей: ${Object.keys(db.users).length}, пришли по рефералке: ${Object.values(db.users).filter(u => u.invitedBy).length}, ` +
-    `начислено бонусов: ${money(Object.values(db.users).reduce((s, u) => s + (u.refEarned || 0), 0))}`);
-});
-
 /* ═══════════════ ПЕРЕПИСКА КЛИЕНТ ⇄ АДМИН ═══════════════ */
 bot.on('message', async ctx => {
   if (!ctx.chat || ctx.chat.type !== 'private') return;
@@ -585,9 +898,11 @@ bot.on('message', async ctx => {
     return createOrder(ctx, Array.isArray(p.items) ? p.items : [], 'приложение');
   }
 
-  if (isAdmin(ctx)) {                                                // ты отвечаешь клиенту реплаем
+  if (isAdmin(ctx)) {
+    if (bcDraft && bcDraft.mode === 'wait' && !msg.reply_to_message) return bcPreview(ctx);   // текст для рассылки
+    // ты отвечаешь клиенту реплаем
     const to = msg.reply_to_message && db.relay[msg.reply_to_message.message_id];
-    if (!to) return ctx.reply('Чтобы ответить клиенту, сделай реплай на его сообщение или карточку заказа. Список команд — /admin');
+    if (!to) return ctx.reply('Чтобы ответить клиенту, сделай реплай на его сообщение или карточку заказа. Панель — /admin');
     try {
       await bot.telegram.copyMessage(to, ctx.chat.id, msg.message_id);
       return ctx.reply('✓ Отправлено');
@@ -689,11 +1004,14 @@ bot.telegram.setMyCommands([
   { command: 'help',    description: 'Как это работает' }
 ]).catch(() => {});
 bot.telegram.setMyCommands([
+  { command: 'admin',   description: '🛠 Панель: доход, заказы, клиенты' },
   { command: 'pending', description: 'Заказы, которые ждут' },
-  { command: 'last',    description: 'Последние заказы' },
-  { command: 'stats',   description: 'Сводка' },
-  { command: 'backup',  description: 'Копия базы' },
-  { command: 'admin',   description: 'Все команды' }
+  { command: 'stats',   description: 'Статистика' },
+  { command: 'money',   description: 'Доход и прибыль' },
+  { command: 'u',       description: 'Карточка клиента: /u @ник' },
+  { command: 'spend',   description: 'Записать расход: /spend 900 сервер' },
+  { command: 'cost',    description: 'Себестоимость: /cost claude 1150' },
+  { command: 'backup',  description: 'Копия базы' }
 ], { scope: { type: 'chat', chat_id: CONFIG.adminId } }).catch(() => {});
 
 setInterval(() => tick().catch(e => console.error('tick:', e.message)), 5 * MIN);
@@ -701,7 +1019,7 @@ setTimeout(() => tick().catch(() => {}), 20 * 1000);
 
 bot.launch().then(() => {
   console.log('AKU Лавка запущена');
-  send(CONFIG.adminId, '🟢 Бот перезапущен. Команды — /admin');
+  send(CONFIG.adminId, '🟢 Бот перезапущен. Панель — /admin');
 });
 process.once('SIGINT',  () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
