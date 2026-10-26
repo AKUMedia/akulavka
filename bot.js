@@ -136,7 +136,7 @@ async function setRef(ctx, u, refId) {
   const ref = db.users[refId];
   if (!ref) return;                                                   // пригласивший должен быть в боте
   if (ref.invitedBy === ctx.from.id) return;                          // запрет взаимной петли A↔B
-  u.invitedBy = refId;
+  u.invitedBy = refId; u.refAt = Date.now();
   send(refId, `👥 По вашей ссылке пришёл новый человек. Как только его заказ будет выполнен — начислим ${CAT.refFirst}%.`);
 }
 async function payReferral(o) {
@@ -181,6 +181,7 @@ bot.start(async ctx => {
   save();
   if (payload === 'profile') return screenProfile(ctx);             // кнопка «Профиль» из приложения
   if (payload === 'ask')     return screenAsk(ctx);
+  if (payload === 'friends') return screenFriends(ctx);
   return ctx.replyWithHTML(hello(ctx.from.first_name), startMenu());
 });
 bot.command('menu',    ctx => ctx.replyWithHTML(hello(ctx.from.first_name), startMenu()));
@@ -232,6 +233,23 @@ async function screenProfile(ctx) {
 
 const refCount = uid => Object.values(db.users).filter(u => u.invitedBy === uid).length;
 
+/* список приглашённых: имя, ник, когда пришёл, покупал ли и сколько принёс */
+function friendsList(uid) {
+  const fr = Object.entries(db.users).filter(([, f]) => f.invitedBy === uid)
+    .sort((a, b) => (b[1].refAt || b[1].created || 0) - (a[1].refAt || a[1].created || 0));
+  if (!fr.length) return '\n\nПока никто не пришёл по вашей ссылке.';
+  const LIMIT = 30;
+  const rows = fr.slice(0, LIMIT).map(([fid, f], i) => {
+    const bonus = db.orders.filter(o => o.uid === +fid && o.refPaid && o.refPaid.to === uid)
+                           .reduce((s, o) => s + o.refPaid.bonus, 0);
+    const who = esc(f.name || 'без имени') + (f.username ? ' @' + esc(f.username) : '');
+    const when = fmtDate(f.refAt || f.created);
+    return `${i + 1}. ${who} · ${when} · ` + (bonus ? `✅ купил, +${money(bonus)}` : '⏳ ещё не покупал');
+  });
+  return '\n\n<b>Ваши друзья</b>\n' + rows.join('\n') +
+    (fr.length > LIMIT ? `\n…и ещё ${fr.length - LIMIT}` : '');
+}
+
 async function screenFriends(ctx) {
   const u = touch(ctx), uid = ctx.from.id;
   const link = `https://t.me/${CAT.bot}?start=ref_${uid}`;
@@ -241,7 +259,8 @@ async function screenFriends(ctx) {
     'Бонус начисляется, когда заказ друга выполнен, и сам списывается с вашего следующего заказа.\n\n' +
     `<b>Ссылка на бота:</b>\n<code>${link}</code>\n\n` +
     `<b>Ссылка на сайт:</b>\n<code>${SHOP_URL}?ref=${uid}</code>\n\n` +
-    `Приглашено: <b>${refCount(uid)}</b> · заработано: <b>${money(u.refEarned)}</b> · баланс: <b>${money(u.balance)}</b>`,
+    `Приглашено: <b>${refCount(uid)}</b> · заработано: <b>${money(u.refEarned)}</b> · баланс: <b>${money(u.balance)}</b>` +
+    friendsList(uid),
     Markup.inlineKeyboard([[Markup.button.url('📨 Отправить другу',
       'https://t.me/share/url?url=' + encodeURIComponent(link) +
       '&text=' + encodeURIComponent('Подписки на нейросети на свой аккаунт — Claude, ChatGPT и другие'))]])
