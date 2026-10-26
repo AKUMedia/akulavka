@@ -8,6 +8,10 @@
 <meta property="og:title" content="AKU Лавка — подписки на нейросети">
 <meta property="og:description" content="Подписки на нейросети на ваш аккаунт. Claude — без передачи пароля.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://akumedia.github.io/akulavka/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="logo-icon.png">
+<link rel="apple-touch-icon" href="logo-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -128,9 +132,9 @@ tailwind.config = { theme: { extend: {
         <a href="#/terms" class="block text-faded hover:text-paper transition-colors">Условия и возврат</a>
       </div>
       <div class="text-sm space-y-2.5">
-        <a href="" data-lnk="tg" class="block text-faded hover:text-paper transition-colors">Написать в Telegram</a>
-        <a href="" data-lnk="channel" class="block text-faded hover:text-paper transition-colors">Канал про нейросети</a>
-        <a href="" data-lnk="guide" class="block text-faded hover:text-paper transition-colors">Бесплатный гайд по Claude</a>
+        <a href="" data-lnk="tg" class="block text-faded hover:text-paper transition-colors">Бот Лавки — заказы и вопросы</a>
+        <a href="" data-lnk="shopch" class="block text-faded hover:text-paper transition-colors">Канал Лавки — новости и розыгрыши</a>
+        <a href="" data-lnk="channel" class="block text-faded hover:text-paper transition-colors">Канал основателя</a>
         <a href="" data-lnk="site" class="block text-faded hover:text-paper transition-colors">Сделано с помощью AKU Automation</a>
       </div>
     </div>
@@ -166,8 +170,7 @@ tailwind.config = { theme: { extend: {
   const money = n => n.toLocaleString('ru-RU') + ' ₽';
   const extLink = g => g.external === 'CARD'  ? CONFIG.cardLink
                      : g.external === 'CARD2' ? CONFIG.cardLink2
-                     : g.external === 'LEXY'  ? CONFIG.lexyLink
-                     : g.external === 'GUIDE' ? CONFIG.guideLink : g.external;
+                     : g.external === 'LEXY'  ? CONFIG.lexyLink : g.external;
   const base = PRICE.base;
   const priceFor = (g, m) => PRICE.priceFor(g, m);
   const crypto = PRICE.crypto;
@@ -183,7 +186,14 @@ tailwind.config = { theme: { extend: {
              border:1px solid ${g.tint}3D">${icon(g, Math.round(s*0.5))}</div>`;
   }
 
+  /* часы работы — по Минску, а не по часам посетителя */
+  const minskHour = () => +new Intl.DateTimeFormat('ru-RU', { hour: 'numeric', hourCycle: 'h23', timeZone: CONFIG.timeZone || 'Europe/Minsk' }).format(new Date());
+  const isOpenNow = () => { const hh = minskHour(); return hh >= CONFIG.openFrom && hh < CONFIG.openTo; };
+
+  /* корзина переживает перезагрузку страницы */
   let cart = {};
+  try { cart = JSON.parse(localStorage.getItem('aku-cart') || '{}') || {}; } catch (_) { cart = {}; }
+  const saveCart = () => { try { localStorage.setItem('aku-cart', JSON.stringify(cart)); } catch (_) {} };
   const cartList  = () => Object.keys(cart).map(k => ({ key:k, ...cart[k] }));
   const cartQty   = () => cartList().reduce((s,i) => s + i.qty, 0);
   const cartTotal = () => cartList().reduce((s,i) => s + priceFor(G(i.id), i.months) * i.qty, 0);
@@ -198,6 +208,7 @@ tailwind.config = { theme: { extend: {
     syncCart(); if (location.hash.startsWith('#/cart')) render();
   }
   function syncCart() {
+    saveCart();
     const el = document.getElementById('cartCount');
     el.textContent = cartQty();
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
@@ -262,15 +273,15 @@ tailwind.config = { theme: { extend: {
     ['Вы получите доступ к моему аккаунту?',
      'По Claude — нет. Подписку оформляем по ID вашего аккаунта, пароль не нужен вообще. По остальным сервисам доступ нужен только на время оплаты: вы ставите временный пароль и меняете его сразу после активации. Переписку и файлы мы не открываем.'],
     ['Почему нельзя оплатить самому?',
-     'Можно, и это дешевле. Нужна зарубежная карта — в каталоге есть два проверенных сервиса, где её выпускают за несколько минут. Мы нужны тем, кому не хочется в этом разбираться.'],
+     'Можно, если у вас есть зарубежная карта и время разбираться с проверками сервисов. Мы нужны тем, кто хочет просто получить работающую подписку на свой аккаунт и не думать, почему не прошла оплата.'],
     ['Почему у других дешевле?',
      'Обычно потому, что там общий аккаунт на несколько человек либо подписка через студенческую или региональную схему. Такие живут до ближайшей проверки. Мы оформляем обычным способом на ваш личный аккаунт.'],
     ['Аккаунт могут заблокировать?',
-     'Такое случается: сервисы проверяют, из какой страны вы заходите. Риск сохраняется и после оплаты, поэтому обязательно пользуйтесь корректно настроенным VPN. Если подписка слетит в течение оплаченного месяца — восстанавливаем за свой счёт либо возвращаем деньги за оставшиеся дни.'],
+     'Такое случается: сервисы проверяют, из какой страны вы заходите. Риск сохраняется и после оплаты, поэтому обязательно пользуйтесь корректно настроенным VPN. Если подписка слетит в оплаченный срок не по вашей вине — восстанавливаем за свой счёт либо возвращаем деньги за оставшиеся дни. Блокировка самим сервисом за нарушение его правил (общий доступ, смена страны) гарантией не покрывается.'],
     ['Как оплатить?',
-     'Криптой (со скидкой ' + CONFIG.cryptoOff + '%), переводом на ЮMoney или картой. Принимаем рубли, тенге и белорусские рубли. Способ выбираем в переписке.'],
+     'Банковской картой или кошельком через защищённую форму ЮMoney — сумма и номер заказа подставляются сами. Или USDT (сети TRC-20 и BEP-20) со скидкой ' + CONFIG.cryptoOff + '%. Из Беларуси и Казахстана удобнее всего USDT. Способ выбираете в боте после оформления.'],
     ['Подписка продлится сама?',
-     'Нет, автосписания не будет. За три дня до окончания мы напишем и спросим, продлевать ли. Не ответите — просто ничего не произойдёт.'],
+     'Нет, автосписаний нет. За три дня до окончания бот напомнит, а продлить можно в одно касание — новый срок добавится к оставшимся дням. Не нужно — просто ничего не делайте.'],
     ['Нужен VPN?',
      'Для большинства сервисов — да, чтобы открыть сайт и чтобы аккаунт не выглядел подозрительно. Если не пользовались раньше, подскажем варианты.'],
     ['Работаете ночью?',
@@ -279,14 +290,13 @@ tailwind.config = { theme: { extend: {
 
   function marquee() {
     const items = ['подписки на нейросети','Claude без пароля','оформление на ваш аккаунт',
-                   'крипта · ЮMoney · карта','гарантия замены','отвечаем лично'];
+                   'карта · ЮMoney · USDT','гарантия: восстановим или вернём','отвечаем лично'];
     const row = items.map(t => `<span class="px-6 text-faded">${t}</span><span class="text-brass">✦</span>`).join('');
     return `<div class="marquee border-y border-edge py-3.5 text-sm"><div class="marquee-track">${row}${row}</div></div>`;
   }
 
   function viewHome() {
-    const h = new Date().getHours();
-    const open = h >= CONFIG.openFrom && h < CONFIG.openTo;
+    const open = isOpenNow();
     return `
     <section class="lamp relative overflow-hidden">
       <div class="orb" style="width:400px;height:400px;background:rgb(var(--c-accent) / var(--orb-a));top:-160px;left:4%"></div>
@@ -309,7 +319,7 @@ tailwind.config = { theme: { extend: {
             <div class="mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
               <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">Открыть каталог</a>
               <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl text-center">Подобрать за 3 вопроса</a>
-              <a href="" data-lnk="guide" class="text-sm text-sage hover:text-paper transition-colors px-2 py-3.5 text-center">Бесплатный гайд по Claude</a>
+              <a href="" data-lnk="shopch" class="text-sm text-sage hover:text-paper transition-colors px-2 py-3.5 text-center">Канал Лавки — розыгрыши</a>
             </div>
           </div>
           <div class="glass rounded-2xl p-6">
@@ -318,9 +328,9 @@ tailwind.config = { theme: { extend: {
               <span class="tech ${open?'text-sage':'text-faded'}">${open?'лавка открыта':'лавка закрыта'}</span>
             </div>
             <p class="text-[15px] leading-relaxed text-faded mb-5">
-              ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заявку можно оставить — ответим с '+CONFIG.openFrom+':00.'}
+              ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заказ можно оставить — возьмём в работу с '+CONFIG.openFrom+':00 по Минску.'}
             </p>
-            <a href="" data-lnk="ask" class="block text-center border border-edge2 hover:border-brass transition-colors rounded-xl py-3 text-sm">Написать в Telegram</a>
+            <a href="" data-lnk="ask" class="block text-center border border-edge2 hover:border-brass transition-colors rounded-xl py-3 text-sm">Написать в бот</a>
           </div>
         </div>
       </div>
@@ -334,13 +344,13 @@ tailwind.config = { theme: { extend: {
             <div class="tech text-brass mb-3">[ хозяин лавки ]</div>
             <h2 class="font-display font-extrabold text-xl sm:text-2xl mb-3">Знакомьтесь, Кислый</h2>
             <p class="text-faded text-[15px] leading-relaxed max-w-md">
-              Он достаёт доступ к любой нейросети, пока вы занимаетесь делами.
+              Он оформляет подписки на нейросети, пока вы занимаетесь делами.
               Знает, где что подешевле, какой сервис под какую задачу и что делать,
               если карта не проходит.
             </p>
             <div class="mt-5 flex flex-wrap gap-2.5">
               <a href="#/pick" class="bg-brass text-ink font-display font-bold text-sm px-5 py-3 rounded-xl hover:opacity-90 transition-opacity">Спросить у Кислого</a>
-              <a href="" data-lnk="channel" class="border border-edge2 hover:border-brass transition-colors text-sm px-5 py-3 rounded-xl">Смотреть видео</a>
+              <a href="" data-lnk="shopch" class="border border-edge2 hover:border-brass transition-colors text-sm px-5 py-3 rounded-xl">Канал Лавки</a>
             </div>
           </div>
           <div class="justify-self-center sm:justify-self-end">
@@ -355,8 +365,8 @@ tailwind.config = { theme: { extend: {
 
     <section class="max-w-6xl mx-auto px-5 pb-12 sm:pb-14">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-edge border border-edge rounded-2xl overflow-hidden">
-        ${[['15–40','минут на оформление'],
-           [CONFIG.goods.filter(g=>g.usd).length+'','сервисов оформляем'],
+        ${[['~1 ч','на оформление днём'],
+           [CONFIG.goods.length+'','сервисов оформляем'],
            ['−'+CONFIG.cryptoOff+'%','при оплате криптой'],
            [CONFIG.openFrom+'–'+CONFIG.openTo,'часы работы лавки']
         ].map(([n,l])=>`<div class="bg-ink p-4 sm:p-6">
@@ -390,7 +400,7 @@ tailwind.config = { theme: { extend: {
             <p class="text-faded text-[15px] leading-relaxed max-w-lg">
               Лавку веду я сам. В канале показываю, что умеют нейросети на практике:
               разборы сервисов, фишки, с чем они реально помогают в работе, а с чем нет.
-              Без курсов и продаж — просто то, чем пользуюсь каждый день.
+              Всё, что продаётся в Лавке, сначала проверяю на себе.
             </p>
           </div>
           <a href="" data-lnk="channel" target="_blank" rel="noopener"
@@ -460,7 +470,7 @@ tailwind.config = { theme: { extend: {
         <div>
           <h2 class="font-display font-bold text-2xl mb-4">Вопросы</h2>
           <p class="text-faded leading-relaxed">Не нашли свой — просто спросите. Ответим без оплаты и без «оставьте заявку».</p>
-          <a href="" data-lnk="ask" class="inline-block mt-6 bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в Telegram</a>
+          <a href="" data-lnk="ask" class="inline-block mt-6 bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в бот</a>
         </div>
         <div>${faqBlock(FAQ.slice(0,5))}
           <a href="#/help" class="inline-block mt-6 text-sm text-brass hover:text-paper transition-colors">Все вопросы и условия</a>
@@ -469,11 +479,11 @@ tailwind.config = { theme: { extend: {
     </section>`;
   }
 
-  let calcRate = 800, calcHours = 4;
+  let calcRate = 800, calcHours = 8;
   function drawCalc() {
     const box = document.getElementById('calc'); if (!box) return;
     const price = priceFor(G('claude'),1), saved = calcHours*calcRate;
-    const days = saved>0 ? Math.max(1, Math.ceil(price/(saved/30))) : 0;
+    const hoursToPay = Math.round(price / calcRate * 10) / 10;
     const profit = saved - price;
     box.innerHTML = `
       <div class="grid sm:grid-cols-2 gap-7 mb-7">
@@ -487,10 +497,13 @@ tailwind.config = { theme: { extend: {
       <div class="border-t border-edge pt-6 grid sm:grid-cols-3 gap-5">
         <div><p class="text-sm text-faded mb-1">Подписка стоит</p><p class="font-display font-bold text-lg">${money(price)}</p></div>
         <div><p class="text-sm text-faded mb-1">Экономит в месяц</p><p class="font-display font-bold text-lg">${money(saved)}</p></div>
-        <div><p class="text-sm text-faded mb-1">${profit>=0?'Окупается за':'Пока не окупается'}</p>
-          <p class="font-display font-bold text-lg ${profit>=0?'text-sage':'text-faded'}">${profit>=0?days+(days===1?' день':days<5?' дня':' дней'):'—'}</p></div>
+        <div><p class="text-sm text-faded mb-1">Окупается, если сэкономит</p>
+          <p class="font-display font-bold text-lg text-sage">${String(hoursToPay).replace('.', ',')} ч в месяц</p></div>
       </div>
-      <p class="text-xs text-faded mt-5 leading-relaxed">Считаем по цене Claude Pro за месяц. Цифры примерные.</p>`;
+      <p class="text-sm mt-5 leading-relaxed ${profit>=0?'text-paper':'text-faded'}">${profit>=0
+          ? 'При ваших цифрах подписка приносит <b>' + money(profit) + '</b> в месяц сверх своей цены.'
+          : 'При ваших цифрах подписка пока не окупается — двигайте ползунки под свою работу.'}</p>
+      <p class="text-xs text-faded mt-2 leading-relaxed">Считаем по цене Claude Pro за месяц. Цифры примерные.</p>`;
   }
 
   let activeCat = 'all';
@@ -533,11 +546,13 @@ tailwind.config = { theme: { extend: {
   let quizStep = 0, quizAns = [];
   function pickResult() {
     const [c,price,lvl] = quizAns;
-    let pool = shown().filter(g => g.cat===c && g.usd);
-    if (!pool.length) pool = shown().filter(g => g.usd);
-    if (lvl==='new' && c==='chat') pool.sort(a => a.id==='gpt' ? -1 : 1);
-    else if (price==='cheap') pool.sort((a,b)=>a.usd-b.usd);
-    else if (price==='best')  pool.sort((a,b)=>b.usd-a.usd);
+    const p1 = g => priceFor(g, termsOf(g)[0].months) / termsOf(g)[0].months;   // цена за месяц
+    let pool = shown().filter(g => g.cat===c);
+    if (!pool.length) pool = shown().slice();
+    if (price==='cheap')      pool.sort((a,b)=>p1(a)-p1(b));
+    else if (price==='best')  pool.sort((a,b)=>p1(b)-p1(a));
+    else                      pool.sort((a,b)=>(b.hit?1:0)-(a.hit?1:0) || p1(a)-p1(b));
+    if (lvl==='new' && c==='chat' && price!=='cheap') { const g = pool.find(x=>x.id==='gpt'); if (g) return g; }
     return pool[0];
   }
   function viewPick() {
@@ -641,8 +656,18 @@ tailwind.config = { theme: { extend: {
     </section>`;
   }
 
+  let sentLink = '';            // ссылка последнего оформленного заказа
   function viewCart() {
     const items = cartList();
+    if (!items.length && sentLink) return `
+      <section class="max-w-6xl mx-auto px-5 py-20 text-center"><div class="max-w-sm mx-auto">
+        <img src="logo-icon.png" alt="" class="w-20 h-20 mx-auto mb-6 object-contain">
+        <h1 class="font-display font-extrabold text-2xl mb-3">Заказ открыт в боте</h1>
+        <p class="text-faded leading-relaxed mb-8">В Telegram нажмите <b class="text-paper">«Запустить»</b> — бот покажет сумму и способы оплаты. Если окно не открылось, нажмите кнопку ниже.</p>
+        <div class="flex flex-col gap-3">
+          <a href="${esc(sentLink)}" target="_blank" rel="noopener" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Открыть заказ в боте</a>
+          <a href="#/shop" class="border border-edge2 hover:border-brass transition-colors text-sm px-7 py-3.5 rounded-xl">Вернуться в каталог</a>
+        </div></div></section>`;
     if (!items.length) return `
       <section class="max-w-6xl mx-auto px-5 py-20 text-center"><div class="max-w-sm mx-auto">
         <div class="w-16 h-16 rounded-2xl border border-edge2 grid place-items-center mx-auto mb-7 text-2xl text-faded">▤</div>
@@ -690,8 +715,8 @@ tailwind.config = { theme: { extend: {
     <section class="max-w-3xl mx-auto px-5 py-10 sm:py-16">
       <h1 class="font-display font-black text-[34px] sm:text-5xl leading-none tracking-tight mb-8 sm:mb-10">КАК ЭТО РАБОТАЕТ</h1>
       <div class="space-y-10 mb-16">
-        ${[['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Состав заказа приходит нам в Telegram. Мы отвечаем, доступен ли сервис сейчас, и называем итоговую сумму — скрытых комиссий сверху не появится.'],
-           ['Оплачиваете удобным способом','Крипта (со скидкой '+CONFIG.cryptoOff+'%), ЮMoney или перевод на карту. Принимаем рубли, тенге и белорусские рубли.'],
+        ${[['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Открывается наш бот в Telegram, он сразу показывает итоговую сумму — ту же, что на сайте, скрытых комиссий нет.'],
+           ['Оплачиваете удобным способом','Банковской картой или кошельком через форму ЮMoney, либо USDT со скидкой '+CONFIG.cryptoOff+'%. Из Беларуси и Казахстана удобнее USDT.'],
            ['Даёте данные для оформления','<b class="text-paper">Claude</b> — присылаете только ID аккаунта, пароль не нужен вообще.<br><b class="text-paper">Остальные сервисы</b> — регистрируете аккаунт на свою почту, ставите временный пароль и присылаете его. Подскажем, как безопасно передать.'],
            ['Проверяете','Убеждаетесь, что подписка активна. Если передавали пароль — меняете его обратно на свой, и доступа у нас не остаётся.'],
            ['Продлеваете, если нужно','За три дня до окончания мы напишем. Автосписания нет: не ответите — просто ничего не произойдёт.']
@@ -711,7 +736,7 @@ tailwind.config = { theme: { extend: {
       ${faqBlock(FAQ)}
       <div class="mt-14 text-center">
         <p class="text-faded mb-6">Не нашли ответ — просто спросите.</p>
-        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в Telegram</a>
+        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в бот</a>
       </div></section>`;
   }
 
@@ -722,7 +747,7 @@ tailwind.config = { theme: { extend: {
       <div class="space-y-5 text-[15px] leading-relaxed text-faded mb-12">
         <p>Лавку основал Алексей — он занимается внедрением ИИ в бизнес: собирает автоматизации, ботов и внутренние сервисы для компаний. Нейросетями мы пользуемся каждый день по работе, поэтому и подписки на них держим для себя.</p>
         <p>Лавка появилась потому, что у нас постоянно спрашивали, где взять доступ к нейросетям. Сначала отвечали в личке по одному человеку, потом решили собрать всё в одном месте.</p>
-        <p>Заказы мы обрабатываем вручную — без колл-центра и ботов-автоответчиков. Ночная заявка уйдёт в работу утром, зато ответит живой человек, который разберётся, а не отправит в раздел помощи.</p>
+        <p>Заказ принимает бот, а оформляет и отвечает живой человек — без колл-центра и шаблонных отписок. Ночной заказ уйдёт в работу утром, зато с вами разберутся, а не отправят в раздел помощи.</p>
         <p class="text-paper">Принципиально не продаём общие аккаунты и промо-подписки. Они дешевле, но живут до первой проверки, а переписка в общем аккаунте видна посторонним. Здесь только оформление на ваш собственный аккаунт.</p>
       </div>
       <div class="bg-board border border-edge rounded-2xl p-5 sm:p-7 mb-12">
@@ -745,10 +770,10 @@ tailwind.config = { theme: { extend: {
       <div class="space-y-8 text-[15px] leading-relaxed text-faded">
         ${[['Предмет','AKU Лавка оказывает услугу по оформлению оплаты подписки на аккаунт заказчика в стороннем сервисе. Аккаунты, логины, пароли и общий доступ не продаются. Права на сами сервисы принадлежат их владельцам.'],
            ['Как оформляется заказ','Заказ собирается на сайте или в Telegram-приложении и оформляется в боте @' + CONFIG.bot + '. Заказ считается принятым после того, как бот присвоил ему номер. Стоимость в заказе рассчитывается ботом по действующему каталогу; если цена на сайте и в боте различается, действует цена в боте.'],
-           ['Порядок оказания услуги','Claude оформляется по идентификатору аккаунта, пароль не передаётся. Для остальных сервисов заказчик регистрирует аккаунт на свою почту и передаёт временный доступ для проведения платежа, после чего обязан сменить пароль. Обычно оформление занимает 15–40 минут в часы работы (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00). Заказы, оформленные ночью, берутся в работу утром.'],
-           ['Стоимость и оплата','Оплата производится до оказания услуги: ЮMoney или криптовалютой USDT (сети TRC-20 и BEP-20). При оплате криптовалютой действует скидка ' + CONFIG.cryptoOff + '%. Заказ принимается в работу после подтверждения поступления средств исполнителем. Цены могут меняться вслед за курсом валют и тарифами сервисов; уже подтверждённый заказ пересчёту не подлежит. Для подписок на 3 и 6 месяцев действует скидка, указанная в каталоге.'],
-           ['Возврат','Если услуга не оказана — возврат полной суммы в течение суток тем же способом оплаты. Если подписка перестала работать в течение оплаченного периода не по вине заказчика — восстановление за счёт исполнителя либо возврат за неиспользованные дни. Возврат за использованный период не производится. Сумма, оплаченная бонусами, возвращается на бонусный баланс, а не деньгами.'],
-           ['Реферальная программа','Каждый пользователь бота получает персональную ссылку. За первую оплаченную покупку приглашённого начисляется ' + CONFIG.refFirst + '% её суммы, за последующие — ' + CONFIG.refNext + '%. Бонус начисляется после подтверждения оплаты и автоматически списывается со следующего заказа; к оплате всегда остаётся не менее 100 ₽. Бонусы не выводятся деньгами и не передаются другим пользователям. Приглашённым считается только тот, кто перешёл по ссылке до своей первой покупки; пригласить самого себя нельзя. При отмене или возврате заказа начисленный за него бонус аннулируется. Исполнитель вправе отменить бонусы, полученные с нарушением этих правил.'],
+           ['Порядок оказания услуги','Claude оформляется по идентификатору аккаунта, пароль не передаётся. Для остальных сервисов заказчик регистрирует аккаунт на свою почту и передаёт временный доступ для проведения платежа, после чего обязан сменить пароль. Обычно оформление занимает до часа в часы работы по Минску (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00). Заказы, оформленные ночью, берутся в работу утром.'],
+           ['Стоимость и оплата','Оплата производится до оказания услуги: банковской картой или кошельком через платёжную форму ЮMoney либо криптовалютой USDT (сети TRC-20 и BEP-20). При оплате криптовалютой действует скидка ' + CONFIG.cryptoOff + '%. Заказ принимается в работу после подтверждения поступления средств исполнителем. Цены могут меняться вслед за курсом валют и тарифами сервисов; уже подтверждённый заказ пересчёту не подлежит. Для подписок на 3 и 6 месяцев действует скидка, указанная в каталоге.'],
+           ['Возврат','Если услуга не оказана — возврат полной суммы в течение суток тем же способом оплаты. Если подписка перестала работать в течение оплаченного периода не по вине заказчика — восстановление за счёт исполнителя либо возврат за неиспользованные дни. Гарантия не распространяется на блокировку аккаунта самим сервисом за нарушение его правил: передачу доступа третьим лицам, смену страны в настройках, вход через подозрительные сети. Возврат за использованный период не производится. Сумма, оплаченная бонусами, возвращается на бонусный баланс, а не деньгами.'],
+           ['Реферальная программа','Каждый пользователь бота получает персональную ссылку. За первую оплаченную покупку приглашённого начисляется ' + CONFIG.refFirst + '% её суммы, за последующие — ' + CONFIG.refNext + '%. Бонус начисляется после выполнения заказа приглашённого и автоматически списывается со следующего заказа; к оплате всегда остаётся не менее 100 ₽. Бонусы не выводятся деньгами и не передаются другим пользователям. Приглашённым считается только тот, кто перешёл по ссылке до своей первой покупки; пригласить самого себя нельзя. При отмене или возврате заказа начисленный за него бонус аннулируется. Исполнитель вправе отменить бонусы, полученные с нарушением этих правил.'],
            ['Розыгрыши','Розыгрыши подписок проводятся в Telegram-канале Лавки. Условия, сроки и способ определения победителей публикуются в посте конкретного розыгрыша. Приз оформляется на аккаунт победителя так же, как обычный заказ, и не заменяется деньгами.'],
            ['Ответственность','Исполнитель не отвечает за решения сторонних сервисов, включая ограничение аккаунта по их инициативе, в том числе связанное с регионом входа заказчика, изменение тарифов и прекращение работы сервиса в отдельных странах. Исполнитель не отвечает за утрату доступа, вызванную действиями самого заказчика.'],
            ['Данные','Собираются только данные, необходимые для оказания услуги: Telegram ID, имя и username в Telegram, состав и история заказов, бонусный баланс и сведения, переданные заказчиком добровольно. Сайт запоминает в браузере номер пригласившего, если заказчик пришёл по реферальной ссылке. Данные не передаются третьим лицам, кроме случаев, предусмотренных законом. Содержимое аккаунта заказчика не просматривается и не сохраняется. Сайт не использует рекламные трекеры.'],
@@ -831,10 +856,9 @@ tailwind.config = { theme: { extend: {
     scope.querySelectorAll('[data-lnk]').forEach(el => {
       const k = el.dataset.lnk;
       el.href = k==='channel' ? CONFIG.channel
+              : k==='shopch'  ? CONFIG.shopChannel
               : k==='site'    ? CONFIG.siteLink
-              : k==='guide'   ? CONFIG.guideLink
-              : k==='ask'     ? tg + '?text=' + encodeURIComponent('Здравствуйте! Вопрос по Лавке: ')
-              : tg;
+              : 'https://t.me/' + CONFIG.bot;          // все вопросы — в бота, рядом с заказом
       el.target = '_blank'; el.rel = 'noopener';
     });
   }
@@ -853,7 +877,9 @@ tailwind.config = { theme: { extend: {
     if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
       const items = cartList().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
-      window.open(CART_LINK.url(items, refFromSite()), '_blank', 'noopener');
+      sentLink = CART_LINK.url(items, refFromSite());
+      window.open(sentLink, '_blank', 'noopener');
+      cart = {}; syncCart(); render(); window.scrollTo({ top:0 });
     }
   });
 
@@ -862,16 +888,21 @@ tailwind.config = { theme: { extend: {
     if (e.target.id==='cHours') { calcHours = +e.target.value; drawCalc(); }
   });
 
+  function fixTerm() {
+    if (!location.hash.startsWith('#/p/')) { pickedTerm = 1; return; }
+    const gg = G(location.hash.split('/')[2]);
+    if (gg && !termsOf(gg).some(t => t.months === pickedTerm)) pickedTerm = termsOf(gg)[0].months;
+  }
   window.addEventListener('hashchange', () => {
-    if (!location.hash.startsWith('#/p/')) pickedTerm = 1;
-    else { const gg = G(location.hash.split('/')[2]); if (gg && !termsOf(gg).some(t => t.months === pickedTerm)) pickedTerm = termsOf(gg)[0].months; }
+    fixTerm();
+    if (!location.hash.startsWith('#/cart')) sentLink = '';
     if (!location.hash.startsWith('#/pick')) { quizStep = 0; quizAns = []; }
     render(); window.scrollTo({ top:0, behavior:'instant' });
   });
 
   wireLinks(document);
   if (!location.hash) location.hash = '#/';
-  render(); syncCart();
+  fixTerm(); render(); syncCart();
 })();
 </script>
 </body>
