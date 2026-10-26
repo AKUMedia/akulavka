@@ -91,6 +91,23 @@ function touch(ctx) {
   u.name = ctx.from.first_name || ''; u.username = ctx.from.username || ''; u.seen = Date.now();
   return u;
 }
+/* картинка Кислого для товара (лежит на сайте в папке img) */
+const picOf = o => { const g = o.items.map(i => CAT.goods.find(x => x.id === i.id)).find(x => x && x.pic);
+                     return g ? SHOP_URL + 'img/' + g.id + '.jpg' : null; };
+/* сообщение с картинкой; если картинка не грузится или текст длинный — обычным текстом */
+async function replyPic(ctx, pic, text, extra = {}) {
+  if (pic && text.length <= 1000) {
+    try { return await ctx.replyWithPhoto(pic, { caption: text, parse_mode: 'HTML', ...extra }); } catch (_) {}
+  }
+  return ctx.replyWithHTML(text, extra);
+}
+async function sendPic(chatId, pic, text, extra = {}) {
+  if (pic && text.length <= 1000) {
+    try { return await bot.telegram.sendPhoto(chatId, pic, { caption: text, parse_mode: 'HTML', ...extra }); } catch (_) {}
+  }
+  return send(chatId, text, extra);
+}
+
 function clientLink(uid) {
   const u = db.users[uid] || {};
   const name = esc(u.name || 'клиент');
@@ -337,7 +354,7 @@ function payKeyboard(o) {
   ]);
 }
 async function showPayChoice(ctx, o, isRepeat) {
-  return ctx.replyWithHTML(
+  return replyPic(ctx, picOf(o),
     `<b>Заказ №${o.id}${isRepeat ? ' — уже создан' : ' принят'}</b>\n\n${itemsText(o)}` +
     (o.usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(o.usedBonus)}</b>` : '') +
     `\n\nИтого: <b>${money(o.base)}</b>\nВ USDT со скидкой: <b>${money(crypto(o.base))}</b>\n\nВыберите, чем платить:`,
@@ -497,7 +514,7 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
     'отменён':     'Заказ отменён.' + (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : '') +
                    ' Если оплата уже прошла — вернём её тем же способом, напишите сюда.'
   }[status];
-  if (note) send(o.uid, `<b>Заказ №${o.id}</b>\n\n${note}`,
+  if (note) (status === 'активна' ? sendPic : (id, _p, t, e) => send(id, t, e))(o.uid, picOf(o), `<b>Заказ №${o.id}</b>\n\n${note}`,
     status === 'активна' ? Markup.inlineKeyboard([[Markup.button.callback('👤 Профиль', 'scr:profile')]]) : {});
 });
 
@@ -941,7 +958,7 @@ async function tick() {
     if (o.status === 'активна' && o.endsAt && !o.reminded && o.endsAt - now < 3 * DAY && work) {
       o.reminded = true; changed = true;
       const names = o.items.map(i => esc(i.name)).join(', ');
-      send(o.uid, `<b>Напоминание</b>\n\n${names} — до ${fmtDate(o.endsAt)}.\n\n` +
+      sendPic(o.uid, picOf(o), `<b>Напоминание</b>\n\n${names} — до ${fmtDate(o.endsAt)}.\n\n` +
         'Продлить можно в одно касание: заказ соберётся сам, новый срок добавится к оставшимся дням.\n' +
         'Не нужно — просто ничего не делайте, автосписаний нет.',
         Markup.inlineKeyboard([[Markup.button.callback('🔄 Продлить', 'renew:' + o.id)]]));

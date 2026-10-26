@@ -114,7 +114,9 @@ tailwind.config = { theme: { extend: {
 
   const icon = (g, size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none"
       stroke="${g.tint}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[g.icon] || ''}</svg>`;
-  const tile = (g, s) => `<div class="shrink-0 grid place-items-center rounded-xl"
+  const tile = (g, s) => g.pic ? `<div class="shrink-0 rounded-xl overflow-hidden"
+      style="width:${s}px;height:${s}px;background:radial-gradient(circle at 50% 60%,${g.tint}33,${g.tint}0A 70%)">
+      <img src="${g.pic}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:2px"></div>` : `<div class="shrink-0 grid place-items-center rounded-xl"
       style="width:${s}px;height:${s}px;background:${g.tint}1A;border:1px solid ${g.tint}33">${icon(g, Math.round(s*.5))}</div>`;
 
   /* ---------- корзина ---------- */
@@ -173,7 +175,7 @@ tailwind.config = { theme: { extend: {
       <div class="space-y-2.5">
         ${items.map(g => `
           <button data-open="${g.id}" class="row go w-full text-left bg-board border border-edge rounded-2xl p-3.5 flex items-center gap-3.5">
-            ${tile(g, 46)}
+            ${tile(g, 58)}
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline gap-2">
                 <span class="font-semibold text-[15px] truncate">${esc(g.name)}</span>
@@ -205,7 +207,7 @@ tailwind.config = { theme: { extend: {
     return `
       <button data-tab-go="shop" class="text-faded text-[13px] mb-3">← Каталог</button>
       <div class="flex items-start gap-3.5 mb-4">
-        ${tile(g, 56)}
+        ${tile(g, 120)}
         <div class="min-w-0 pt-0.5">
           <h1 class="font-display font-bold text-[20px] leading-tight">${esc(g.name)}</h1>
           <div class="text-faded text-[13px] mt-1">${esc(g.for || '')}</div>

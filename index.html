@@ -181,6 +181,9 @@ tailwind.config = { theme: { extend: {
   }
   function markTile(g, s) {
     s = s || 46;
+    if (g.pic) return `<div class="tile shrink-0 rounded-2xl overflow-hidden"
+      style="width:${s}px;height:${s}px;background:radial-gradient(circle at 50% 60%,${g.tint}33,${g.tint}0A 70%)">
+      <img src="${g.pic}" alt="${esc(g.name)}" loading="lazy" class="w-full h-full object-contain p-1"></div>`;
     return `<div class="tile shrink-0 grid place-items-center rounded-xl"
       style="width:${s}px;height:${s}px;background:linear-gradient(140deg,${g.tint}26,${g.tint}0D);
              border:1px solid ${g.tint}3D">${icon(g, Math.round(s*0.5))}</div>`;
@@ -238,7 +241,7 @@ tailwind.config = { theme: { extend: {
          style="--tint:${g.tint}; animation-delay:${Math.min(i,9)*45}ms">
         <a href="${href}"${ext} class="absolute inset-0 rounded-2xl" aria-label="${esc(g.name)}"></a>
         <div class="flex items-start justify-between gap-3 mb-4">
-          ${markTile(g)}
+          ${markTile(g, g.pic ? 104 : 46)}
           ${(g.tag||g.hit) ? `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
              style="background:${g.tint}1F;color:${g.tint}">${esc(g.tag||'Часто берут')}</span>` : ''}
         </div>
@@ -569,7 +572,7 @@ tailwind.config = { theme: { extend: {
       <section class="max-w-2xl mx-auto px-5 py-12 sm:py-24">
         <p class="text-sm text-faded mb-4">Судя по ответам, вам подойдёт</p>
         <div class="bg-board border rounded-2xl p-7 mb-8" style="border-color:${g.tint}44">
-          <div class="flex items-center gap-4 mb-5">${markTile(g,56)}
+          <div class="flex items-center gap-4 mb-5">${markTile(g, g.pic ? 110 : 56)}
             <div><h1 class="font-display font-extrabold text-xl sm:text-2xl">${esc(g.name)}</h1>
               <p class="text-faded text-sm mt-1">${esc(g.for)}</p></div></div>
           <p class="text-faded text-[15px] leading-relaxed mb-6">${esc(g.about)}</p>
@@ -613,7 +616,7 @@ tailwind.config = { theme: { extend: {
         <span class="text-edge2">/</span><span>${esc(cat(g.cat))}</span></nav>
       <div class="grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
         <div>
-          <div class="flex items-center gap-4 mb-6">${markTile(g,64)}
+          <div class="flex items-center gap-4 mb-6">${markTile(g, g.pic ? 150 : 64)}
             <div><h1 class="font-display font-extrabold text-xl sm:text-3xl leading-tight tracking-tight">${esc(g.name)}</h1>
               <p class="text-faded text-sm mt-1.5">${esc(g.for||cat(g.cat))}</p></div></div>
           <p class="text-[15px] leading-relaxed text-faded mb-9 max-w-lg">${esc(g.about)}</p>
