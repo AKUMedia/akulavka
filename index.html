@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="logo-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = { theme: { extend: {
@@ -23,7 +23,7 @@ tailwind.config = { theme: { extend: {
             edge2:'rgb(var(--c-edge2) / <alpha-value>)', paper:'rgb(var(--c-paper) / <alpha-value>)',
             faded:'rgb(var(--c-faded) / <alpha-value>)', brass:'rgb(var(--c-accent) / <alpha-value>)',
             sage:'rgb(var(--c-sage) / <alpha-value>)', rust:'rgb(var(--c-rust) / <alpha-value>)' },
-  fontFamily: { display:['Space Grotesk','system-ui','sans-serif'], ui:['Inter','system-ui','sans-serif'],
+  fontFamily: { display:['Onest','Inter','system-ui','sans-serif'], ui:['Inter','system-ui','sans-serif'],
                 mono:['JetBrains Mono','ui-monospace','monospace'] }
 }}}
 </script>
@@ -63,8 +63,16 @@ tailwind.config = { theme: { extend: {
   ::selection { background:rgb(var(--c-accent)); color:#fff }
   .tech { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11px; letter-spacing:.13em; text-transform:uppercase }
   .glass { background:rgb(var(--c-panel) / .74); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgb(var(--c-accent) / .22) }
-  .huge { font-size:clamp(32px,8.2vw,92px); line-height:.95; letter-spacing:-.035em; overflow-wrap:break-word }
-  @media (min-width:1180px){ .huge{font-size:100px} }
+  .huge { font-size:clamp(36px,10vw,94px); line-height:1; letter-spacing:-.015em; overflow-wrap:break-word }
+  body { font-synthesis: none }   /* не рисовать «ложный жирный», если веса нет */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-family:'Onest','Inter',system-ui,sans-serif;
+         font-weight:700; font-size:15px; line-height:1.2; letter-spacing:0; padding:14px 24px; border-radius:12px; text-align:center;
+         transition:background-color .2s, border-color .2s, color .2s, opacity .2s, transform .1s }
+  .btn:active { transform:scale(.98) }
+  .btn-main { background:rgb(var(--c-accent)); color:#fff } .btn-main:hover { opacity:.9 }
+  .btn-line { border:1.5px solid rgb(var(--c-edge2)); color:rgb(var(--c-paper)); background:rgb(var(--c-ink) / .6) } .btn-line:hover { border-color:rgb(var(--c-accent)) }
+  .btn-dark { background:rgb(var(--c-paper)); color:rgb(var(--c-ink)) } .btn-dark:hover { background:rgb(var(--c-accent)); color:#fff }
+  @media (min-width:1180px){ .huge{font-size:104px} }
   .stat { font-size:clamp(26px,6.4vw,48px); line-height:1; letter-spacing:-.03em }
   @media (max-width:400px){ .tech{font-size:10px;letter-spacing:.1em} }
   .marquee { overflow:hidden; white-space:nowrap; position:relative }
@@ -88,7 +96,7 @@ tailwind.config = { theme: { extend: {
 <body class="font-ui text-paper antialiased min-h-screen flex flex-col">
 
 <!-- ═══════ НАСТРОЙКИ: правишь только этот блок ═══════ -->
-<script src="catalog.js?v=2610c"></script>
+<script src="catalog.js?v=2610d"></script>
 
 <header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
   <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
@@ -264,9 +272,9 @@ tailwind.config = { theme: { extend: {
         </div>
         <div class="relative z-10 flex gap-2 mt-4">
           ${p ? `<button data-plus="${g.id}" aria-label="В корзину" title="В корзину"
-                   class="w-12 shrink-0 grid place-items-center border border-edge2 hover:border-brass rounded-xl text-lg font-bold transition-colors">+</button>
-                 <button data-buy="${g.id}" class="flex-1 bg-paper text-ink hover:bg-brass font-display font-bold text-sm py-3 rounded-xl transition-colors">Купить</button>`
-              : `<a href="${href}"${ext} class="flex-1 text-center bg-paper text-ink hover:bg-brass font-display font-bold text-sm py-3 rounded-xl transition-colors">Открыть</a>`}
+                   class="btn btn-line w-12 shrink-0 px-0 text-lg">+</button>
+                 <button data-buy="${g.id}" class="flex-1 btn btn-dark py-3 px-4">Купить</button>`
+              : `<a href="${href}"${ext} class="flex-1 text-center btn btn-dark py-3 px-4">Открыть</a>`}
         </div>
       </div>`;
   }
@@ -330,9 +338,9 @@ tailwind.config = { theme: { extend: {
               вместе со всей перепиской и файлами.
             </p>
             <div class="mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
-              <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">Открыть каталог</a>
-              <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-6 py-3.5 rounded-xl text-center">Подобрать за 3 вопроса</a>
-              <a href="" data-lnk="shopch" class="text-sm text-sage hover:text-paper transition-colors px-2 py-3.5 text-center">Канал Лавки — розыгрыши</a>
+              <a href="#/shop" class="btn btn-main text-center">Открыть каталог</a>
+              <a href="#/pick" class="btn btn-line text-center">Подобрать за 3 вопроса</a>
+              <a href="" data-lnk="shopch" class="btn btn-line">Розыгрыши в канале</a>
             </div>
           </div>
           <div class="glass rounded-2xl p-6">
@@ -343,7 +351,7 @@ tailwind.config = { theme: { extend: {
             <p class="text-[15px] leading-relaxed text-faded mb-5">
               ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заказ можно оставить — возьмём в работу с '+CONFIG.openFrom+':00 по Минску.'}
             </p>
-            <a href="" data-lnk="ask" class="block text-center border border-edge2 hover:border-brass transition-colors rounded-xl py-3 text-sm">Написать в бот</a>
+            <a href="" data-lnk="ask" class="btn btn-line w-full">Задать вопрос</a>
           </div>
         </div>
       </div>
@@ -362,8 +370,8 @@ tailwind.config = { theme: { extend: {
               если карта не проходит.
             </p>
             <div class="mt-5 flex flex-wrap gap-2.5">
-              <a href="#/pick" class="bg-brass text-ink font-display font-bold text-sm px-5 py-3 rounded-xl hover:opacity-90 transition-opacity">Спросить у Кислого</a>
-              <a href="" data-lnk="shopch" class="border border-edge2 hover:border-brass transition-colors text-sm px-5 py-3 rounded-xl">Канал Лавки</a>
+              <a href="#/pick" class="btn btn-main">Подобрать подписку</a>
+              <a href="" data-lnk="shopch" class="btn btn-line">Канал Лавки</a>
             </div>
           </div>
           <div class="justify-self-center sm:justify-self-end">
@@ -417,7 +425,7 @@ tailwind.config = { theme: { extend: {
             </p>
           </div>
           <a href="" data-lnk="channel" target="_blank" rel="noopener"
-             class="justify-self-start sm:justify-self-end bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+             class="justify-self-start sm:justify-self-end btn btn-main whitespace-nowrap">
             Читать канал
           </a>
         </div>
@@ -428,16 +436,16 @@ tailwind.config = { theme: { extend: {
 
     <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <h2 class="font-display font-bold text-2xl mb-3">Окупится или нет</h2>
-      <p class="text-faded mb-8 max-w-lg leading-relaxed">Подписка стоит денег, но экономит часы. Посчитайте, за сколько дней она вернётся именно вам.</p>
+      <p class="text-faded mb-8 max-w-lg leading-relaxed">Подписка стоит денег, но экономит часы. Посчитайте, сколько часов в месяц она должна сэкономить, чтобы окупиться.</p>
       <div id="calc" class="bg-board border border-edge rounded-2xl p-5 sm:p-8 max-w-2xl"></div>
     </section>
 
     <section class="max-w-6xl mx-auto px-5 py-12 sm:py-16 border-t border-edge">
       <h2 class="font-display font-bold text-2xl mb-10">Три шага до подписки</h2>
       <div class="grid sm:grid-cols-3 gap-8">
-        ${[['Выбираете в каталоге','Складываете нужное в корзину и оформляете заказ. Он придёт нам в Telegram, мы подтверждаем сумму и способ оплаты.'],
+        ${[['Выбираете в каталоге','Складываете нужное в корзину и оформляете заказ. Бот сразу покажет сумму и способы оплаты.'],
            ['Даёте данные','Для Claude — только ID аккаунта. Для остальных сервисов — временный пароль, который вы меняете сразу после активации.'],
-           ['Пользуетесь','Проверяете, что всё работает. За три дня до конца месяца напомним про продление.']
+           ['Пользуетесь','Проверяете, что всё работает. За три дня до конца срока бот напомнит про продление.']
         ].map(([t,d],i)=>`<div>
             <div class="font-display font-extrabold text-2xl text-brass mb-4">${i+1}</div>
             <h3 class="font-display font-bold text-[15px] mb-2.5">${t}</h3>
@@ -471,8 +479,8 @@ tailwind.config = { theme: { extend: {
                Вот что можно проверить прямо сейчас:</p>
           </div>
           <div class="mt-6 flex flex-col sm:flex-row gap-3">
-            <a href="" data-lnk="channel" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Канал про нейросети</a>
-            <a href="" data-lnk="site" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Что мы делаем для бизнеса</a>
+            <a href="" data-lnk="channel" class="flex-1 btn btn-line text-center">Канал основателя</a>
+            <a href="" data-lnk="site" class="flex-1 btn btn-line text-center">Что мы делаем для бизнеса</a>
           </div>
         </div>
       </div>
@@ -483,7 +491,7 @@ tailwind.config = { theme: { extend: {
         <div>
           <h2 class="font-display font-bold text-2xl mb-4">Вопросы</h2>
           <p class="text-faded leading-relaxed">Не нашли свой — просто спросите. Ответим без оплаты и без «оставьте заявку».</p>
-          <a href="" data-lnk="ask" class="inline-block mt-6 bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в бот</a>
+          <a href="" data-lnk="ask" class="inline-block mt-6 btn btn-main">Написать нам</a>
         </div>
         <div>${faqBlock(FAQ.slice(0,5))}
           <a href="#/help" class="inline-block mt-6 text-sm text-brass hover:text-paper transition-colors">Все вопросы и условия</a>
@@ -546,7 +554,7 @@ tailwind.config = { theme: { extend: {
       <div class="mt-6 bg-board border border-edge rounded-2xl p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
         <div><h3 class="font-display font-bold text-base mb-1.5">Нет и в этом списке?</h3>
           <p class="text-faded text-sm">Напишите название — ответим, сможем ли оформить, и назовём цену.</p></div>
-        <a href="" data-lnk="ask" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3 rounded-xl hover:opacity-90 transition-opacity text-center shrink-0">Спросить</a>
+        <a href="" data-lnk="ask" class="btn btn-main text-center shrink-0">Спросить в боте</a>
       </div>
     </section>`;
   }
@@ -580,7 +588,7 @@ tailwind.config = { theme: { extend: {
               <p class="text-faded text-sm mt-1">${esc(g.for)}</p></div></div>
           <p class="text-faded text-[15px] leading-relaxed mb-6">${esc(g.about)}</p>
           <div class="flex flex-wrap items-center gap-4">
-            <a href="#/p/${g.id}" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Смотреть подробнее</a>
+            <a href="#/p/${g.id}" class="btn btn-main">Подробнее</a>
             <span class="font-display font-bold text-lg">${money(priceFor(g,1))} <span class="text-faded text-sm font-ui font-normal">в месяц</span></span>
           </div>
         </div>
@@ -649,7 +657,7 @@ tailwind.config = { theme: { extend: {
             : g.external==='CARD2'? 'Выпуск на стороне сервиса. Промокод <span class="text-brass font-semibold">'+CONFIG.promo+'</span> даёт скидку.'
             : g.external==='LEXY' ? 'Работает в Telegram. Оформлять ничего не нужно.'
             : 'Открывается сразу, без почты и регистрации.'}</p>
-            <a href="${extLink(g)}" target="_blank" rel="noopener" class="block text-center bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Открыть</a>
+            <a href="${extLink(g)}" target="_blank" rel="noopener" class="block text-center btn btn-main">Открыть</a>
           `:`
             ${termsOf(g).length > 1 ? `<p class="text-sm text-faded mb-3">Срок подписки</p>
             <div class="flex gap-2 mb-6">${termsOf(g).map(termBtn).join('')}</div>` : ''}
@@ -659,7 +667,7 @@ tailwind.config = { theme: { extend: {
             <p class="text-sage text-sm mb-1">криптой ${money(crypto(p))}</p>
             <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · ${g.noLogin?'по ID аккаунта':'на ваш аккаунт'}</p>
             ${t.annual?`<p class="text-sm leading-relaxed bg-brass/10 rounded-xl px-4 py-3 -mt-3 mb-6">Официальный годовой план сервиса: одна оплата на 12 месяцев, без продлений. Экономия <b>${money(base(g)*12-p)}</b> против помесячной оплаты.</p>`:''}
-            <button id="addBtn" class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Добавить в корзину</button>
+            <button id="addBtn" class="w-full btn btn-main">Добавить в корзину</button>
             <a href="" data-lnk="ask" class="block text-center text-sm text-faded hover:text-paper transition-colors mt-4">Сначала спросить</a>
           `}
         </aside>
@@ -679,8 +687,8 @@ tailwind.config = { theme: { extend: {
         <h1 class="font-display font-extrabold text-2xl mb-3">Заказ открыт в боте</h1>
         <p class="text-faded leading-relaxed mb-8">В Telegram нажмите <b class="text-paper">«Запустить»</b> — бот покажет сумму и способы оплаты. Если окно не открылось, нажмите кнопку ниже.</p>
         <div class="flex flex-col gap-3">
-          <a href="${esc(sentLink)}" target="_blank" rel="noopener" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Открыть заказ в боте</a>
-          <a href="#/shop" class="border border-edge2 hover:border-brass transition-colors text-sm px-7 py-3.5 rounded-xl">Вернуться в каталог</a>
+          <a href="${esc(sentLink)}" target="_blank" rel="noopener" class="btn btn-main">Открыть заказ в боте</a>
+          <a href="#/shop" class="btn btn-line">Вернуться в каталог</a>
         </div></div></section>`;
     if (!items.length) return `
       <section class="max-w-6xl mx-auto px-5 py-20 text-center"><div class="max-w-sm mx-auto">
@@ -688,8 +696,8 @@ tailwind.config = { theme: { extend: {
         <h1 class="font-display font-extrabold text-2xl mb-3">В корзине пусто</h1>
         <p class="text-faded leading-relaxed mb-8">Выберите подписку в каталоге — или пройдите подбор, если не уверены, какая нужна.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="#/shop" class="bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Открыть каталог</a>
-          <a href="#/pick" class="border border-edge2 hover:border-brass transition-colors text-sm px-7 py-3.5 rounded-xl">Подобрать за 3 вопроса</a>
+          <a href="#/shop" class="btn btn-main">Открыть каталог</a>
+          <a href="#/pick" class="btn btn-line">Подобрать за 3 вопроса</a>
         </div></div></section>`;
     const rows = items.map(i => {
       const g = G(i.id), line = priceFor(g,i.months)*i.qty;
@@ -719,7 +727,7 @@ tailwind.config = { theme: { extend: {
             <span class="text-sage text-sm">Криптой (−${CONFIG.cryptoOff}%)</span>
             <span class="text-sage font-semibold">${money(crypto(cartTotal()))}</span></div>
           <p class="text-faded text-sm leading-relaxed mb-6">Нажмите кнопку — состав заказа откроется у нас в Telegram. Там подтвердим сумму и выберем способ оплаты.</p>
-          <button id="checkout" class="w-full bg-brass text-ink font-display font-bold text-sm px-6 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Оформить заказ</button>
+          <button id="checkout" class="w-full btn btn-main">Оформить заказ</button>
           <p class="text-faded text-xs leading-relaxed mt-4">Деньги на сайте не списываются. Оплата — только после того, как мы подтвердим заказ.</p>
         </aside></div></section>`;
   }
@@ -750,7 +758,7 @@ tailwind.config = { theme: { extend: {
       ${faqBlock(FAQ)}
       <div class="mt-14 text-center">
         <p class="text-faded mb-6">Не нашли ответ — просто спросите.</p>
-        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать в бот</a>
+        <a href="" data-lnk="ask" class="inline-block btn btn-main">Написать нам</a>
       </div></section>`;
   }
 
@@ -768,11 +776,11 @@ tailwind.config = { theme: { extend: {
         <h2 class="font-display font-bold text-lg mb-3">Лавка открылась недавно</h2>
         <p class="text-faded text-[15px] leading-relaxed mb-6">Отзывов пока мало, и выдумывать их мы не будем. Вместо этого — то, что можно проверить сейчас:</p>
         <div class="flex flex-col sm:flex-row gap-3">
-          <a href="" data-lnk="channel" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Канал про нейросети</a>
-          <a href="" data-lnk="site" class="flex-1 border border-edge2 hover:border-brass transition-colors px-5 py-3.5 rounded-xl text-sm text-center">Что мы делаем для бизнеса</a>
+          <a href="" data-lnk="channel" class="flex-1 btn btn-line text-center">Канал основателя</a>
+          <a href="" data-lnk="site" class="flex-1 btn btn-line text-center">Что мы делаем для бизнеса</a>
         </div></div>
       <div class="text-center">
-        <a href="" data-lnk="ask" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">Написать нам</a>
+        <a href="" data-lnk="ask" class="inline-block btn btn-main">Написать нам</a>
       </div></section>`;
   }
 
@@ -803,7 +811,7 @@ tailwind.config = { theme: { extend: {
     return `<section class="max-w-3xl mx-auto px-5 py-24 text-center">
       <h1 class="font-display font-extrabold text-3xl mb-4">Такой полки нет</h1>
       <p class="text-faded mb-8">Возможно, товар убрали или в ссылке опечатка.</p>
-      <a href="#/shop" class="inline-block bg-brass text-ink font-display font-bold text-sm px-7 py-3.5 rounded-xl hover:opacity-90 transition-opacity">В каталог</a></section>`;
+      <a href="#/shop" class="inline-block btn btn-main">В каталог</a></section>`;
   }
 
   function drawDock() {
@@ -821,7 +829,7 @@ tailwind.config = { theme: { extend: {
             '<div class="font-display font-bold text-lg leading-none">' + money(p) + '</div>' +
             '<div class="text-xs text-faded mt-1">криптой ' + money(crypto(p)) + '</div>' +
           '</div>' +
-          '<button id="dockAdd" class="bg-brass text-ink font-display font-bold text-sm px-6 py-3 rounded-xl shrink-0">В корзину</button>' +
+          '<button id="dockAdd" class="btn btn-main py-3 shrink-0">В корзину</button>' +
         '</div>';
       return;
     }
