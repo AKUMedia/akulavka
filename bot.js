@@ -93,7 +93,7 @@ function touch(ctx) {
 }
 /* картинка Кислого для товара (лежит на сайте в папке img) */
 const picOf = o => { const g = o.items.map(i => CAT.goods.find(x => x.id === i.id)).find(x => x && x.pic);
-                     return g ? SHOP_URL + 'img/' + g.id + '.jpg' : null; };
+                     return g ? SHOP_URL + g.id + '.jpg' : null; };
 /* сообщение с картинкой; если картинка не грузится или текст длинный — обычным текстом */
 async function replyPic(ctx, pic, text, extra = {}) {
   if (pic && text.length <= 1000) {
