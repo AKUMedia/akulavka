@@ -18,14 +18,15 @@ const CONFIG = {
 
   rate      : 92,    // рубли за доллар на карте, со всеми комиссиями
   markup    : 1.46,  // наценка: $20 даёт 2690 ₽
-  cryptoOff : 5,     // скидка за оплату криптой, %
-  refFirst  : 8,     // % пригласившему с первой покупки друга
-  refNext   : 5,     // % со всех следующих
+  cryptoOff : 3,     // скидка за оплату криптой, %
+  refFirst  : 5,     // % пригласившему с первой покупки друга
+  refNext   : 3,     // % со всех следующих
+  annualMarkup: 1.40, // наценка на официальный годовой план (annualUsd у товара)
 
+  // Сроки: месяц есть у всех. «12 месяцев» — только официальный годовой план сервиса
+  // (у товара поле annualUsd). 3 и 6 месяцев не продаём: у сервисов таких тарифов нет.
   terms: [
-    { months:1, label:'1 месяц',   mult:1,    off:0  },
-    { months:3, label:'3 месяца',  mult:2.85, off:5  },
-    { months:6, label:'6 месяцев', mult:5.4,  off:10 }
+    { months:1, label:'1 месяц', mult:1, off:0 }
   ],
 
   cats: [
@@ -47,7 +48,7 @@ const CONFIG = {
   ],
 
   goods: [
-    { id:'claude', pic:'claude.webp', n:1, cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, hit:true, noLogin:true,
+    { id:'claude', pic:'claude.webp', n:1, cat:'chat', name:'Claude Pro', icon:'claude', tint:'#F0864A', usd:20, annualUsd:200, hit:true, noLogin:true,
       short:'Сильнее всех в тексте, коде и работе с документами.',
       for:'Тексты, аналитика, программирование',
       about:'Подписка Anthropic. Продвинутые модели, длинные диалоги, загрузка файлов. Лучший выбор для работы с текстом и кодом: пишет аккуратнее конкурентов и реже выдумывает. Единственная позиция, которую мы оформляем вообще без доступа к вашему аккаунту — только по ID.',
@@ -59,7 +60,7 @@ const CONFIG = {
       about:'Подписка OpenAI. Самый популярный сервис: помимо текста рисует картинки, говорит голосом, разбирает таблицы и ищет в интернете. Если берёте первую подписку в жизни — обычно берут эту.',
       inc:['Свежие модели без ограничений базовой версии','Генерация картинок','Голосовой режим','Анализ файлов и таблиц'] },
 
-    { id:'heygen', pic:'heygen.webp', n:3, cat:'image', name:'HeyGen', icon:'heygen', tint:'#5B8CFF', usd:29, hit:true,
+    { id:'heygen', pic:'heygen.webp', n:3, cat:'image', name:'HeyGen', icon:'heygen', tint:'#5B8CFF', usd:29, annualUsd:288, hit:true,
       short:'Видео с говорящим аватаром по тексту.',
       for:'Ролики без съёмки и микрофона',
       about:'Делает видео, где аватар произносит ваш текст на нужном языке. Берут для обучающих роликов, рекламы и контента в соцсети, когда снимать себя не хочется или некогда.',
@@ -69,20 +70,15 @@ const CONFIG = {
 
 
 
-    { id:'gemini', pic:'gemini.webp', n:4, cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20,
+    { id:'gemini', pic:'gemini.webp', n:4, cat:'chat', name:'Google Gemini Pro', icon:'gemini', tint:'#6C8CF5', usd:20, annualUsd:199.99,
       short:'Живёт внутри Google Документов, Почты и Диска.', for:'Работа в экосистеме Google',
       about:'Подписка Google. Помощник встроен прямо в Документы, Почту и Диск, плюс даёт дополнительное место в облаке.',
       inc:['Продвинутые модели Google','Помощник в Документах и Почте','Место на Диске','Очень длинные тексты'] },
-    { id:'gptgo', pic:'gptgo.webp', n:5, cat:'chat', name:'ChatGPT Go', icon:'gpt', tint:'#2FBF9A', rub:590,
-      short:'Урезанный ChatGPT за треть цены.', for:'Первая подписка, попробовать',
+    { id:'gptgo', pic:'gptgo.webp', n:5, cat:'chat', name:'ChatGPT Go', icon:'gpt', tint:'#2FBF9A', rub:1090,
+      short:'Облегчённый ChatGPT: дешевле Plus, лимиты ниже.', for:'Первая подписка, попробовать',
       about:'Облегчённый тариф OpenAI: те же свежие модели, но с лимитами пониже, чем в Plus. Берут, чтобы попробовать нейросеть на небольшой сумме и понять, нужен ли полный тариф.',
       inc:['Свежие модели вместо базовой','Генерация картинок','Анализ файлов','Лимиты ниже, чем в Plus'] },
 
-    { id:'spotify', pic:'spotify.webp', n:6, cat:'sound', name:'Spotify Premium', icon:'suno', tint:'#4BC27A',
-      terms:[{ months:3, label:'3 месяца', price:650 },{ months:6, label:'6 месяцев', price:1190 }],
-      short:'Музыка без рекламы и с офлайном.', for:'Не нейросеть, но спрашивают часто',
-      about:'Подписка Spotify на ваш аккаунт: музыка без рекламы, загрузка треков на телефон и нормальное качество звука. Оформляем так же, как и остальное.',
-      inc:['Без рекламы','Загрузка на телефон','Высокое качество','На ваш аккаунт'] },
 
     { hidden:true, id:'perplexity', n:10, cat:'chat', name:'Perplexity Pro', icon:'perplexity', tint:'#38B3B8', usd:20,
       short:'Поиск с источниками. Для research и учёбы.', for:'Проверка фактов, учёба',
@@ -92,7 +88,7 @@ const CONFIG = {
       short:'Свободнее конкурентов, видит происходящее в X.', for:'Свежие данные',
       about:'Подписка xAI. Отвечает свободнее большинства конкурентов и видит, что прямо сейчас обсуждают в X.',
       inc:['Режим рассуждений','Данные из X в реальном времени','Генерация картинок','Повышенные лимиты'] },
-    { id:'midjourney', pic:'midjourney.webp', n:7, cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10,
+    { id:'midjourney', pic:'midjourney.webp', n:7, cat:'image', name:'Midjourney', icon:'midjourney', tint:'#C9CDD6', usd:10, annualUsd:96,
       short:'Лучшая картинка среди генераторов.', for:'Реклама, обложки, иллюстрации',
       about:'Генератор изображений с самой узнаваемой картинкой на рынке.',
       inc:['Быстрые генерации по тарифу','Работа в веб-версии','Апскейл и вариации','Свои референсы'] },
@@ -104,15 +100,15 @@ const CONFIG = {
       short:'Реалистичное видео, хорошо держит лица.', for:'Рекламные ролики с людьми',
       about:'Один из сильнейших генераторов видео. Лучше конкурентов справляется с движением людей.',
       inc:['Видео по описанию','Оживление фотографий','Повышенное качество','Приоритетная очередь'] },
-    { id:'cursor', pic:'cursor.webp', n:8, cat:'code', name:'Cursor Pro', icon:'cursor', tint:'#A78BFA', usd:20,
+    { id:'cursor', pic:'cursor.webp', n:8, cat:'code', name:'Cursor Premium', icon:'cursor', tint:'#A78BFA', usd:30, annualUsd:300,
       short:'Редактор кода, который пишет код за вас.', for:'Разработка проектов',
-      about:'Среда разработки со встроенным ИИ. Понимает проект целиком и правит несколько файлов сразу.',
-      inc:['Запросы без лимитов базовой версии','Работа с проектом целиком','Автодополнение','Агент для правок'] },
+      about:'Среда разработки со встроенным ИИ. Понимает проект целиком и правит несколько файлов сразу. Оформляем актуальный тариф Premium — старый Pro Cursor больше не продаёт.',
+      inc:['Тариф Premium','Агент для правок по всему проекту','Автодополнение кода','Расширенные лимиты'] },
     { hidden:true, id:'copilot', n:14, cat:'code', name:'GitHub Copilot', icon:'copilot', tint:'#9EA7B3', usd:10,
       short:'Подсказки кода прямо в вашем редакторе.', for:'Не меняя инструменты',
       about:'Дописывает код по мере набора внутри привычного редактора.',
       inc:['Автодополнение в редакторе','Чат по вашему коду','Объяснение чужого кода','Популярные редакторы'] },
-    { id:'suno', pic:'suno.webp', n:9, cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10,
+    { id:'suno', pic:'suno.webp', n:9, cat:'sound', name:'Suno', icon:'suno', tint:'#F45D9B', usd:10, annualUsd:96,
       short:'Песни целиком: музыка, вокал и текст.', for:'Джинглы и треки',
       about:'Делает законченный трек с вокалом по описанию жанра и настроения.',
       inc:['Расширенный лимит','Коммерческое использование','Загрузка своего вокала','Хорошее качество'] },
@@ -152,7 +148,13 @@ const ICONS = {
 
 /* ---------- расчёт цен: один на сайт, приложение и бота ---------- */
 const PRICE = {
-  termsOf: g => g.terms || CONFIG.terms,
+  termsOf(g) {
+    if (g.terms) return g.terms;
+    if (!g.annualUsd) return CONFIG.terms;
+    const price = Math.round(g.annualUsd * CONFIG.rate * CONFIG.annualMarkup / 10) * 10;
+    const off = Math.max(0, Math.round((1 - price / (PRICE.base(g) * 12)) * 100));
+    return [CONFIG.terms[0], { months:12, label:'12 месяцев', price, off, annual:true }];
+  },
   base:    g => g.rub ? g.rub : Math.round(g.usd * CONFIG.rate * CONFIG.markup / 10) * 10,
   term(g, m) { const t = PRICE.termsOf(g); return t.find(x => x.months === m) || t[0]; },
   priceFor(g, m) {
