@@ -64,9 +64,9 @@ tailwind.config = { theme: { extend: {
   <button class="tab" data-tab="cart">
     <svg viewBox="0 0 24 24"><path d="M3 5h2.2l2 11.2a1.8 1.8 0 0 0 1.8 1.5h8.6a1.8 1.8 0 0 0 1.8-1.4L21 9H6"/><circle cx="10" cy="20.5" r="1.1"/><circle cx="18" cy="20.5" r="1.1"/></svg>
     <span>Корзина</span><span id="cartDot" class="dot hidden">0</span></button>
-  <button class="tab" data-tab="orders">
-    <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h5"/></svg>
-    <span>Заказы</span></button>
+  <button class="tab" data-tab="help">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.1"/></svg>
+    <span>Помощь</span></button>
   <button class="tab" data-tab="friends">
     <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 11.2a3 3 0 0 0 0-5.9M18.5 20a5.6 5.6 0 0 0-2.4-4.6"/></svg>
     <span>Друзья</span></button>
@@ -94,7 +94,18 @@ tailwind.config = { theme: { extend: {
   const esc   = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const shown = () => CONFIG.goods.filter(g => !g.hidden);
   const byReq = () => CONFIG.goods.filter(g => g.hidden);
-  const isOpen = () => { const h = new Date().getHours(); return h >= CONFIG.openFrom && h < CONFIG.openTo; };
+  /* часы работы — по Минску, а не по часам телефона */
+  const isOpen = () => {
+    const h = +new Intl.DateTimeFormat('ru-RU', { hour:'numeric', hourCycle:'h23', timeZone: CONFIG.timeZone || 'Europe/Minsk' }).format(new Date());
+    return h >= CONFIG.openFrom && h < CONFIG.openTo;
+  };
+  const BOT = 'https://t.me/' + CONFIG.bot;
+  /* открыть чат с ботом (или любую t.me-ссылку) и свернуть приложение */
+  function toBot(url) {
+    url = url || BOT;
+    if (TG && TG.openTelegramLink) { TG.openTelegramLink(url); setTimeout(() => { try { TG.close(); } catch (_) {} }, 300); }
+    else window.open(url, '_blank', 'noopener');
+  }
 
   const icon = (g, size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none"
       stroke="${g.tint}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[g.icon] || ''}</svg>`;
@@ -103,6 +114,8 @@ tailwind.config = { theme: { extend: {
 
   /* ---------- корзина ---------- */
   let cart = {};
+  try { cart = JSON.parse(localStorage.getItem('aku-app-cart') || '{}') || {}; } catch (_) { cart = {}; }
+  Object.keys(cart).forEach(k => { if (!G(cart[k].id)) delete cart[k]; });   // товар убрали из каталога
   const list  = () => Object.keys(cart).map(k => ({ key:k, ...cart[k] }));
   const qty   = () => list().reduce((s,i) => s + i.qty, 0);
   const total = () => list().reduce((s,i) => s + PRICE.priceFor(G(i.id), i.months) * i.qty, 0);
@@ -116,6 +129,7 @@ tailwind.config = { theme: { extend: {
   function setQty(k, v) { if (v <= 0) delete cart[k]; else cart[k].qty = v; sync(); render(); }
 
   function sync() {
+    try { localStorage.setItem('aku-app-cart', JSON.stringify(cart)); } catch (_) {}
     const d = document.getElementById('cartDot');
     const n = qty();
     d.textContent = n;
@@ -171,11 +185,11 @@ tailwind.config = { theme: { extend: {
 
       <div class="mt-5 bg-panel border border-edge rounded-2xl p-4">
         <div class="tech text-faded mb-2">под заказ</div>
-        <div class="text-[13px] text-faded leading-relaxed mb-3">Эти оформляем по запросу — напишите, назовём цену и срок.</div>
+        <div class="text-[13px] text-faded leading-relaxed mb-3">Эти оформляем по запросу — напишите боту, назовём цену и срок.</div>
         <div class="flex flex-wrap gap-1.5">
           ${byReq().map(g => `<span class="text-[12px] border border-edge2 rounded-full px-2.5 py-1">${esc(g.name)}</span>`).join('')}
         </div>
-        <button data-tab-go="more" class="mt-3 text-brass text-[13px] font-semibold">Написать нам →</button>
+        <button data-bot="ask" class="mt-3 text-brass text-[13px] font-semibold">Спросить в боте →</button>
       </div>
       <div class="h-3"></div>`;
   }
@@ -264,25 +278,30 @@ tailwind.config = { theme: { extend: {
       <div class="h-3"></div>`;
   }
 
-  function scOrders() {
+  function scHelp() {
+    const faq = [
+      ['Нужно ли давать пароль?', 'Для Claude — нет, только номер аккаунта (ID). Для остальных сервисов попросим временный пароль после оплаты; потом смените его — бот напомнит.'],
+      ['Сколько ждать?', 'Обычно до часа в часы работы (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00 по Минску). Ночной заказ возьмём утром.'],
+      ['Как оплатить?', 'Картой или кошельком через форму ЮMoney, либо USDT (TRC-20, BEP-20) со скидкой ' + CONFIG.cryptoOff + '%. Из Беларуси и Казахстана удобнее USDT.'],
+      ['Что если подписка слетит?', 'Если не по вашей вине — восстановим за свой счёт или вернём деньги за оставшиеся дни. Блокировка сервисом за нарушение его правил (общий доступ, смена страны) не покрывается.'],
+      ['Будут автосписания?', 'Нет. За три дня до конца бот напомнит, продлить можно в одно касание.'],
+    ];
     return `
-      <h1 class="font-display font-bold text-[20px] mb-4">Мои заказы</h1>
-      <div class="bg-board border border-edge rounded-2xl p-5 text-center">
-        <div class="text-[14px] leading-relaxed text-faded mb-4">
-          Заказы и статусы живут в чате с ботом — там же приходят реквизиты
-          и напоминания о продлении.
-        </div>
-        <button data-close-to="orders" class="bg-brass text-white font-semibold text-[14px] px-6 py-3 rounded-xl">Открыть чат</button>
+      <h1 class="font-display font-bold text-[20px] mb-4">Помощь</h1>
+      <button data-bot="profile" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-3">
+        <div class="font-semibold text-[14px]">Профиль и подписки — в боте</div>
+        <div class="text-faded text-[13px] mt-0.5">Статусы заказов, сроки, продление и бонусы</div>
+      </button>
+      <div class="bg-panel border border-edge rounded-2xl px-4 mb-3">
+        ${faq.map(([q, a], i) => `
+          <details class="${i ? 'border-t border-edge' : ''} py-3.5">
+            <summary class="font-semibold text-[14px] cursor-pointer list-none flex justify-between gap-3">${esc(q)}<span class="text-faded">+</span></summary>
+            <div class="text-faded text-[13px] leading-relaxed mt-2">${esc(a)}</div>
+          </details>`).join('')}
       </div>
-      <div class="mt-4 bg-panel border border-edge rounded-2xl p-4">
-        <div class="font-semibold text-[14px] mb-2">Как проходит оформление</div>
-        <ol class="text-faded text-[13px] leading-relaxed space-y-1.5 list-decimal pl-4">
-          <li>Собираете заказ здесь и отправляете</li>
-          <li>Выбираете оплату в чате: крипта или ЮMoney</li>
-          <li>Даёте данные: Claude — только ID, пароль не нужен</li>
-          <li>Через 15–40 минут подписка на вашем аккаунте</li>
-        </ol>
-      </div>`;
+      <button data-bot="ask" class="w-full bg-brass text-white font-semibold text-[14px] py-3 rounded-xl mb-3">Задать вопрос</button>
+      <a href="${CONFIG.site}#/terms" target="_blank" class="block text-center text-faded text-[13px] underline py-2">Условия оказания услуг</a>
+      <div class="h-3"></div>`;
   }
 
   function scFriends() {
@@ -307,8 +326,10 @@ tailwind.config = { theme: { extend: {
       <div class="mt-4 bg-panel border border-edge rounded-2xl p-4">
         <div class="font-semibold text-[14px] mb-1.5">Сколько выходит</div>
         <div class="text-faded text-[13px] leading-relaxed">
-          С Claude Pro это около 215 ₽ за первую покупку друга. Пять человек — и ваша
-          подписка окупилась.
+          ${(() => { const g = G('claude'), p = g ? PRICE.priceFor(g, 1) : 0;
+            return p ? 'С Claude Pro это около ' + money(Math.round(p * (CONFIG.refFirst || 8) / 100)) +
+              ' с первой покупки друга и около ' + money(Math.round(p * (CONFIG.refNext || 5) / 100)) +
+              ' с каждого его продления.' : ''; })()}
         </div>
       </div>`;
   }
@@ -324,13 +345,18 @@ tailwind.config = { theme: { extend: {
         </div>
         <div class="text-faded text-[13px] leading-relaxed">
           ${open ? 'Отвечаем сейчас, обычно оформляем в течение часа.'
-                 : 'Заявку можно оставить — ответим с ' + CONFIG.openFrom + ':00.'}
+                 : 'Заказ можно оставить — возьмём в работу с ' + CONFIG.openFrom + ':00 по Минску.'}
         </div>
       </div>
 
-      <button data-close-to="chat" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
+      <button data-bot="ask" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
         <div class="font-semibold text-[14px]">Написать нам</div>
         <div class="text-faded text-[13px] mt-0.5">Отвечает человек, а не автоответчик</div>
+      </button>
+
+      <button data-tg="${CONFIG.shopChannel}" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
+        <div class="font-semibold text-[14px]">Канал AKU Лавки</div>
+        <div class="text-faded text-[13px] mt-0.5">Новости, розыгрыши подписок и акции</div>
       </button>
 
       <a href="${CONFIG.channel}" target="_blank" class="row block bg-board border border-edge rounded-2xl p-4 mb-2.5">
@@ -338,14 +364,9 @@ tailwind.config = { theme: { extend: {
         <div class="text-faded text-[13px] mt-0.5">Разборы нейросетей и фишки</div>
       </a>
 
-      <a href="${CONFIG.guideLink}" target="_blank" class="row block bg-board border border-edge rounded-2xl p-4 mb-2.5">
-        <div class="font-semibold text-[14px]">Бесплатный гайд по Claude</div>
-        <div class="text-faded text-[13px] mt-0.5">Чтобы подписка окупилась, а не пылилась</div>
-      </a>
-
       <div class="tech text-faded mt-5 mb-2">полезное рядом</div>
-      ${CONFIG.extras.filter(e => e.external !== 'GUIDE').map(e => `
-        <a href="${e.external === 'LEXY' ? CONFIG.lexyLink : e.external === 'CARD' ? CONFIG.cardLink : CONFIG.cardLink2}"
+      ${CONFIG.extras.filter(e => e.external === 'LEXY').map(e => `
+        <a href="${CONFIG.lexyLink}"
            target="_blank" class="row block bg-panel border border-edge rounded-2xl p-3.5 mb-2">
           <div class="font-semibold text-[13.5px]">${esc(e.name)}</div>
           <div class="text-faded text-[12.5px] mt-0.5">${esc(e.short)}</div>
@@ -354,13 +375,14 @@ tailwind.config = { theme: { extend: {
       <div class="text-faded text-[12px] leading-relaxed mt-5 mb-2">
         Мы не продаём готовые аккаунты и не просим пароль от почты.
         Claude оформляем по номеру аккаунта, остальное — на ваш аккаунт с временным паролем.
+        <a href="${CONFIG.site}#/terms" target="_blank" class="underline">Условия</a>
       </div>`;
   }
 
   function render() {
     const html = tab === 'product' ? scProduct()
                : tab === 'cart'    ? scCart()
-               : tab === 'orders'  ? scOrders()
+               : tab === 'help'    ? scHelp()
                : tab === 'friends' ? scFriends()
                : tab === 'more'    ? scMore()
                : scShop();
@@ -396,8 +418,7 @@ tailwind.config = { theme: { extend: {
     const items = list().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
     const url = CART_LINK.url(items, null);
     cart = {}; sync();
-    if (TG && TG.openTelegramLink) { TG.openTelegramLink(url); setTimeout(() => { try { TG.close(); } catch (_) {} }, 300); }
-    else window.location.href = url;
+    toBot(url);
   }
 
   /* ---------- события ---------- */
@@ -410,8 +431,10 @@ tailwind.config = { theme: { extend: {
     const q = e.target.closest('[data-qty]');       if (q) return setQty(q.dataset.qty, +q.dataset.v);
     const cp = e.target.closest('[data-copy]');
     if (cp) {
-      navigator.clipboard && navigator.clipboard.writeText(cp.dataset.copy);
-      if (TG) TG.showAlert ? TG.showAlert('Ссылка скопирована') : 0;
+      const link = cp.dataset.copy;
+      const ok  = () => { try { TG && TG.showAlert ? TG.showAlert('Ссылка скопирована') : alert('Ссылка скопирована'); } catch (_) {} };
+      const bad = () => { try { TG && TG.showAlert ? TG.showAlert('Не получилось скопировать. Зажмите ссылку пальцем и выберите «Копировать»:\n\n' + link) : prompt('Скопируйте ссылку:', link); } catch (_) {} };
+      try { navigator.clipboard.writeText(link).then(ok, bad); } catch (_) { bad(); }
       return;
     }
     const sh = e.target.closest('[data-share]');
@@ -420,8 +443,10 @@ tailwind.config = { theme: { extend: {
         '&text=' + encodeURIComponent('Подписки на нейросети на свой аккаунт — Claude, ChatGPT и другие'));
       return;
     }
-    const cl = e.target.closest('[data-close-to]');
-    if (cl && TG) { TG.close(); return; }
+    const b = e.target.closest('[data-bot]');
+    if (b) return toBot(BOT + '?start=' + b.dataset.bot);
+    const tl = e.target.closest('[data-tg]');
+    if (tl) return toBot(tl.dataset.tg);
   });
 
   /* ---------- запуск ---------- */
