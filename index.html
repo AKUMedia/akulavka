@@ -245,7 +245,7 @@ tailwind.config = { theme: { extend: {
           ${(g.tag||g.hit) ? `<span class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
              style="background:${g.tint}1F;color:${g.tint}">${esc(g.tag||'Часто берут')}</span>` : ''}
         </div>
-        <h3 class="font-display font-bold text-[15px] leading-snug mb-2">${esc(g.name)}</h3>
+        <h3 class="font-display font-extrabold text-[21px] sm:text-[23px] leading-tight tracking-tight mb-2">${esc(g.name)}</h3>
         <p class="text-faded text-[13px] leading-relaxed mb-4 sm:mb-5 sm:min-h-[52px]">${esc(g.short)}</p>
         <div class="tech text-faded/70 flex items-center gap-2 mb-3">
           <span>${g.noLogin ? '[ без пароля ]' : '[ ' + esc(cat(g.cat)) + ' ]'}</span>
