@@ -4,9 +4,11 @@
 const CONFIG = {
   telegram : 'hipnohop',
   bot      : 'akulavka_bot',
-  channel  : 'https://t.me/Alekseii_AI',
+  channel  : 'https://t.me/Alekseii_AI',      // личный канал основателя
+  shopChannel: 'https://t.me/AKULavka',       // канал Лавки: новости, розыгрыши
+  site     : 'https://akumedia.github.io/akulavka/',
+  timeZone : 'Europe/Minsk',                 // часы работы считаются по этому поясу
   siteLink : 'https://aku-automation.io',
-  guideLink: 'https://aku-automation.io/guide/?utm_source=lavka&utm_medium=site&utm_campaign=guide',
   cardLink : 'https://t.me/Cashinout_bot?start=23610',
   cardLink2: 'https://platipomiru.com/?utm_source=Aleksei_AI&utm_medium=cpa',
   lexyLink : 'https://lexygpt.com/?ref=ALEKSEIAI',
@@ -42,8 +44,6 @@ const CONFIG = {
       short:'Оплачивать зарубежные сервисы самому. Этой картой пользуемся сами.' },
     { id:'card2', name:'Карта «Плати по всему миру»', icon:'card', tint:'#B4A8FF', external:'CARD2',
       short:'Альтернативный сервис карт с Apple Pay и Google Pay.' },
-    { id:'guide', name:'Гайд «Claude с нуля»', icon:'guide', tint:'#3C8C5C', external:'GUIDE', tag:'Бесплатно',
-      short:'Как пользоваться Claude, чтобы подписка окупилась.' }
   ],
 
   goods: [
