@@ -25,6 +25,11 @@ tailwind.config = { theme: { extend: {
   .view { animation:vin .2s ease both }
   @keyframes vin { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
   .row { transition:transform .12s ease } .row:active { transform:scale(.985) }
+  /* строки-кнопки: стрелка справа, чтобы было видно, что это нажимается */
+  .go { position:relative; padding-right:56px !important; box-shadow:0 1px 2px rgba(0,0,0,.05) }
+  .go::after { content:''; position:absolute; right:16px; top:50%; width:28px; height:28px; margin-top:-14px;
+    border-radius:999px; background:#F2601A1A url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F2601A' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m10 7 5 5-5 5'/%3E%3C/svg%3E") center/16px no-repeat }
+  .go:active { background:#F3F3EF }
   .pop { animation:pop .3s cubic-bezier(.3,1.6,.5,1) }
   @keyframes pop { 0%{transform:scale(1)} 45%{transform:scale(1.3)} 100%{transform:scale(1)} }
   .scroll-x { overflow-x:auto; scrollbar-width:none } .scroll-x::-webkit-scrollbar { display:none }
@@ -167,7 +172,7 @@ tailwind.config = { theme: { extend: {
       </div>
       <div class="space-y-2.5">
         ${items.map(g => `
-          <button data-open="${g.id}" class="row w-full text-left bg-board border border-edge rounded-2xl p-3.5 flex items-center gap-3.5">
+          <button data-open="${g.id}" class="row go w-full text-left bg-board border border-edge rounded-2xl p-3.5 flex items-center gap-3.5">
             ${tile(g, 46)}
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline gap-2">
@@ -288,7 +293,7 @@ tailwind.config = { theme: { extend: {
     ];
     return `
       <h1 class="font-display font-bold text-[20px] mb-4">Помощь</h1>
-      <button data-bot="profile" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-3">
+      <button data-bot="profile" class="row go w-full text-left bg-board border border-edge rounded-2xl p-4 mb-3">
         <div class="font-semibold text-[14px]">Профиль и подписки — в боте</div>
         <div class="text-faded text-[13px] mt-0.5">Статусы заказов, сроки, продление и бонусы</div>
       </button>
@@ -319,7 +324,11 @@ tailwind.config = { theme: { extend: {
           <div class="font-mono text-[12px] break-all text-paper mb-3">${link}</div>
           <button data-copy="${link}" class="w-full bg-brass text-white font-semibold text-[14px] py-3 rounded-xl">Скопировать</button>
         </div>
-        <button data-share="${link}" class="w-full border border-edge2 text-[14px] py-3 rounded-xl">Отправить другу</button>`
+        <button data-share="${link}" class="w-full border border-edge2 text-[14px] py-3 rounded-xl mb-3">Отправить другу</button>
+        <button data-bot="friends" class="row go w-full text-left bg-board border border-edge rounded-2xl p-4">
+          <div class="font-semibold text-[14px]">Кто пришёл по ссылке</div>
+          <div class="text-faded text-[13px] mt-0.5">Список друзей с никами, покупки и бонусы — в боте</div>
+        </button>`
       : `<div class="bg-panel border border-edge rounded-2xl p-4 text-faded text-[13px]">
            Ссылка появится здесь при открытии из чата с ботом.
          </div>`}
@@ -349,17 +358,17 @@ tailwind.config = { theme: { extend: {
         </div>
       </div>
 
-      <button data-bot="ask" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
+      <button data-bot="ask" class="row go w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
         <div class="font-semibold text-[14px]">Написать нам</div>
         <div class="text-faded text-[13px] mt-0.5">Отвечает человек, а не автоответчик</div>
       </button>
 
-      <button data-tg="${CONFIG.shopChannel}" class="row w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
+      <button data-tg="${CONFIG.shopChannel}" class="row go w-full text-left bg-board border border-edge rounded-2xl p-4 mb-2.5">
         <div class="font-semibold text-[14px]">Канал AKU Лавки</div>
         <div class="text-faded text-[13px] mt-0.5">Новости, розыгрыши подписок и акции</div>
       </button>
 
-      <a href="${CONFIG.channel}" target="_blank" class="row block bg-board border border-edge rounded-2xl p-4 mb-2.5">
+      <a href="${CONFIG.channel}" target="_blank" class="row go block bg-board border border-edge rounded-2xl p-4 mb-2.5">
         <div class="font-semibold text-[14px]">Канал «Лёха про ИИ»</div>
         <div class="text-faded text-[13px] mt-0.5">Разборы нейросетей и фишки</div>
       </a>
@@ -367,7 +376,7 @@ tailwind.config = { theme: { extend: {
       <div class="tech text-faded mt-5 mb-2">полезное рядом</div>
       ${CONFIG.extras.filter(e => e.external === 'LEXY').map(e => `
         <a href="${CONFIG.lexyLink}"
-           target="_blank" class="row block bg-panel border border-edge rounded-2xl p-3.5 mb-2">
+           target="_blank" class="row go block bg-panel border border-edge rounded-2xl p-3.5 mb-2">
           <div class="font-semibold text-[13.5px]">${esc(e.name)}</div>
           <div class="text-faded text-[12.5px] mt-0.5">${esc(e.short)}</div>
         </a>`).join('')}
