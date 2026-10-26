@@ -87,7 +87,7 @@ tailwind.config = { theme: { extend: {
   </div>
 </div>
 
-<script src="catalog.js?v=2610b"></script>
+<script src="catalog.js?v=2610c"></script>
 <script>
 (function () {
   'use strict';
@@ -122,7 +122,8 @@ tailwind.config = { theme: { extend: {
   /* ---------- корзина ---------- */
   let cart = {};
   try { cart = JSON.parse(localStorage.getItem('aku-app-cart') || '{}') || {}; } catch (_) { cart = {}; }
-  Object.keys(cart).forEach(k => { if (!G(cart[k].id)) delete cart[k]; });   // товар убрали из каталога
+  Object.keys(cart).forEach(k => { const g = G(cart[k].id);                // товар или срок убрали из каталога
+    if (!g || !PRICE.termsOf(g).some(t => t.months === cart[k].months)) delete cart[k]; });
   const list  = () => Object.keys(cart).map(k => ({ key:k, ...cart[k] }));
   const qty   = () => list().reduce((s,i) => s + i.qty, 0);
   const total = () => list().reduce((s,i) => s + PRICE.priceFor(G(i.id), i.months) * i.qty, 0);
@@ -217,7 +218,7 @@ tailwind.config = { theme: { extend: {
 
       ${terms.length > 1 ? `
         <div class="tech text-faded mb-2">срок подписки</div>
-        <div class="grid grid-cols-${Math.min(terms.length,3)} gap-2 mb-4">
+        <div class="grid ${terms.length === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-2 mb-4">
           ${terms.map(t => `<button data-term="${t.months}"
             class="py-2.5 rounded-xl border text-[13px] ${months===t.months ? 'border-brass bg-brass/10 font-semibold' : 'border-edge2 text-faded'}">
             ${t.label}${t.off ? `<div class="text-[11px] text-sage">−${t.off}%</div>` : ''}</button>`).join('')}
@@ -228,6 +229,7 @@ tailwind.config = { theme: { extend: {
         <div class="text-sage text-[13px] mt-1.5">криптой ${money(PRICE.crypto(p))}</div>
         <div class="text-faded text-[12px] mt-1">за ${PRICE.term(g, months).label.toLowerCase()}${g.noLogin ? ' · по ID аккаунта' : ''}</div>
       </div>
+      ${PRICE.term(g, months).annual ? `<div class="text-[13px] leading-relaxed bg-brass/10 rounded-xl px-4 py-3 mb-4">Официальный годовой план: одна оплата на 12 месяцев, без продлений. Экономия <b>${money(PRICE.base(g) * 12 - p)}</b>.</div>` : ''}
 
       ${g.inc && g.inc.length ? `
         <div class="tech text-faded mb-2">что входит</div>
