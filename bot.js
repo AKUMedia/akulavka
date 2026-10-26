@@ -60,6 +60,7 @@ db.daily = db.daily || {};       // отметки ежедневных дел
 db.costs = db.costs || {};       // твоя себестоимость за 1 месяц товара: { claude: 1150 }
 db.expenses = db.expenses || []; // расходы: сервер, реклама, розыгрыши
 db.broadcasts = db.broadcasts || [];
+db.reviews = db.reviews || [];   // отзывы клиентов: оценка, текст, опубликован ли в канале
 
 /* ---------- мелочи ---------- */
 const esc   = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
@@ -182,6 +183,7 @@ function revokeReferral(o) {
 }
 function returnBonus(o) {
   if (o.usedBonus > 0 && !o.bonusReturned) { userOf(o.uid).balance += o.usedBonus; o.bonusReturned = true; }
+  if (o.couponOff > 0 && !o.couponReturned) { userOf(o.uid).coupon5 = true; o.couponReturned = true; }   // скидка за отзыв возвращается
 }
 
 /* ═══════════════ /start ═══════════════ */
@@ -243,6 +245,8 @@ async function screenProfile(ctx) {
     open.filter(o => o.status === 'ждёт оплаты').forEach(o => rows.push([Markup.button.callback(`💳 Оплатить заказ №${o.id}`, 'payfor:' + o.id)]));
   }
   t += `💰 Бонусный баланс: <b>${money(u.balance)}</b>` + (u.balance > 0 ? ' — спишется со следующего заказа' : '') + '\n';
+  if (u.coupon5) t += `🎟 Скидка ${REVIEW_OFF}% за отзыв — применится к следующему заказу\n`;
+  reviewable(uid).slice(0, 2).forEach(o => rows.push([Markup.button.callback(`⭐ Отзыв о заказе №${o.id} (−${REVIEW_OFF}% на следующий)`, 'rvask:' + o.id)]));
   t += `👥 Приглашено друзей: <b>${refCount(uid)}</b>, заработано <b>${money(u.refEarned)}</b>`;
 
   const done = mine.filter(o => !ACTIVE_STATUSES.includes(o.status)).slice(-5).reverse();
@@ -336,11 +340,13 @@ async function createOrder(ctx, rawItems, source, extra = {}) {
   if (dup) return showPayChoice(ctx, dup, true);
 
   const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const usedBonus = Math.min(u.balance, Math.max(0, total - 100));
+  const couponOff = u.coupon5 ? Math.round(total * REVIEW_OFF / 100 / 10) * 10 : 0;   // −5% за отзыв, один раз
+  if (couponOff > 0) u.coupon5 = false;
+  const usedBonus = Math.min(u.balance, Math.max(0, total - couponOff - 100));
   if (usedBonus > 0) u.balance -= usedBonus;
-  const base = total - usedBonus;
+  const base = total - couponOff - usedBonus;
 
-  const o = { id: ++db.seq, uid, items, total, base, due: base, usedBonus, method: 'не выбран',
+  const o = { id: ++db.seq, uid, items, total, base, due: base, usedBonus, couponOff, method: 'не выбран',
               status: 'ждёт оплаты', created: Date.now(), source, ...extra };
   db.orders.push(o); save();
   await showPayChoice(ctx, o, false);
@@ -358,6 +364,7 @@ function payKeyboard(o) {
 async function showPayChoice(ctx, o, isRepeat) {
   return replyPic(ctx, picOf(o),
     `<b>Заказ №${o.id}${isRepeat ? ' — уже создан' : ' принят'}</b>\n\n${itemsText(o)}` +
+    (o.couponOff > 0 ? `\n\nСкидка за отзыв: <b>−${money(o.couponOff)}</b>` : '') +
     (o.usedBonus > 0 ? `\n\nСписано с бонусного баланса: <b>−${money(o.usedBonus)}</b>` : '') +
     `\n\nИтого: <b>${money(o.base)}</b>\nВ USDT со скидкой: <b>${money(crypto(o.base))}</b>\n\nВыберите, чем платить:`,
     payKeyboard(o));
@@ -449,6 +456,82 @@ bot.action(/^renew:(\d+)(?::(\d+))?$/, async ctx => {
   return createOrder(ctx, items, 'продление', { renewOf: o.id });
 });
 
+/* ═══════════════ ОТЗЫВЫ ═══════════════
+   Через сутки после выполнения бот просит оценку. За отзыв — разовая скидка 5% на следующий заказ.
+   Отзывы хранятся в data.json (и в ежедневном бэкапе); хорошие ты публикуешь в канал кнопкой. */
+const REVIEW_OFF = 5;
+const reviewed = o => db.reviews.some(r => r.orderId === o.id);
+const reviewable = uid => db.orders.filter(o => o.uid === uid && ['активна', 'истекла', 'продлена'].includes(o.status) && !reviewed(o)).reverse();
+const stars = n => '⭐'.repeat(n);
+const REVIEW_KB = id => Markup.inlineKeyboard([[1, 2, 3, 4, 5].map(n => Markup.button.callback(n + '⭐', `rv:${id}:${n}`))]);
+const reviewAskText = o => `<b>Как вам заказ №${o.id}?</b> ${o.items.map(i => esc(i.name)).join(', ')}\n\n` +
+  `Поставьте оценку и напишите пару слов — за отзыв дарим <b>−${REVIEW_OFF}%</b> на следующий заказ, на любую подписку.`;
+
+bot.action(/^rvask:(\d+)$/, async ctx => {
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (reviewed(o)) return ctx.answerCbQuery('Отзыв уже есть, спасибо!');
+  await ctx.answerCbQuery();
+  return ctx.replyWithHTML(reviewAskText(o), REVIEW_KB(o.id));
+});
+bot.action(/^rv:(\d+):([1-5])$/, async ctx => {
+  const o = orderOf(ctx.match[1]), rating = +ctx.match[2];
+  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (reviewed(o)) return ctx.answerCbQuery('Отзыв уже есть, спасибо!');
+  await ctx.answerCbQuery(stars(rating));
+  const u = touch(ctx); u.awaitReview = { orderId: o.id, rating, at: Date.now() }; save();
+  try { await ctx.editMessageReplyMarkup(undefined); } catch (_) {}
+  return ctx.replyWithHTML(`${stars(rating)} — спасибо!\n\nТеперь напишите пару слов: что понравилось, что улучшить. ` +
+    'Хороший отзыв можем показать в канале Лавки — только с именем, без ника.',
+    Markup.inlineKeyboard([[Markup.button.callback('Без текста', 'rvskip:' + o.id)]]));
+});
+bot.action(/^rvskip:(\d+)$/, async ctx => {
+  const u = touch(ctx);
+  if (!u.awaitReview || u.awaitReview.orderId !== +ctx.match[1]) return ctx.answerCbQuery('Сначала поставьте оценку');
+  await ctx.answerCbQuery();
+  return saveReview(ctx, u, '');
+});
+async function saveReview(ctx, u, text) {
+  const { orderId, rating } = u.awaitReview; delete u.awaitReview;
+  const o = orderOf(orderId);
+  if (!o || reviewed(o)) { save(); return ctx.reply('Отзыв уже есть, спасибо!'); }
+  const r = { id: db.reviews.length + 1, uid: ctx.from.id, orderId, rating, text: String(text || '').slice(0, 700),
+              goods: o.items.map(i => i.name), name: ctx.from.first_name || '', at: Date.now(), status: 'новый' };
+  db.reviews.push(r);
+  u.coupon5 = true; save();
+  await ctx.replyWithHTML(`Спасибо за отзыв! 🧡\n\n🎟 Скидка <b>${REVIEW_OFF}%</b> на следующий заказ уже ваша — применится сама при оформлении.`,
+    Markup.inlineKeyboard([[Markup.button.webApp('🛍 Открыть магазин', APP_URL)]]));
+  try {
+    await bot.telegram.sendMessage(CONFIG.adminId, reviewCard(r), { parse_mode: 'HTML', ...reviewKb(r) });
+  } catch (e) { console.error('review→admin:', e.message); }
+}
+const reviewCard = r => `<b>${r.rating >= 4 ? '⭐ Новый отзыв' : '⚠️ Низкая оценка'}</b> · №${r.id} · ${esc(r.status)}\n` +
+  `${stars(r.rating)} · заказ /o${r.orderId} · ${nick(r.uid)} · /u${r.uid}\n${r.goods.map(esc).join(', ')}\n\n` +
+  (r.text ? `«${esc(r.text)}»` : '<i>без текста</i>');
+const reviewKb = r => Markup.inlineKeyboard(r.status === 'новый' ? [[
+  ...(r.text ? [Markup.button.callback('📣 В канал', 'rvpub:' + r.id)] : []),
+  Markup.button.callback('🙈 Не публиковать', 'rvhide:' + r.id)], [Markup.button.callback('✉️ Ответить', 'dm:' + r.uid)]]
+  : [[Markup.button.callback('✉️ Ответить', 'dm:' + r.uid)]]);
+
+bot.action(/^rv(pub|hide):(\d+)$/, async ctx => {
+  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
+  const r = db.reviews.find(x => x.id === +ctx.match[2]);
+  if (!r || r.status !== 'новый') return ctx.answerCbQuery('Уже обработан');
+  if (ctx.match[1] === 'hide') { r.status = 'скрыт'; save(); await ctx.answerCbQuery('Скрыт'); }
+  else {
+    const chan = '@' + CHANNEL.split('/').pop();
+    try {
+      const m = await bot.telegram.sendMessage(chan, `${stars(r.rating)} <b>Отзыв: ${r.goods.map(esc).join(', ')}</b>\n\n«${esc(r.text)}»\n\n— ${esc(r.name || 'покупатель')}`,
+        { parse_mode: 'HTML', ...Markup.inlineKeyboard([[Markup.button.url('🛍 Открыть Лавку', `https://t.me/${CAT.bot}`)]]) });
+      r.status = 'в канале'; r.channelMsg = m.message_id; save();
+      await ctx.answerCbQuery('Опубликован в канале');
+    } catch (e) {
+      return ctx.answerCbQuery('Не вышло: бот должен быть админом канала с правом публикации', { show_alert: true });
+    }
+  }
+  try { await ctx.editMessageText(reviewCard(r), { parse_mode: 'HTML', ...reviewKb(r) }); } catch (_) {}
+});
+
 /* ═══════════════ АДМИНКА ═══════════════ */
 const STATUS_ICON = { 'ждёт оплаты':'⏳', 'оплата заявлена':'💰', 'оплачен':'✅', 'оформляется':'⚙️',
                       'активна':'🟢', 'отменён':'❌', 'истекла':'⚪️', 'продлена':'🔁', 'возврат':'↩️' };
@@ -461,6 +544,7 @@ function adminCard(o) {
     `Создан: ${new Date(o.created).toLocaleString('ru-RU')} · ${esc(o.source || '')}\n` +
     (o.renewOf ? `Продление заказа №${o.renewOf}\n` : '') +
     `Оплата: ${METHOD_NAME[o.method] || esc(o.method)}\n\n${itemsText(o)}\n\n` +
+    (o.couponOff > 0 ? `Скидка за отзыв: −${money(o.couponOff)}\n` : '') +
     (o.usedBonus > 0 ? `Бонусами: −${money(o.usedBonus)}\n` : '') +
     `К оплате: <b>${money(o.due)}</b>` + (o.method === 'crypto' ? ` (${usdt(o.due)} USDT)` : '') +
     (o.method === 'card' || o.method === 'wallet' ? `\nМетка в ЮMoney: lavka-${o.id}` : '') +
@@ -616,13 +700,16 @@ function scrHome() {
     `🔥 ждут тебя: <b>${waiting.length}</b>` + (waiting.length ? ' — ' + waiting.slice(0, 5).map(o => '/o' + o.id).join(' ') : '') + '\n' +
     `⏳ не оплачены: ${unpaid.length}\n` +
     `🟢 активных подписок: ${active.length}` + (soon.length ? ` · кончаются в 3 дня: ${soon.length}` : '') + '\n' +
-    `👥 всего пользователей: ${users.length}`;
+    `👥 всего пользователей: ${users.length}` +
+    (db.reviews.length ? `\n⭐ отзывов: ${db.reviews.length}, средняя ${(sumBy(db.reviews, r => r.rating) / db.reviews.length).toFixed(1)}` +
+      (db.reviews.some(r => r.status === 'новый') ? ` · ждут решения: ${db.reviews.filter(r => r.status === 'новый').length}` : '') : '');
   const kb = Markup.inlineKeyboard([
     [Markup.button.callback('📊 Статистика', 'adm:stats'), Markup.button.callback('💰 Доход', 'adm:money')],
     [Markup.button.callback('🔥 Ждут меня', 'adm:orders:wait:0'), Markup.button.callback('📦 Все заказы', 'adm:orders:all:0')],
     [Markup.button.callback('👥 Клиенты', 'adm:users'), Markup.button.callback('🤝 Рефералы', 'adm:refs')],
     [Markup.button.callback('🛍 Товары', 'adm:goods'), Markup.button.callback('🔁 Продления', 'adm:renew')],
     [Markup.button.callback('💸 Расходы', 'adm:exp'), Markup.button.callback('📣 Рассылка', 'adm:bc')],
+    [Markup.button.callback('⭐ Отзывы', 'adm:reviews')],
     [Markup.button.callback('💾 Бэкап', 'adm:backup'), Markup.button.callback('🔄 Обновить', 'adm:home')]
   ]);
   return [text, kb];
@@ -801,6 +888,18 @@ function scrRenew() {
   return [text, Markup.inlineKeyboard([back])];
 }
 
+function scrReviews() {
+  const rs = db.reviews, avg = rs.length ? (sumBy(rs, r => r.rating) / rs.length).toFixed(1) : '—';
+  const waiting = rs.filter(r => r.status === 'новый');
+  const text = '<b>⭐ Отзывы</b>\n\n' +
+    `Всего: <b>${rs.length}</b> · средняя оценка: <b>${avg}</b> · в канале: ${rs.filter(r => r.status === 'в канале').length}\n` +
+    `Ждут решения: ${waiting.length}` + (waiting.length ? ' — карточки выше в чате или /rv' + waiting[0].id : '') + '\n' +
+    `Неиспользованных скидок за отзыв: ${Object.values(db.users).filter(u => u.coupon5).length}\n\n` +
+    '<b>Последние</b>\n' + (rs.slice(-10).reverse().map(r => `${stars(r.rating)} /rv${r.id} · ${esc(r.status)} · ${nick(r.uid)}` +
+      (r.text ? `\n   «${esc(r.text.slice(0, 80))}${r.text.length > 80 ? '…' : ''}»` : '')).join('\n') || 'пока нет');
+  return [text, Markup.inlineKeyboard([back])];
+}
+
 function scrExp() {
   const list = expBetween(monthStart()).slice().reverse();
   const text = `<b>💸 Расходы — ${MONTHS[new Date().getMonth()]}</b>\n\n` +
@@ -847,7 +946,7 @@ async function bcRun(ctx, seg) {
 }
 
 /* ---------- маршрутизация ---------- */
-const SCREENS = { home: scrHome, stats: scrStats, money: scrMoney, costs: scrCosts, users: scrUsers,
+const SCREENS = { reviews: scrReviews, home: scrHome, stats: scrStats, money: scrMoney, costs: scrCosts, users: scrUsers,
                   refs: scrRefs, goods: scrGoods, renew: scrRenew, exp: scrExp, bc: scrBc };
 async function show(ctx, [text, kb]) {
   const extra = { parse_mode: 'HTML', disable_web_page_preview: true, ...kb };
@@ -874,6 +973,11 @@ bot.action(/^adm:(.+)$/, async ctx => {
   if (SCREENS[k]) return show(ctx, SCREENS[k]());
 });
 
+bot.hears(/^\/rv_?(\d+)$/, async ctx => {
+  if (!isAdmin(ctx)) return;
+  const r = db.reviews.find(x => x.id === +ctx.match[1]);
+  return r ? ctx.replyWithHTML(reviewCard(r), reviewKb(r)) : ctx.reply('Нет такого отзыва');
+});
 bot.hears(/^\/u_?(\d+)$/, ctx => {
   if (!isAdmin(ctx)) return;
   const c = userCard(+ctx.match[1]); return c ? show(ctx, c) : ctx.reply('Нет такого пользователя');
@@ -988,6 +1092,8 @@ bot.on('message', async ctx => {
 
   // клиент пишет — пересылаем тебе с контекстом
   const u = touch(ctx);
+  if (u.awaitReview && Date.now() - u.awaitReview.at < 60 * MIN && msg.text && !msg.text.startsWith('/'))
+    return saveReview(ctx, u, msg.text);                          // это текст отзыва
   const open = db.orders.filter(o => o.uid === ctx.from.id && ACTIVE_STATUSES.includes(o.status)).pop();
   try {
     const head = await bot.telegram.sendMessage(CONFIG.adminId,
@@ -1038,6 +1144,12 @@ async function tick() {
         send(o.uid, `Заказ №${o.id} ждёт оплаты. Если остались вопросы — напишите сюда, поможем.`,
           Markup.inlineKeyboard([[Markup.button.callback('💳 Оплатить', 'payfor:' + o.id)], [Markup.button.callback('✖️ Отменить', 'ccl:' + o.id)]]));
       }
+    }
+
+    // через сутки после выполнения — просим отзыв (один раз, днём)
+    if (o.status === 'активна' && o.at_активна && !o.reviewAsked && work && now - o.at_активна > DAY && !reviewed(o)) {
+      o.reviewAsked = true; changed = true;
+      send(o.uid, reviewAskText(o), REVIEW_KB(o.id));
     }
 
     // клиент сообщил об оплате, а ты молчишь 30 минут — напомню тебе
