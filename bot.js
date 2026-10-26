@@ -222,18 +222,20 @@ bot.action(/^scr:(profile|friends|help|ask)$/, async ctx => {
 async function screenProfile(ctx) {
   const uid = ctx.from.id, u = touch(ctx);
   const mine = db.orders.filter(o => o.uid === uid);
-  const subs = mine.filter(o => o.status === 'активна' || (o.status === 'истекла' && Date.now() - o.endsAt < 30 * DAY));
+  const subs = [];                                                   // каждая подписка отдельно, со своим сроком
+  mine.filter(o => o.status === 'активна' || (o.status === 'истекла' && Date.now() - o.endsAt < 30 * DAY))
+      .forEach(o => o.items.forEach((i, idx) => { if (!i.renewed) subs.push({ o, i, idx, end: itemEnd(o, i) }); }));
+  subs.sort((a, b) => a.end - b.end);
   const open = mine.filter(o => ACTIVE_STATUSES.includes(o.status));
   const rows = [];
 
   let t = '<b>👤 Профиль</b>\n\n';
   if (subs.length) {
-    t += '<b>Подписки</b>\n' + subs.map(o => {
-      const left = Math.ceil((o.endsAt - Date.now()) / DAY);
-      return '• ' + o.items.map(i => esc(i.name)).join(', ') + ' — ' +
-        (o.status === 'активна' ? `до ${fmtDate(o.endsAt)} (${left} дн.)` : `закончилась ${fmtDate(o.endsAt)}`);
+    t += '<b>Подписки</b>\n' + subs.map(({ i, end }) => {
+      const left = Math.ceil((end - Date.now()) / DAY);
+      return `• ${esc(i.name)} — ` + (left > 0 ? `до ${fmtDate(end)} (${left} дн.)` : `закончилась ${fmtDate(end)}`);
     }).join('\n') + '\n\n';
-    subs.forEach(o => rows.push([Markup.button.callback('🔄 Продлить: ' + o.items.map(i => i.name).join(', ').slice(0, 40), 'renew:' + o.id)]));
+    subs.forEach(({ o, i, idx }) => rows.push([Markup.button.callback('🔄 Продлить: ' + i.name.slice(0, 40), `renew:${o.id}:${idx}`)]));
   } else t += 'Активных подписок пока нет.\n\n';
 
   if (open.length) {
@@ -419,8 +421,9 @@ bot.action(/^paid:(\d+)$/, async ctx => {
   await ctx.replyWithHTML(
     `<b>Заказ №${o.id}</b> — спасибо! Проверим поступление и напишем сюда.\n\n` +
     '<b>Пока пришлите данные следующим сообщением:</b>\n' +
-    (claude ? '• для Claude — ID аккаунта (Settings → Account) и почту, пароль не нужен\n' : '') +
+    (claude ? '• для Claude — только ID аккаунта (Settings → Account), пароль и почта не нужны\n' : '') +
     (other ? '• для остальных сервисов — почту аккаунта. Пароль попросим, когда возьмём заказ в работу, — заранее не присылайте\n' : '') +
+    (o.items.some(i => i.qty > 1) ? '• несколько штук одного сервиса — это разные аккаунты: пришлите данные для каждого\n' : '') +
     '\n' + (isOpen() ? 'Обычно оформляем в течение часа.' : `Сейчас закрыто, возьмём в работу с ${OPEN_FROM}:00.`));
   await notifyAdmin(o, '💰 Клиент сообщил об оплате — проверь поступление');
 });
@@ -435,17 +438,22 @@ bot.action(/^ccl:(\d+)$/, async ctx => {
   await updateAdminCard(o);
 });
 
-bot.action(/^renew:(\d+)$/, async ctx => {
+bot.action(/^renew:(\d+)(?::(\d+))?$/, async ctx => {
   const o = orderOf(ctx.match[1]);
   if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
   if (!['активна', 'истекла'].includes(o.status)) return ctx.answerCbQuery('Эту подписку уже продлили');
+  const idx = ctx.match[2] != null ? +ctx.match[2] : null;
+  const items = (idx != null ? [o.items[idx]] : o.items).filter(i => i && !i.renewed);
+  if (!items.length) return ctx.answerCbQuery('Эту подписку уже продлили');
   await ctx.answerCbQuery();
-  return createOrder(ctx, o.items, 'продление', { renewOf: o.id });
+  return createOrder(ctx, items, 'продление', { renewOf: o.id });
 });
 
 /* ═══════════════ АДМИНКА ═══════════════ */
 const STATUS_ICON = { 'ждёт оплаты':'⏳', 'оплата заявлена':'💰', 'оплачен':'✅', 'оформляется':'⚙️',
-                      'активна':'🟢', 'отменён':'❌', 'истекла':'⚪️', 'продлена':'🔁' };
+                      'активна':'🟢', 'отменён':'❌', 'истекла':'⚪️', 'продлена':'🔁', 'возврат':'↩️' };
+const itemEnd = (o, i) => i.endsAt || o.endsAt || 0;              // у старых заказов дата одна на весь заказ
+const addMonths = (from, m) => { const d = new Date(from); d.setMonth(d.getMonth() + m); return d.getTime(); };
 function adminCard(o) {
   const who = db.users[o.uid] ? clientLink(o.uid) : esc(o.user || o.uid);
   return `<b>Заказ №${o.id}</b> · ${STATUS_ICON[o.status] || ''} ${esc(o.status)}\n` +
@@ -456,11 +464,12 @@ function adminCard(o) {
     (o.usedBonus > 0 ? `Бонусами: −${money(o.usedBonus)}\n` : '') +
     `К оплате: <b>${money(o.due)}</b>` + (o.method === 'crypto' ? ` (${usdt(o.due)} USDT)` : '') +
     (o.method === 'card' || o.method === 'wallet' ? `\nМетка в ЮMoney: lavka-${o.id}` : '') +
-    (o.endsAt ? `\nДействует до: ${fmtDate(o.endsAt)}` : '');
+    (o.endsAt ? '\nДействует до: ' + (o.items.length > 1 ? o.items.map(i => `${esc(i.name)} — ${fmtDate(itemEnd(o, i))}`).join(', ') : fmtDate(o.endsAt)) : '');
 }
 function adminKb(o) {
-  const done = ['активна', 'отменён', 'истекла', 'продлена'].includes(o.status);
-  const rows = done ? [] : [
+  const done = ['активна', 'отменён', 'истекла', 'продлена', 'возврат'].includes(o.status);
+  const rows = done ? (['активна', 'истекла', 'продлена'].includes(o.status) && o.due > 0
+    ? [[Markup.button.callback('↩️ Оформить возврат', `rf:${o.id}`)]] : []) : [
     [Markup.button.callback('💰 Оплачено', `st:${o.id}:оплачен`), Markup.button.callback('⚙️ Оформляю', `st:${o.id}:оформляется`)],
     [Markup.button.callback('✅ Готово', `st:${o.id}:активна`),  Markup.button.callback('❌ Отменить', `st:${o.id}:отменён`)]
   ];
@@ -486,18 +495,22 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
   const o = orderOf(ctx.match[1]), status = ctx.match[2];
   if (!o) return ctx.answerCbQuery('Заказ не найден');
-  if (['отменён', 'активна', 'истекла', 'продлена'].includes(o.status)) return ctx.answerCbQuery('Заказ уже закрыт');
+  if (['отменён', 'активна', 'истекла', 'продлена', 'возврат'].includes(o.status)) return ctx.answerCbQuery('Заказ уже закрыт');
   if (o.status === status) return ctx.answerCbQuery('Уже стоит этот статус');
 
   o.status = status; o['at_' + status] = Date.now();
   if (status === 'отменён') { returnBonus(o); revokeReferral(o); }
   if (status === 'активна') {
     o.cost = sumBy(o.items, costOf);                                 // фиксируем закупку на момент выполнения
-    const months = Math.max(...o.items.map(i => i.months));
     const prev = o.renewOf ? orderOf(o.renewOf) : null;
-    const from = Math.max(Date.now(), prev && prev.endsAt ? prev.endsAt : 0);   // продление не съедает оставшиеся дни
-    const d = new Date(from); d.setMonth(d.getMonth() + months); o.endsAt = d.getTime();
-    if (prev && ['активна', 'истекла'].includes(prev.status)) { prev.status = 'продлена'; }
+    for (const i of o.items) {                                       // у каждой подписки свой срок
+      const pi = prev ? prev.items.find(x => x.id === i.id && !x.renewed) : null;
+      const from = Math.max(Date.now(), pi ? itemEnd(prev, pi) : 0); // продление не съедает оставшиеся дни
+      i.endsAt = addMonths(from, i.months);
+      if (pi) pi.renewed = true;
+    }
+    o.endsAt = Math.max(...o.items.map(i => i.endsAt));
+    if (prev && ['активна', 'истекла'].includes(prev.status) && prev.items.every(x => x.renewed)) prev.status = 'продлена';
   }
   save();
   await ctx.answerCbQuery('Статус: ' + status);
@@ -507,7 +520,9 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   const note = {
     'оплачен':     'Оплата получена. Берём в работу — если для оформления что-то понадобится, напишем сюда.',
     'оформляется': 'Оформляем прямо сейчас. Будьте, пожалуйста, на связи — может понадобиться код подтверждения.',
-    'активна':     `Готово! Подписка активна до <b>${o.endsAt ? fmtDate(o.endsAt) : ''}</b>.\n\n` +
+    'активна':     'Готово! ' + (o.items.length > 1
+                     ? 'Подписки активны:\n' + o.items.map(i => `• ${esc(i.name)} — до <b>${fmtDate(i.endsAt)}</b>`).join('\n') + '\n\n'
+                     : `Подписка активна до <b>${fmtDate(o.endsAt)}</b>.\n\n`) +
                    'Если передавали пароль — смените его прямо сейчас и выйдите со всех устройств. ' +
                    'Не меняйте страну в настройках аккаунта и не делитесь им с другими — так сервисы не блокируют.\n\n' +
                    'За три дня до конца напомним про продление. Всё ваши подписки — в разделе «Профиль».',
@@ -516,6 +531,26 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   }[status];
   if (note) (status === 'активна' ? sendPic : (id, _p, t, e) => send(id, t, e))(o.uid, picOf(o), `<b>Заказ №${o.id}</b>\n\n${note}`,
     status === 'активна' ? Markup.inlineKeyboard([[Markup.button.callback('👤 Профиль', 'scr:profile')]]) : {});
+});
+
+bot.action(/^rf:(\d+)$/, async ctx => {
+  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.status === 'возврат') return ctx.answerCbQuery('Уже оформлен');
+  await ctx.answerCbQuery();
+  return ctx.reply(`Точно оформить возврат по заказу №${o.id} на ${money(o.due)}? Бонус пригласившего спишется, заказ уйдёт из выручки.`,
+    Markup.inlineKeyboard([[Markup.button.callback('✅ Да, возврат', `rfok:${o.id}`), Markup.button.callback('Нет', 'adm:noop')]]));
+});
+bot.action(/^rfok:(\d+)$/, async ctx => {
+  if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
+  const o = orderOf(ctx.match[1]);
+  if (!o || o.status === 'возврат') return ctx.answerCbQuery('Уже оформлен');
+  o.status = 'возврат'; o.at_возврат = Date.now(); revokeReferral(o); returnBonus(o); save();
+  await ctx.answerCbQuery('Возврат оформлен');
+  try { await ctx.editMessageText(`↩️ Возврат по заказу №${o.id} оформлен. Не забудь вернуть ${money(o.due)} клиенту тем же способом.`); } catch (_) {}
+  await updateAdminCard(o);
+  send(o.uid, `<b>Заказ №${o.id}</b>\n\nОформили возврат. Деньги вернём тем же способом, которым вы платили.` +
+    (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : ''));
 });
 
 bot.action(/^dm:(\d+)$/, async ctx => {
@@ -860,6 +895,31 @@ bot.command('cost', ctx => {
   save(); return show(ctx, scrCosts());
 });
 
+/* ручной заказ: приз розыгрыша или оплата мимо бота
+   /neworder @ник claude          — оплачен, 1 месяц
+   /neworder 123456789 gpt 1 приз — приз розыгрыша, сумма 0 */
+bot.command('neworder', async ctx => {
+  if (!isAdmin(ctx)) return;
+  const [, who, gid, m, kind] = ctx.message.text.split(/\s+/);
+  const q = (who || '').replace('@', '').toLowerCase();
+  const uid = /^\d+$/.test(q) ? +q : +(Object.entries(db.users).find(([, u]) => (u.username || '').toLowerCase() === q) || [])[0];
+  const g = G(gid || '');
+  if (!uid || !db.users[uid] || !g) return ctx.replyWithHTML(
+    'Напиши так:\n<code>/neworder @ник claude</code> — заказ оплачен мимо бота\n<code>/neworder @ник gpt 1 приз</code> — приз розыгрыша (сумма 0)\n\n' +
+    'Человек должен хотя бы раз запустить бота. Товары: ' + GOODS.map(x => '<code>' + x.id + '</code>').join(', '));
+  const months = PRICE.termsOf(g).some(t => t.months === +m) ? +m : PRICE.termsOf(g)[0].months;
+  const prize = /приз|розыгр/i.test(kind || m || '');
+  const price = PRICE.priceFor(g, months);
+  const o = { id: ++db.seq, uid, items: [{ id: g.id, name: g.name, months, qty: 1, price }], total: price,
+              base: prize ? 0 : price, due: prize ? 0 : price, usedBonus: 0, method: prize ? 'приз' : 'вручную',
+              status: 'оплачен', at_оплачен: Date.now(), created: Date.now(), source: prize ? 'розыгрыш' : 'вручную' };
+  db.orders.push(o); save();
+  await notifyAdmin(o, prize ? '🎁 Приз розыгрыша' : '✍️ Ручной заказ');
+  send(uid, prize
+    ? `🎉 <b>Вы выиграли ${esc(g.name)}!</b>\n\nЗаказ №${o.id}. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID аккаунта (Settings → Account).' : 'почту аккаунта, пароль попросим позже.')
+    : `<b>Заказ №${o.id}</b> — ${esc(g.name)}, оплата получена. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID аккаунта.' : 'почту аккаунта.'));
+});
+
 bot.command('spend', ctx => {
   if (!isAdmin(ctx)) return;
   const parts = ctx.message.text.split(/\s+/).slice(1);
@@ -955,15 +1015,16 @@ async function tick() {
     if (o.status === 'активна' && o.endsAt && o.endsAt < now) { o.status = 'истекла'; changed = true; }
 
     // напоминание о продлении за 3 дня, только днём
-    if (o.status === 'активна' && o.endsAt && !o.reminded && o.endsAt - now < 3 * DAY && work) {
-      o.reminded = true; changed = true;
-      const names = o.items.map(i => esc(i.name)).join(', ');
-      sendPic(o.uid, picOf(o), `<b>Напоминание</b>\n\n${names} — до ${fmtDate(o.endsAt)}.\n\n` +
+    if (o.status === 'активна' && o.endsAt && work) o.items.forEach((i, idx) => {
+      const end = itemEnd(o, i);
+      if (i.reminded || o.reminded || i.renewed || end - now >= 3 * DAY) return;
+      i.reminded = true; changed = true;
+      sendPic(o.uid, picOf({ items: [i] }), `<b>Напоминание</b>\n\n${esc(i.name)} — до ${fmtDate(end)}.\n\n` +
         'Продлить можно в одно касание: заказ соберётся сам, новый срок добавится к оставшимся дням.\n' +
         'Не нужно — просто ничего не делайте, автосписаний нет.',
-        Markup.inlineKeyboard([[Markup.button.callback('🔄 Продлить', 'renew:' + o.id)]]));
-      send(CONFIG.adminId, `⏰ Напомнил о продлении: /o${o.id} (${names}), до ${fmtDate(o.endsAt)}`);
-    }
+        Markup.inlineKeyboard([[Markup.button.callback('🔄 Продлить', `renew:${o.id}:${idx}`)]]));
+      send(CONFIG.adminId, `⏰ Напомнил о продлении: /o${o.id} (${esc(i.name)}), до ${fmtDate(end)}`);
+    });
 
     // неоплаченный заказ: одно напоминание через 2 часа, отмена через 48
     if (o.status === 'ждёт оплаты') {
@@ -1028,6 +1089,7 @@ bot.telegram.setMyCommands([
   { command: 'u',       description: 'Карточка клиента: /u @ник' },
   { command: 'spend',   description: 'Записать расход: /spend 900 сервер' },
   { command: 'cost',    description: 'Себестоимость: /cost claude 1150' },
+  { command: 'neworder', description: 'Ручной заказ или приз: /neworder @ник gpt 1 приз' },
   { command: 'backup',  description: 'Копия базы' }
 ], { scope: { type: 'chat', chat_id: CONFIG.adminId } }).catch(() => {});
 
