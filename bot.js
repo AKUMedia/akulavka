@@ -298,7 +298,7 @@ async function screenHelp(ctx) {
     '<b>Как это работает</b>\n\n' +
     '1. Открываете магазин и собираете заказ\n' +
     `2. Оплачиваете: банковской картой или кошельком ЮMoney, либо USDT со скидкой ${CAT.cryptoOff}%\n` +
-    '3. Присылаете данные прямо сюда, в чат: для Claude — только ID аккаунта, пароль не нужен. ' +
+    '3. Присылаете данные прямо сюда, в чат: для Claude — только ID аккаунта, для ChatGPT — ключ сессии (бот подскажет, где взять), пароль не нужен. ' +
     'Для остальных — временный пароль, который вы меняете сразу после оформления\n' +
     '4. Обычно оформляем в течение часа. За три дня до конца срока напомним про продление\n\n' +
     '<b>Гарантия.</b> Если подписка перестала работать в оплаченный срок не по вашей вине — ' +
@@ -424,11 +424,14 @@ bot.action(/^paid:(\d+)$/, async ctx => {
   o.status = 'оплата заявлена'; o.claimedAt = Date.now(); save();
   await ctx.answerCbQuery('Принято!');
   const claude = o.items.some(i => G(i.id) && G(i.id).noLogin);
-  const other  = o.items.some(i => !(G(i.id) && G(i.id).noLogin));
+  const gpt    = o.items.some(i => G(i.id) && G(i.id).token);
+  const other  = o.items.some(i => !(G(i.id) && (G(i.id).noLogin || G(i.id).token)));
   await ctx.replyWithHTML(
     `<b>Заказ №${o.id}</b> — спасибо! Проверим поступление и напишем сюда.\n\n` +
     '<b>Пока пришлите данные следующим сообщением:</b>\n' +
-    (claude ? '• для Claude — только ID аккаунта (Settings → Account), пароль и почта не нужны\n' : '') +
+    (claude ? '• <b>Claude</b> — ID организации: claude.ai → Settings → Account, строка Organization ID. Пароль и почта не нужны\n' : '') +
+    (gpt ? '• <b>ChatGPT</b> — ключ сессии, пароль не нужен. Войдите на chatgpt.com, затем в той же вкладке откройте ' +
+           '<code>chatgpt.com/api/auth/session</code> — скопируйте весь текст со страницы и пришлите сюда\n' : '') +
     (other ? '• для остальных сервисов — почту аккаунта. Пароль попросим, когда возьмём заказ в работу, — заранее не присылайте\n' : '') +
     (o.items.some(i => i.qty > 1) ? '• несколько штук одного сервиса — это разные аккаунты: пришлите данные для каждого\n' : '') +
     '\n' + (isOpen() ? 'Обычно оформляем в течение часа.' : `Сейчас закрыто, возьмём в работу с ${OPEN_FROM}:00.`));
@@ -607,7 +610,11 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
     'активна':     'Готово! ' + (o.items.length > 1
                      ? 'Подписки активны:\n' + o.items.map(i => `• ${esc(i.name)} — до <b>${fmtDate(i.endsAt)}</b>`).join('\n') + '\n\n'
                      : `Подписка активна до <b>${fmtDate(o.endsAt)}</b>.\n\n`) +
-                   'Если передавали пароль — смените его прямо сейчас и выйдите со всех устройств. ' +
+                   (o.items.some(i => G(i.id) && G(i.id).token)
+                     ? 'ChatGPT: прямо сейчас откройте Настройки → Безопасность → «Выйти на всех устройствах» — ключ сессии перестанет работать, подписка останется. '
+                     : '') +
+                   (o.items.some(i => !(G(i.id) && (G(i.id).noLogin || G(i.id).token)))
+                     ? 'Если передавали пароль — смените его прямо сейчас и выйдите со всех устройств. ' : '') +
                    'Не меняйте страну в настройках аккаунта и не делитесь им с другими — так сервисы не блокируют.\n\n' +
                    'За три дня до конца напомним про продление. Всё ваши подписки — в разделе «Профиль».',
     'отменён':     'Заказ отменён.' + (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : '') +
@@ -664,6 +671,8 @@ function costOf(item) {
   const set = db.costs[item.id];
   let perMonth;
   if (set != null) perMonth = set;
+  else if (g && item.months === 12 && g.annualUsd) return Math.round(g.annualUsd * CAT.rate * item.qty);   // годовой — своей картой
+  else if (g && g.cost) perMonth = g.cost;                       // закупка у поставщика из каталога
   else if (g && g.usd) perMonth = g.usd * CAT.rate;
   else perMonth = Math.round(item.price / (CAT.markup || 1.46) / item.months);
   return Math.round(perMonth * item.months * item.qty);
@@ -1020,7 +1029,7 @@ bot.command('neworder', async ctx => {
   db.orders.push(o); save();
   await notifyAdmin(o, prize ? '🎁 Приз розыгрыша' : '✍️ Ручной заказ');
   send(uid, prize
-    ? `🎉 <b>Вы выиграли ${esc(g.name)}!</b>\n\nЗаказ №${o.id}. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID аккаунта (Settings → Account).' : 'почту аккаунта, пароль попросим позже.')
+    ? `🎉 <b>Вы выиграли ${esc(g.name)}!</b>\n\nЗаказ №${o.id}. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID организации (Settings → Account → Organization ID).' : g.token ? 'для ChatGPT ключ сессии: войдите на chatgpt.com и откройте chatgpt.com/api/auth/session, скопируйте весь текст.' : 'почту аккаунта, пароль попросим позже.')
     : `<b>Заказ №${o.id}</b> — ${esc(g.name)}, оплата получена. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID аккаунта.' : 'почту аккаунта.'));
 });
 
