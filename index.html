@@ -96,7 +96,7 @@ tailwind.config = { theme: { extend: {
 <body class="font-ui text-paper antialiased min-h-screen flex flex-col">
 
 <!-- ═══════ НАСТРОЙКИ: правишь только этот блок ═══════ -->
-<script src="catalog.js?v=0211a"></script>
+<script src="catalog.js?v=0211b"></script>
 
 <header class="sticky top-0 z-40 bg-ink/85 backdrop-blur-md border-b border-edge">
   <div class="max-w-6xl mx-auto px-5 h-14 sm:h-16 flex items-center justify-between gap-3">
@@ -854,6 +854,7 @@ tailwind.config = { theme: { extend: {
   }
   refFromSite();
 
+  const track = (e, x) => { try { if (typeof TRACK === 'function') TRACK(e, x); } catch (_) {} }; // статистика не должна ломать сайт
   let lastView = null;
   function render() {
     // Telegram дописывает к адресу свой хвост (#tgWebAppData=...) — это не маршрут
@@ -871,7 +872,7 @@ tailwind.config = { theme: { extend: {
     else                         html = viewNotFound();
     app.innerHTML = '<div class="view-in">' + html + '</div>';
     wireLinks(app); drawCalc(); drawDock();
-    if (raw !== lastView) { lastView = raw; TRACK('view', { p: seg[0] || '/', g: seg[0] === 'p' ? seg[1] : undefined }); }
+    if (raw !== lastView) { lastView = raw; track('view', { p: seg[0] || '/', g: seg[0] === 'p' ? seg[1] : undefined }); }
   }
 
   function wireLinks(scope) {
@@ -886,7 +887,7 @@ tailwind.config = { theme: { extend: {
   }
 
   document.addEventListener('click', e => {
-    const lk = e.target.closest('[data-lnk]'); if (lk) TRACK('out', { p: lk.dataset.lnk });
+    const lk = e.target.closest('[data-lnk]'); if (lk) track('out', { p: lk.dataset.lnk });
     const c = e.target.closest('[data-cat]');
     if (c) { activeCat = c.dataset.cat; render(); return; }
     const t = e.target.closest('[data-term]');
@@ -898,13 +899,13 @@ tailwind.config = { theme: { extend: {
     if (e.target.closest('#quizBack'))  { quizStep = Math.max(0,quizStep-1); render(); return; }
     if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
     const pl = e.target.closest('[data-plus]');
-    if (pl) { const g = G(pl.dataset.plus); TRACK('add', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); return; }
+    if (pl) { const g = G(pl.dataset.plus); track('add', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); return; }
     const by = e.target.closest('[data-buy]');
-    if (by) { const g = G(by.dataset.buy); TRACK('buy', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); location.hash = '#/cart'; return; }
-    if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { TRACK('add', { g: location.hash.split('/')[2] }); addToCart(location.hash.split('/')[2], pickedTerm); return; }
+    if (by) { const g = G(by.dataset.buy); track('buy', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); location.hash = '#/cart'; return; }
+    if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { track('add', { g: location.hash.split('/')[2] }); addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
       const items = cartList().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
-      TRACK('checkout', { n: cartTotal() });
+      track('checkout', { n: cartTotal() });
       sentLink = CART_LINK.url(items, refFromSite());
       window.open(sentLink, '_blank', 'noopener');
       cart = {}; syncCart(); render(); window.scrollTo({ top:0 });

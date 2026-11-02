@@ -88,7 +88,7 @@ tailwind.config = { theme: { extend: {
   </div>
 </div>
 
-<script src="catalog.js?v=0211a"></script>
+<script src="catalog.js?v=0211b"></script>
 <script>
 (function () {
   'use strict';
@@ -105,6 +105,7 @@ tailwind.config = { theme: { extend: {
     const h = +new Intl.DateTimeFormat('ru-RU', { hour:'numeric', hourCycle:'h23', timeZone: CONFIG.timeZone || 'Europe/Minsk' }).format(new Date());
     return h >= CONFIG.openFrom && h < CONFIG.openTo;
   };
+  const track = (e, x) => { try { if (typeof TRACK === 'function') TRACK(e, x); } catch (_) {} }; // статистика не должна ломать сайт
   const BOT = 'https://t.me/' + CONFIG.bot;
   /* открыть чат с ботом (или любую t.me-ссылку) и свернуть приложение */
   function toBot(url) {
@@ -132,7 +133,7 @@ tailwind.config = { theme: { extend: {
   function add(id, months) {
     const k = id + ':' + months;
     cart[k] = { id, months, qty: Math.min(9, (cart[k] ? cart[k].qty : 0) + 1) };
-    sync(); toast(G(id)); TRACK('add', { g: id });
+    sync(); toast(G(id)); track('add', { g: id });
     try { TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred('light'); } catch (_) {}
   }
   function setQty(k, v) { if (v <= 0) delete cart[k]; else cart[k].qty = Math.min(9, v); sync(); render(); }
@@ -163,7 +164,7 @@ tailwind.config = { theme: { extend: {
     tab = t; openId = id || null;
     if (t === 'product') months = PRICE.termsOf(G(id))[0].months;
     render(); window.scrollTo({ top: 0 });
-    TRACK('view', { p: t, g: id || undefined });
+    track('view', { p: t, g: id || undefined });
   }
 
   /* ---------- экраны ---------- */
@@ -432,7 +433,7 @@ tailwind.config = { theme: { extend: {
     if (!qty()) return;
     const items = list().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
     const url = CART_LINK.url(items, null);
-    TRACK('checkout', { n: total() });
+    track('checkout', { n: total() });
     cart = {}; sync();
     toBot(url);
   }
@@ -460,7 +461,7 @@ tailwind.config = { theme: { extend: {
       return;
     }
     const b = e.target.closest('[data-bot]');
-    if (b) TRACK('out', { p: 'bot:' + b.dataset.bot });
+    if (b) track('out', { p: 'bot:' + b.dataset.bot });
     if (b) return toBot(BOT + '?start=' + b.dataset.bot);
     const tl = e.target.closest('[data-tg]');
     if (tl) return toBot(tl.dataset.tg);
@@ -478,7 +479,7 @@ tailwind.config = { theme: { extend: {
     });
     TG.onEvent('backButtonClicked', () => go('shop'));
   }
-  sync(); render(); TRACK('view', { p: tab });
+  sync(); render(); track('view', { p: tab });
 })();
 </script>
 </body>
