@@ -6,7 +6,7 @@ const CONFIG = {
   bot      : 'akulavka_bot',
   channel  : 'https://t.me/Alekseii_AI',      // личный канал основателя
   shopChannel: 'https://t.me/AKULavka',       // канал Лавки: новости, розыгрыши
-  site     : 'https://akumedia.github.io/akulavka/',
+  site     : 'https://akulavka.com/',
   timeZone : 'Europe/Minsk',                 // часы работы считаются по этому поясу
   siteLink : 'https://aku-automation.io',
   cardLink : 'https://t.me/Cashinout_bot?start=23610',
