@@ -214,11 +214,11 @@ tailwind.config = { theme: { extend: {
 
   function addToCart(id, months) {
     const key = id + ':' + months;
-    cart[key] = { id, months, qty:(cart[key]?cart[key].qty:0) + 1 };
+    cart[key] = { id, months, qty:Math.min(9, (cart[key]?cart[key].qty:0) + 1) };
     syncCart(); toast(G(id));
   }
   function setQty(key, q) {
-    if (q <= 0) delete cart[key]; else cart[key].qty = q;
+    if (q <= 0) delete cart[key]; else cart[key].qty = Math.min(9, q);
     syncCart(); if (location.hash.startsWith('#/cart')) render();
   }
   function syncCart() {
@@ -292,19 +292,17 @@ tailwind.config = { theme: { extend: {
 
   const FAQ = [
     ['Вы получите доступ к моему аккаунту?',
-     'По Claude и ChatGPT — нет. Claude оформляем по ID вашего аккаунта. Для ChatGPT присылаете ключ сессии — после оформления выходите со всех устройств, и он перестаёт работать. По остальным сервисам доступ нужен только на время оплаты: временный пароль, который вы меняете сразу после активации. Переписку и файлы мы не открываем.'],
+     'По Claude — нет, нужен только Organization ID. По ChatGPT присылаете ключ сессии: он даёт вход в аккаунт, пока вы не нажмёте «Выйти на всех устройствах». Сделайте это сразу после оформления — и ключ перестанет работать. По остальным сервисам доступ нужен только на время оплаты: временный пароль, который вы меняете сразу после активации. Переписку и файлы мы не открываем.'],
     ['Почему нельзя оплатить самому?',
      'Можно, если у вас есть зарубежная карта и время разбираться с проверками сервисов. Мы нужны тем, кто хочет просто получить работающую подписку на свой аккаунт и не думать, почему не прошла оплата.'],
     ['Почему у других дешевле?',
      'Обычно потому, что там общий аккаунт на несколько человек, готовый чужой аккаунт или студенческий промо-тариф. Такие живут до ближайшей проверки. Мы оформляем подписку на ваш личный аккаунт — история и файлы остаются у вас, а на оплаченный срок действует гарантия.'],
     ['Аккаунт могут заблокировать?',
-     'Такое случается: сервисы проверяют, из какой страны вы заходите. Риск сохраняется и после оплаты, поэтому обязательно пользуйтесь корректно настроенным VPN. Если подписка слетит в оплаченный срок не по вашей вине — восстанавливаем за свой счёт либо возвращаем деньги за оставшиеся дни. Блокировка самим сервисом за нарушение его правил (общий доступ, смена страны) гарантией не покрывается.'],
+     'Такое случается: сервисы проверяют, из какой страны вы заходите. Если подписка слетит в оплаченный срок не по вашей вине — восстанавливаем за свой счёт либо возвращаем деньги за оставшиеся дни. Блокировка самим сервисом за нарушение его правил (общий доступ, смена страны) гарантией не покрывается.'],
     ['Как оплатить?',
      'Банковской картой или кошельком через защищённую форму ЮMoney — сумма и номер заказа подставляются сами. Или USDT (сети TRC-20 и BEP-20) со скидкой ' + CONFIG.cryptoOff + '%. Из Беларуси и Казахстана удобнее всего USDT. Способ выбираете в боте после оформления.'],
     ['Подписка продлится сама?',
      'Нет, автосписаний нет. За три дня до окончания бот напомнит, а продлить можно в одно касание — новый срок добавится к оставшимся дням. Не нужно — просто ничего не делайте.'],
-    ['Нужен VPN?',
-     'Для большинства сервисов — да, чтобы открыть сайт и чтобы аккаунт не выглядел подозрительно. Если не пользовались раньше, подскажем варианты.'],
     ['Работаете ночью?',
      'Заявки принимаем круглосуточно, оформляем с ' + CONFIG.openFrom + ':00 до ' + CONFIG.openTo + ':00. Ночной заказ уйдёт в работу утром.']
   ];
@@ -333,7 +331,7 @@ tailwind.config = { theme: { extend: {
         <div class="mt-8 sm:mt-10 grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-end">
           <div>
             <p class="text-faded leading-relaxed max-w-md text-[15px]">
-              Claude оформляем по ID аккаунта — пароль передавать не нужно вообще.
+              Claude оформляем по Organization ID — пароль передавать не нужно вообще.
               Остальные сервисы — на ваш собственный аккаунт, который остаётся только вашим
               вместе со всей перепиской и файлами.
             </p>
@@ -349,7 +347,7 @@ tailwind.config = { theme: { extend: {
               <span class="tech ${open?'text-sage':'text-faded'}">${open?'лавка открыта':'лавка закрыта'}</span>
             </div>
             <p class="text-[15px] leading-relaxed text-faded mb-5">
-              ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заказ можно оставить — возьмём в работу с '+CONFIG.openFrom+':00 по Минску.'}
+              ${open?'Отвечаем сейчас. Обычно оформляем в течение часа.':'Заказ можно оставить — возьмём в работу с '+CONFIG.openFrom+':00 по Москве.'}
             </p>
             <a href="" data-lnk="ask" class="btn btn-line w-full">Задать вопрос</a>
           </div>
@@ -444,7 +442,7 @@ tailwind.config = { theme: { extend: {
       <h2 class="font-display font-bold text-2xl mb-10">Три шага до подписки</h2>
       <div class="grid sm:grid-cols-3 gap-8">
         ${[['Выбираете в каталоге','Складываете нужное в корзину и оформляете заказ. Бот сразу покажет сумму и способы оплаты.'],
-           ['Даёте данные','Для Claude — только ID аккаунта, для ChatGPT — ключ сессии, пароль не нужен. Для остальных сервисов — временный пароль, который вы меняете сразу после активации.'],
+           ['Даёте данные','Для Claude — только Organization ID, для ChatGPT — ключ сессии, пароль не нужен. Для остальных сервисов — временный пароль: бот попросит его после оплаты, а вы меняете его сразу после активации.'],
            ['Пользуетесь','Проверяете, что всё работает. За три дня до конца срока бот напомнит про продление.']
         ].map(([t,d],i)=>`<div>
             <div class="font-display font-extrabold text-2xl text-brass mb-4">${i+1}</div>
@@ -613,7 +611,7 @@ tailwind.config = { theme: { extend: {
 
   let pickedTerm = 1;
   function viewProduct(id) {
-    const g = G(id); if (!g) return viewNotFound();
+    const g = G(id); if (!g || g.hidden) return viewNotFound();
     const isExt = !!g.external;
     const p = isExt ? 0 : priceFor(g, pickedTerm);
     const t = term(pickedTerm, g);
@@ -641,11 +639,11 @@ tailwind.config = { theme: { extend: {
           <div class="grid sm:grid-cols-2 gap-4 max-w-lg">
             <div class="bg-board border border-edge rounded-2xl p-5">
               <h3 class="font-display font-bold text-[15px] mb-2">Если подписка слетит</h3>
-              <p class="text-faded text-sm leading-relaxed">Восстанавливаем за свой счёт. Не выходит — возвращаем деньги за неиспользованные дни.</p></div>
+              <p class="text-faded text-sm leading-relaxed">Не активировалась или слетела оплата — восстановим или вернём деньги за оставшиеся дни. Блокировку аккаунта самим сервисом не покрываем.</p></div>
             <div class="bg-board border rounded-2xl p-5" style="border-color:${g.noLogin?g.tint+'55':'#2E2822'}">
               <h3 class="font-display font-bold text-[15px] mb-2">${g.noLogin?'Пароль не нужен':'Аккаунт остаётся вашим'}</h3>
               <p class="text-faded text-sm leading-relaxed">${g.noLogin
-                ?'Оформляем по ID вашего аккаунта. Вы не передаёте ни почту с паролем, ни коды входа — только номер аккаунта.'
+                ?'Оформляем по ID вашего аккаунта. Вы не передаёте ни почту с паролем, ни коды входа — только Organization ID (claude.ai → Settings → Account).'
                 :'Оформляем на ваш логин. После активации меняете пароль — доступа у нас не остаётся.'}</p></div>
           </div>`}
         </div>
@@ -665,7 +663,7 @@ tailwind.config = { theme: { extend: {
               <span class="font-display font-black text-3xl sm:text-4xl">${money(p)}</span>
               ${t.off?`<span class="text-faded text-sm line-through">${money(base(g)*t.months)}</span>`:''}</div>
             <p class="text-sage text-sm mb-1">криптой ${money(crypto(p))}</p>
-            <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · ${g.noLogin?'по ID аккаунта':'на ваш аккаунт'}</p>
+            <p class="text-faded text-sm mb-6">за ${t.label.toLowerCase()} · ${g.noLogin?'по Organization ID':'на ваш аккаунт'}</p>
             ${t.annual?`<p class="text-sm leading-relaxed bg-brass/10 rounded-xl px-4 py-3 -mt-3 mb-6">Официальный годовой план сервиса: одна оплата на 12 месяцев, без продлений. Экономия <b>${money(base(g)*12-p)}</b> против помесячной оплаты.</p>`:''}
             <button id="addBtn" class="w-full btn btn-main">Добавить в корзину</button>
             <a href="" data-lnk="ask" class="block text-center text-sm text-faded hover:text-paper transition-colors mt-4">Сначала спросить</a>
@@ -709,7 +707,7 @@ tailwind.config = { theme: { extend: {
           <div class="flex items-center gap-3 mt-3">
             <button data-qty="${i.key}" data-v="${i.qty-1}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">−</button>
             <span class="text-sm w-4 text-center">${i.qty}</span>
-            <button data-qty="${i.key}" data-v="${i.qty+1}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">+</button>
+            <button data-qty="${i.key}" data-v="${Math.min(9, i.qty+1)}" class="w-8 h-8 rounded-lg border border-edge2 hover:border-brass transition-colors text-faded hover:text-paper">+</button>
             <button data-qty="${i.key}" data-v="0" class="text-sm text-faded hover:text-rust transition-colors ml-2">Убрать</button>
           </div></div>
         <div class="font-display font-bold text-[14px] sm:text-[15px] shrink-0 whitespace-nowrap">${money(line)}</div></div>`;
@@ -739,7 +737,7 @@ tailwind.config = { theme: { extend: {
       <div class="space-y-10 mb-16">
         ${[['Выбираете и оформляете','Складываете нужное в корзину и нажимаете «Оформить». Открывается наш бот в Telegram, он сразу показывает итоговую сумму — ту же, что на сайте, скрытых комиссий нет.'],
            ['Оплачиваете удобным способом','Банковской картой или кошельком через форму ЮMoney, либо USDT со скидкой '+CONFIG.cryptoOff+'%. Из Беларуси и Казахстана удобнее USDT.'],
-           ['Даёте данные для оформления','<b class="text-paper">Claude</b> — присылаете только ID аккаунта, пароль не нужен вообще.<br><b class="text-paper">ChatGPT</b> — присылаете ключ сессии, бот покажет, где его взять. После оформления выходите со всех устройств — ключ перестаёт работать.<br><b class="text-paper">Остальные сервисы</b> — регистрируете аккаунт на свою почту, ставите временный пароль и присылаете его.'],
+           ['Даёте данные для оформления','<b class="text-paper">Claude</b> — присылаете только Organization ID (claude.ai → Settings → Account), пароль не нужен вообще.<br><b class="text-paper">ChatGPT</b> — присылаете ключ сессии, бот покажет, где его взять. После оформления выходите со всех устройств — ключ перестаёт работать.<br><b class="text-paper">Остальные сервисы</b> — регистрируете аккаунт на свою почту и присылаете её. Временный пароль бот попросит после оплаты — заранее не присылайте.'],
            ['Проверяете','Убеждаетесь, что подписка активна. Если передавали пароль — меняете его обратно на свой, и доступа у нас не остаётся.'],
            ['Продлеваете, если нужно','За три дня до окончания мы напишем. Автосписания нет: не ответите — просто ничего не произойдёт.']
         ].map(([t,d],i)=>`<div class="flex gap-5">
@@ -752,7 +750,7 @@ tailwind.config = { theme: { extend: {
         <div class="space-y-4 text-faded text-[15px] leading-relaxed">
           <p><span class="text-paper font-semibold">Что мы делаем.</span> Подписка не активировалась или слетела в течение оплаченного месяца — восстанавливаем за свой счёт. Если восстановить не выходит, возвращаем деньги за неиспользованные дни, пропорционально остатку.</p>
           <p><span class="text-paper font-semibold">Полный возврат.</span> Если мы не смогли оформить подписку вообще — возвращаем всю сумму тем же способом, которым вы платили, в течение суток.</p>
-          <p><span class="text-paper font-semibold">Чего мы не можем.</span> Повлиять на решения самих сервисов. Сервисы проверяют, из какой страны вы заходите, и могут ограничить аккаунт — поэтому обязательно пользуйтесь корректно настроенным VPN. Также мы не возвращаем деньги за месяц, которым вы уже пользовались, и не чиним доступ, если вы сменили данные аккаунта и не сказали нам.</p>
+          <p><span class="text-paper font-semibold">Чего мы не можем.</span> Повлиять на решения самих сервисов. Сервисы сами решают, ограничивать ли аккаунт, — блокировку аккаунта самим сервисом гарантия не покрывает. Также мы не возвращаем деньги за месяц, которым вы уже пользовались, и не чиним доступ, если вы сменили данные аккаунта и не сказали нам.</p>
         </div></div>
       <h2 class="font-display font-bold text-xl mb-4">Вопросы</h2>
       ${faqBlock(FAQ)}
@@ -792,7 +790,7 @@ tailwind.config = { theme: { extend: {
       <div class="space-y-8 text-[15px] leading-relaxed text-faded">
         ${[['Предмет','AKU Лавка оказывает услугу по оформлению оплаты подписки на аккаунт заказчика в стороннем сервисе. Аккаунты, логины, пароли и общий доступ не продаются. Права на сами сервисы принадлежат их владельцам.'],
            ['Как оформляется заказ','Заказ собирается на сайте или в Telegram-приложении и оформляется в боте @' + CONFIG.bot + '. Заказ считается принятым после того, как бот присвоил ему номер. Стоимость в заказе рассчитывается ботом по действующему каталогу; если цена на сайте и в боте различается, действует цена в боте.'],
-           ['Порядок оказания услуги','Claude оформляется по идентификатору аккаунта, ChatGPT — по ключу сессии; пароль не передаётся. После оформления ChatGPT заказчик выходит из всех сеансов, чтобы ключ перестал действовать. Для остальных сервисов заказчик регистрирует аккаунт на свою почту и передаёт временный доступ для проведения платежа, после чего обязан сменить пароль. Обычно оформление занимает до часа в часы работы по Минску (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00). Заказы, оформленные ночью, берутся в работу утром.'],
+           ['Порядок оказания услуги','Claude оформляется по идентификатору организации (Organization ID), ChatGPT — по ключу сессии; пароль не передаётся. После оформления ChatGPT заказчик выходит из всех сеансов, чтобы ключ перестал действовать. Для остальных сервисов заказчик регистрирует аккаунт на свою почту и передаёт временный доступ для проведения платежа, после чего обязан сменить пароль. Обычно оформление занимает до часа в часы работы по московскому времени (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00). Заказы, оформленные ночью, берутся в работу утром.'],
            ['Стоимость и оплата','Оплата производится до оказания услуги: банковской картой или кошельком через платёжную форму ЮMoney либо криптовалютой USDT (сети TRC-20 и BEP-20). При оплате криптовалютой действует скидка ' + CONFIG.cryptoOff + '%. Заказ принимается в работу после подтверждения поступления средств исполнителем. Цены могут меняться вслед за курсом валют и тарифами сервисов; уже подтверждённый заказ пересчёту не подлежит. Подписка на 12 месяцев оформляется только там, где у сервиса есть официальный годовой план, и оплачивается сервису одним платежом.'],
            ['Возврат','Если услуга не оказана — возврат полной суммы в течение суток тем же способом оплаты. Если подписка перестала работать в течение оплаченного периода не по вине заказчика — восстановление за счёт исполнителя либо возврат за неиспользованные дни. Гарантия не распространяется на блокировку аккаунта самим сервисом за нарушение его правил: передачу доступа третьим лицам, смену страны в настройках, вход через подозрительные сети. Возврат за использованный период не производится. Сумма, оплаченная бонусами, возвращается на бонусный баланс, а не деньгами.'],
            ['Реферальная программа','Каждый пользователь бота получает персональную ссылку. За первую оплаченную покупку приглашённого начисляется ' + CONFIG.refFirst + '% её суммы, за последующие — ' + CONFIG.refNext + '%. Бонус начисляется после выполнения заказа приглашённого и автоматически списывается со следующего заказа; к оплате всегда остаётся не менее 100 ₽. Бонусы не выводятся деньгами и не передаются другим пользователям. Приглашённым считается только тот, кто перешёл по ссылке до своей первой покупки; пригласить самого себя нельзя. При отмене или возврате заказа начисленный за него бонус аннулируется. Исполнитель вправе отменить бонусы, полученные с нарушением этих правил.'],
@@ -803,7 +801,7 @@ tailwind.config = { theme: { extend: {
         ].map(([t,d],i)=>`<div class="pb-8 border-b border-edge">
             <h2 class="font-display font-bold text-[16px] text-paper mb-3">${i+1}. ${t}</h2><p>${d}</p></div>`).join('')}
       </div>
-      <p class="text-faded text-xs leading-relaxed mt-10">AKU Лавка — независимый сервис. Не связан с Anthropic, OpenAI, Google, Spotify, Midjourney и другими упомянутыми брендами. Названия используются исключительно для описания услуг.</p>
+      <p class="text-faded text-xs leading-relaxed mt-10">AKU Лавка — независимый сервис. Не связан с Anthropic, OpenAI, Google, Midjourney и другими упомянутыми брендами. Названия используются исключительно для описания услуг.</p>
     </section>`;
   }
 
@@ -856,6 +854,7 @@ tailwind.config = { theme: { extend: {
   }
   refFromSite();
 
+  let lastView = null;
   function render() {
     // Telegram дописывает к адресу свой хвост (#tgWebAppData=...) — это не маршрут
     const raw = /^#?tgWebApp/i.test(location.hash.replace(/^#/,'')) ? '' : location.hash;
@@ -872,6 +871,7 @@ tailwind.config = { theme: { extend: {
     else                         html = viewNotFound();
     app.innerHTML = '<div class="view-in">' + html + '</div>';
     wireLinks(app); drawCalc(); drawDock();
+    if (raw !== lastView) { lastView = raw; TRACK('view', { p: seg[0] || '/', g: seg[0] === 'p' ? seg[1] : undefined }); }
   }
 
   function wireLinks(scope) {
@@ -886,6 +886,7 @@ tailwind.config = { theme: { extend: {
   }
 
   document.addEventListener('click', e => {
+    const lk = e.target.closest('[data-lnk]'); if (lk) TRACK('out', { p: lk.dataset.lnk });
     const c = e.target.closest('[data-cat]');
     if (c) { activeCat = c.dataset.cat; render(); return; }
     const t = e.target.closest('[data-term]');
@@ -897,12 +898,13 @@ tailwind.config = { theme: { extend: {
     if (e.target.closest('#quizBack'))  { quizStep = Math.max(0,quizStep-1); render(); return; }
     if (e.target.closest('#quizReset')) { quizStep = 0; quizAns = []; render(); return; }
     const pl = e.target.closest('[data-plus]');
-    if (pl) { const g = G(pl.dataset.plus); addToCart(g.id, termsOf(g)[0].months); return; }
+    if (pl) { const g = G(pl.dataset.plus); TRACK('add', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); return; }
     const by = e.target.closest('[data-buy]');
-    if (by) { const g = G(by.dataset.buy); addToCart(g.id, termsOf(g)[0].months); location.hash = '#/cart'; return; }
-    if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { addToCart(location.hash.split('/')[2], pickedTerm); return; }
+    if (by) { const g = G(by.dataset.buy); TRACK('buy', { g: g.id }); addToCart(g.id, termsOf(g)[0].months); location.hash = '#/cart'; return; }
+    if (e.target.closest('#addBtn') || e.target.closest('#dockAdd')) { TRACK('add', { g: location.hash.split('/')[2] }); addToCart(location.hash.split('/')[2], pickedTerm); return; }
     if (e.target.closest('#checkout')) {
       const items = cartList().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
+      TRACK('checkout', { n: cartTotal() });
       sentLink = CART_LINK.url(items, refFromSite());
       window.open(sentLink, '_blank', 'noopener');
       cart = {}; syncCart(); render(); window.scrollTo({ top:0 });

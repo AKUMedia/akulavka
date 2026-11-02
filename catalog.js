@@ -7,6 +7,7 @@ const CONFIG = {
   channel  : 'https://t.me/Alekseii_AI',      // личный канал основателя
   shopChannel: 'https://t.me/AKULavka',       // канал Лавки: новости, розыгрыши
   site     : 'https://akulavka.com/',
+  api      : 'https://api.akulavka.com/',     // приём статистики сайта (сервер бота)
   timeZone : 'Europe/Minsk',                 // часы работы считаются по этому поясу
   siteLink : 'https://aku-automation.io',
   cardLink : 'https://t.me/Cashinout_bot?start=23610',
@@ -192,5 +193,35 @@ const CART_LINK = {
   },
   url(items, ref) { return 'https://t.me/' + CONFIG.bot + '?start=' + CART_LINK.encode(items, ref); }
 };
+
+
+/* Статистика посещений: сайт и Mini App шлют события на сервер бота (CONFIG.api).
+   Без кук и личных данных — только случайный номер браузера. Смотреть: /admin → 🌐 Сайт */
+const TRACK = (function () {
+  if (typeof window === 'undefined' || !CONFIG.api) return function () {};
+  const a = /app\.html/.test(location.pathname) ? 'app' : 'site';
+  let vid;
+  try { vid = localStorage.getItem('aku-vid');
+        if (!vid) { vid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('aku-vid', vid); } }
+  catch (_) { vid = 'x' + Math.random().toString(36).slice(2, 14); }
+  let src = '';
+  try {
+    const q = new URLSearchParams(location.search);
+    src = q.get('s') || q.get('utm_source') || '';
+    if (!src && document.referrer) { const h = new URL(document.referrer).hostname.replace(/^www\./, '');
+      if (!/akulavka\.com$/.test(h)) src = h; }
+  } catch (_) {}
+  let ns = true;
+  try { ns = !sessionStorage.getItem('aku-ses'); sessionStorage.setItem('aku-ses', '1'); } catch (_) {}
+  const m = (window.matchMedia && matchMedia('(pointer:coarse)').matches) ? 1 : 0;
+  return function (e, x) {
+    const body = JSON.stringify(Object.assign({ v: vid, e: e, a: a, m: m }, x || {}, ns ? { ns: 1, u: src } : {}));
+    ns = false;
+    try {
+      if (!(navigator.sendBeacon && navigator.sendBeacon(CONFIG.api + 't', body)))
+        fetch(CONFIG.api + 't', { method: 'POST', body: body, keepalive: true, mode: 'no-cors' });
+    } catch (_) {}
+  };
+})();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = { CONFIG, ICONS, PRICE, CART_LINK };

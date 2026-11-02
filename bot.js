@@ -22,6 +22,7 @@ const fs = require('fs');
 const path = require('path');
 const { Telegraf, Markup } = require('telegraf');
 const { CONFIG: CAT, PRICE, CART_LINK } = require('./catalog.js');
+const SITE = require('./stats.js');   // статистика сайта и Mini App
 
 function readToken() {
   if (process.env.BOT_TOKEN) return process.env.BOT_TOKEN.trim();
@@ -39,10 +40,15 @@ const ON_REQ    = CAT.goods.filter(g => g.hidden).map(g => g.name);
 
 /* ---------- база: один JSON-файл ---------- */
 const DB_FILE = path.join(__dirname, 'data.json');
+let restoredFrom = null;
 function load() {
   if (!fs.existsSync(DB_FILE)) return { orders: [], users: {}, seq: 1000 };
   try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
   catch (e) {
+    // пробуем самую свежую почасовую копию
+    const baks = fs.readdirSync(__dirname).filter(f => f.startsWith('data.json.bak-'))
+      .map(f => path.join(__dirname, f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+    for (const b of baks) { try { const d = JSON.parse(fs.readFileSync(b, 'utf8')); console.error('data.json повреждён — загружена копия', b); restoredFrom = b; return d; } catch (_) {} }
     // файл есть, но испорчен — не стартуем с пустой базой, иначе затрём все заказы
     console.error('data.json повреждён, бот остановлен. Восстановите файл из бэкапа.', e.message);
     process.exit(1);
@@ -52,6 +58,10 @@ function save() {
   const tmp = DB_FILE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(db, null, 1));
   fs.renameSync(tmp, DB_FILE);
+  if (Date.now() - (save.t || 0) > 60 * 60e3) {                    // раз в час — копия (хранятся 24 штуки по часам)
+    save.t = Date.now();
+    try { fs.copyFileSync(DB_FILE, DB_FILE + '.bak-' + String(new Date().getHours()).padStart(2, '0')); } catch (_) {}
+  }
 }
 const db = load();
 db.orders = db.orders || []; db.users = db.users || {}; db.seq = db.seq || 1000;
@@ -298,14 +308,14 @@ async function screenHelp(ctx) {
     '<b>Как это работает</b>\n\n' +
     '1. Открываете магазин и собираете заказ\n' +
     `2. Оплачиваете: банковской картой или кошельком ЮMoney, либо USDT со скидкой ${CAT.cryptoOff}%\n` +
-    '3. Присылаете данные прямо сюда, в чат: для Claude — только ID аккаунта, для ChatGPT — ключ сессии (бот подскажет, где взять), пароль не нужен. ' +
-    'Для остальных — временный пароль, который вы меняете сразу после оформления\n' +
+    '3. Присылаете данные прямо сюда, в чат: для Claude — только Organization ID, для ChatGPT — ключ сессии (бот подскажет, где взять), пароль не нужен. ' +
+    'Для остальных — почту, а временный пароль попросим после оплаты (заранее не присылайте)\n' +
     '4. Обычно оформляем в течение часа. За три дня до конца срока напомним про продление\n\n' +
     '<b>Гарантия.</b> Если подписка перестала работать в оплаченный срок не по вашей вине — ' +
     'восстановим за свой счёт или вернём деньги за оставшиеся дни. ' +
     'Блокировка аккаунта самим сервисом за нарушение его правил (общий доступ, смена страны и т. п.) гарантией не покрывается.\n\n' +
     (ON_REQ.length ? '<b>Под заказ:</b> ' + ON_REQ.join(', ') + '. Нужного нет в списке — просто напишите сюда.\n\n' : '') +
-    `Работаем с ${OPEN_FROM}:00 до ${OPEN_TO}:00 по Минску. Заказы ночью берём в работу утром.`,
+    `Работаем с ${OPEN_FROM}:00 до ${OPEN_TO}:00 по Москве. Заказы ночью берём в работу утром.`,
     Markup.inlineKeyboard([
       [Markup.button.url('📄 Условия и возврат', SHOP_URL + '#/terms')],
       [Markup.button.url('📣 Канал Лавки', CHANNEL), Markup.button.url('🧑‍💻 Канал основателя', FOUNDER)],
@@ -333,6 +343,8 @@ async function createOrder(ctx, rawItems, source, extra = {}) {
     return { id: g.id, name: g.name, months, qty: Math.max(1, Math.min(9, +i.qty || 1)), price: PRICE.priceFor(g, months) };
   }).filter(Boolean);
   if (!items.length) return ctx.reply('Корзина пустая — откройте магазин и выберите подписку.');
+  delete u.awaitReview;                                            // новый заказ — больше не ждём текст отзыва
+  if (items.length < rawItems.length) ctx.reply('Часть позиций сейчас недоступна для заказа — их убрали из корзины. Если они нужны, напишите сюда.').catch(() => {});
 
   // повторный переход по той же ссылке не плодит заказы
   const dup = db.orders.find(o => o.uid === uid && o.status === 'ждёт оплаты' &&
@@ -404,7 +416,7 @@ bot.action(/^pay:(card|wallet|crypto):(\d+)$/, async ctx => {
     rows.push([Markup.button.url('👛 Оплатить из ЮMoney', quickpay(o, 'PC'))]);
   } else {
     text += `Сумма: <b>${usdt(o.due)} USDT</b>\n\n` +
-      `<b>TRC-20</b> (Tron, комиссия копеечная):\n<code>${CONFIG.usdtTrc}</code>\n\n` +
+      `<b>TRC-20</b> (Tron):\n<code>${CONFIG.usdtTrc}</code>\n\n` +
       `<b>BEP-20</b> (BNB Smart Chain):\n<code>${CONFIG.usdtBep}</code>\n\n` +
       '⚠️ Сеть и адрес должны совпадать, иначе деньги не дойдут. ' +
       'Сумма должна прийти полностью — комиссию сети оплачивает отправитель.';
@@ -479,7 +491,7 @@ bot.action(/^rvask:(\d+)$/, async ctx => {
 });
 bot.action(/^rv:(\d+):([1-5])$/, async ctx => {
   const o = orderOf(ctx.match[1]), rating = +ctx.match[2];
-  if (!o || o.uid !== ctx.from.id) return ctx.answerCbQuery('Заказ не найден');
+  if (!o || o.uid !== ctx.from.id || !['активна', 'истекла', 'продлена'].includes(o.status)) return ctx.answerCbQuery('Заказ не найден');
   if (reviewed(o)) return ctx.answerCbQuery('Отзыв уже есть, спасибо!');
   await ctx.answerCbQuery(stars(rating));
   const u = touch(ctx); u.awaitReview = { orderId: o.id, rating, at: Date.now() }; save();
@@ -582,7 +594,9 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
   if (ctx.from.id !== CONFIG.adminId) return ctx.answerCbQuery('Не для вас');
   const o = orderOf(ctx.match[1]), status = ctx.match[2];
   if (!o) return ctx.answerCbQuery('Заказ не найден');
-  if (['отменён', 'активна', 'истекла', 'продлена', 'возврат'].includes(o.status)) return ctx.answerCbQuery('Заказ уже закрыт');
+  if (['отменён', 'активна', 'истекла', 'продлена', 'возврат'].includes(o.status) && !(o.autoCancelled && o.status === 'отменён' && status !== 'отменён'))
+    return ctx.answerCbQuery('Заказ уже закрыт');
+  if (o.autoCancelled && o.status === 'отменён') o.autoCancelled = false;  // заказ отменился сам, но клиент всё-таки оплатил
   if (o.status === status) return ctx.answerCbQuery('Уже стоит этот статус');
 
   o.status = status; o['at_' + status] = Date.now();
@@ -592,7 +606,9 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
     const prev = o.renewOf ? orderOf(o.renewOf) : null;
     for (const i of o.items) {                                       // у каждой подписки свой срок
       const pi = prev ? prev.items.find(x => x.id === i.id && !x.renewed) : null;
-      const from = Math.max(Date.now(), pi ? itemEnd(prev, pi) : 0); // продление не съедает оставшиеся дни
+      const lastEnd = Math.max(0, ...db.orders.filter(x => x.uid === o.uid && x !== o && x.status === 'активна')
+        .flatMap(x => x.items.filter(y => y.id === i.id && y.endsAt).map(y => itemEnd(x, y))));
+      const from = Math.max(Date.now(), pi ? itemEnd(prev, pi) : 0, o.renewOf ? lastEnd : 0); // продление не съедает оставшиеся дни
       i.endsAt = addMonths(from, i.months);
       if (pi) pi.renewed = true;
     }
@@ -606,7 +622,7 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
 
   const note = {
     'оплачен':     'Оплата получена. Берём в работу — если для оформления что-то понадобится, напишем сюда.',
-    'оформляется': 'Оформляем прямо сейчас. Будьте, пожалуйста, на связи — может понадобиться код подтверждения.',
+    'оформляется': 'Оформляем прямо сейчас. Будьте, пожалуйста, на связи — если что-то понадобится, напишем сюда.',
     'активна':     'Готово! ' + (o.items.length > 1
                      ? 'Подписки активны:\n' + o.items.map(i => `• ${esc(i.name)} — до <b>${fmtDate(i.endsAt)}</b>`).join('\n') + '\n\n'
                      : `Подписка активна до <b>${fmtDate(o.endsAt)}</b>.\n\n`) +
@@ -615,8 +631,8 @@ bot.action(/^st:(\d+):(.+)$/, async ctx => {
                      : '') +
                    (o.items.some(i => !(G(i.id) && (G(i.id).noLogin || G(i.id).token)))
                      ? 'Если передавали пароль — смените его прямо сейчас и выйдите со всех устройств. ' : '') +
-                   'Не меняйте страну в настройках аккаунта и не делитесь им с другими — так сервисы не блокируют.\n\n' +
-                   'За три дня до конца напомним про продление. Всё ваши подписки — в разделе «Профиль».',
+                   'Не меняйте страну в настройках аккаунта и не делитесь им с другими — это главные причины блокировок.\n\n' +
+                   'За три дня до конца напомним про продление. Все ваши подписки — в разделе «Профиль».',
     'отменён':     'Заказ отменён.' + (o.usedBonus > 0 ? ` Бонусы ${money(o.usedBonus)} вернули на баланс.` : '') +
                    ' Если оплата уже прошла — вернём её тем же способом, напишите сюда.'
   }[status];
@@ -718,7 +734,7 @@ function scrHome() {
     [Markup.button.callback('👥 Клиенты', 'adm:users'), Markup.button.callback('🤝 Рефералы', 'adm:refs')],
     [Markup.button.callback('🛍 Товары', 'adm:goods'), Markup.button.callback('🔁 Продления', 'adm:renew')],
     [Markup.button.callback('💸 Расходы', 'adm:exp'), Markup.button.callback('📣 Рассылка', 'adm:bc')],
-    [Markup.button.callback('⭐ Отзывы', 'adm:reviews')],
+    [Markup.button.callback('🌐 Сайт', 'adm:site'), Markup.button.callback('⭐ Отзывы', 'adm:reviews')],
     [Markup.button.callback('💾 Бэкап', 'adm:backup'), Markup.button.callback('🔄 Обновить', 'adm:home')]
   ]);
   return [text, kb];
@@ -956,7 +972,16 @@ async function bcRun(ctx, seg) {
 
 /* ---------- маршрутизация ---------- */
 const SCREENS = { reviews: scrReviews, home: scrHome, stats: scrStats, money: scrMoney, costs: scrCosts, users: scrUsers,
-                  refs: scrRefs, goods: scrGoods, renew: scrRenew, exp: scrExp, bc: scrBc };
+                  refs: scrRefs, goods: scrGoods, renew: scrRenew, exp: scrExp, bc: scrBc, site: scrSite };
+function scrSite() {
+  const fromWeb = o => o.source === 'сайт / приложение' || o.source === 'приложение';
+  const text = SITE.report({
+    goodsNames: Object.fromEntries(CAT.goods.map(g => [g.id, g.name])), money,
+    ordersBetween: from => { const os = db.orders.filter(o => o.created >= from && fromWeb(o));
+      return { all: os.length, paid: os.filter(isPaid).length }; }
+  });
+  return [text, Markup.inlineKeyboard([[Markup.button.callback('🔄 Обновить', 'adm:site')], back])];
+}
 async function show(ctx, [text, kb]) {
   const extra = { parse_mode: 'HTML', disable_web_page_preview: true, ...kb };
   if (ctx.callbackQuery) {
@@ -969,6 +994,7 @@ async function show(ctx, [text, kb]) {
 bot.command('admin', ctx => isAdmin(ctx) && show(ctx, scrHome()));
 bot.command('stats', ctx => isAdmin(ctx) && show(ctx, scrStats()));
 bot.command('money', ctx => isAdmin(ctx) && show(ctx, scrMoney()));
+bot.command('site', ctx => isAdmin(ctx) && show(ctx, scrSite()));
 
 bot.action(/^adm:(.+)$/, async ctx => {
   if (!isAdmin(ctx)) return ctx.answerCbQuery('Не для вас');
@@ -976,7 +1002,7 @@ bot.action(/^adm:(.+)$/, async ctx => {
   if (k === 'noop') return ctx.answerCbQuery();
   if (k === 'backup') { await ctx.answerCbQuery('Отправляю'); return sendBackup('по запросу'); }
   if (k === 'bccancel') { bcDraft = null; await ctx.answerCbQuery('Отменено'); return show(ctx, scrHome()); }
-  if (k === 'bcgo') { await ctx.answerCbQuery(); try { await ctx.editMessageReplyMarkup(undefined); } catch (_) {} return bcRun(ctx, a); }
+  if (k === 'bcgo') { await ctx.answerCbQuery(); try { await ctx.editMessageReplyMarkup(undefined); } catch (_) {} bcRun(ctx, a).catch(e => console.error('bc:', e.message)); return; }
   await ctx.answerCbQuery();
   if (k === 'orders') return show(ctx, scrOrders(a, +b || 0));
   if (SCREENS[k]) return show(ctx, SCREENS[k]());
@@ -1030,7 +1056,7 @@ bot.command('neworder', async ctx => {
   await notifyAdmin(o, prize ? '🎁 Приз розыгрыша' : '✍️ Ручной заказ');
   send(uid, prize
     ? `🎉 <b>Вы выиграли ${esc(g.name)}!</b>\n\nЗаказ №${o.id}. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID организации (Settings → Account → Organization ID).' : g.token ? 'для ChatGPT ключ сессии: войдите на chatgpt.com и откройте chatgpt.com/api/auth/session, скопируйте весь текст.' : 'почту аккаунта, пароль попросим позже.')
-    : `<b>Заказ №${o.id}</b> — ${esc(g.name)}, оплата получена. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только ID аккаунта.' : 'почту аккаунта.'));
+    : `<b>Заказ №${o.id}</b> — ${esc(g.name)}, оплата получена. Пришлите сюда данные аккаунта — ` + (g.noLogin ? 'для Claude только Organization ID (claude.ai → Settings → Account).' : 'почту аккаунта.'));
 });
 
 bot.command('spend', ctx => {
@@ -1085,7 +1111,7 @@ bot.on('message', async ctx => {
 
   if (msg.web_app_data) {                                            // старый способ из приложения
     let p; try { p = JSON.parse(msg.web_app_data.data); } catch { return ctx.reply('Не удалось прочитать заказ.'); }
-    return createOrder(ctx, Array.isArray(p.items) ? p.items : [], 'приложение');
+    return createOrder(ctx, p && Array.isArray(p.items) ? p.items : [], 'приложение');
   }
 
   if (isAdmin(ctx)) {
@@ -1101,7 +1127,9 @@ bot.on('message', async ctx => {
 
   // клиент пишет — пересылаем тебе с контекстом
   const u = touch(ctx);
-  if (u.awaitReview && Date.now() - u.awaitReview.at < 60 * MIN && msg.text && !msg.text.startsWith('/'))
+  const busy = db.orders.some(o => o.uid === ctx.from.id && ACTIVE_STATUSES.includes(o.status));
+  if (u.awaitReview && !busy && Date.now() - u.awaitReview.at < 15 * MIN && msg.text && !msg.text.startsWith('/') &&
+      !/accessToken|sessionToken|^\s*[{[]/.test(msg.text))
     return saveReview(ctx, u, msg.text);                          // это текст отзыва
   const open = db.orders.filter(o => o.uid === ctx.from.id && ACTIVE_STATUSES.includes(o.status)).pop();
   try {
@@ -1151,7 +1179,8 @@ async function tick() {
       } else if (!o.payReminded && now - o.created > 2 * HOUR && work) {
         o.payReminded = true; changed = true;
         send(o.uid, `Заказ №${o.id} ждёт оплаты. Если остались вопросы — напишите сюда, поможем.`,
-          Markup.inlineKeyboard([[Markup.button.callback('💳 Оплатить', 'payfor:' + o.id)], [Markup.button.callback('✖️ Отменить', 'ccl:' + o.id)]]));
+          Markup.inlineKeyboard([...(o.method ? [[Markup.button.callback('✅ Я оплатил', 'paid:' + o.id)]] : []),
+            [Markup.button.callback('💳 Оплатить', 'payfor:' + o.id)], [Markup.button.callback('✖️ Отменить', 'ccl:' + o.id)]]));
       }
     }
 
@@ -1207,6 +1236,7 @@ bot.telegram.setMyCommands([
   { command: 'pending', description: 'Заказы, которые ждут' },
   { command: 'stats',   description: 'Статистика' },
   { command: 'money',   description: 'Доход и прибыль' },
+  { command: 'site',    description: 'Посетители сайта и Mini App' },
   { command: 'u',       description: 'Карточка клиента: /u @ник' },
   { command: 'spend',   description: 'Записать расход: /spend 900 сервер' },
   { command: 'cost',    description: 'Себестоимость: /cost claude 1150' },
@@ -1217,9 +1247,11 @@ bot.telegram.setMyCommands([
 setInterval(() => tick().catch(e => console.error('tick:', e.message)), 5 * MIN);
 setTimeout(() => tick().catch(() => {}), 20 * 1000);
 
-bot.launch().then(() => {
+SITE.start();
+bot.launch(() => {
   console.log('AKU Лавка запущена');
-  send(CONFIG.adminId, '🟢 Бот перезапущен. Панель — /admin');
+  send(CONFIG.adminId, '🟢 Бот перезапущен. Панель — /admin' +
+    (restoredFrom ? '\n\n⚠️ data.json был повреждён — загружена копия ' + path.basename(restoredFrom) + '. Проверь последние заказы.' : ''));
 });
 process.once('SIGINT',  () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

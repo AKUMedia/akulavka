@@ -131,11 +131,11 @@ tailwind.config = { theme: { extend: {
 
   function add(id, months) {
     const k = id + ':' + months;
-    cart[k] = { id, months, qty: (cart[k] ? cart[k].qty : 0) + 1 };
-    sync(); toast(G(id));
+    cart[k] = { id, months, qty: Math.min(9, (cart[k] ? cart[k].qty : 0) + 1) };
+    sync(); toast(G(id)); TRACK('add', { g: id });
     try { TG && TG.HapticFeedback && TG.HapticFeedback.impactOccurred('light'); } catch (_) {}
   }
-  function setQty(k, v) { if (v <= 0) delete cart[k]; else cart[k].qty = v; sync(); render(); }
+  function setQty(k, v) { if (v <= 0) delete cart[k]; else cart[k].qty = Math.min(9, v); sync(); render(); }
 
   function sync() {
     try { localStorage.setItem('aku-app-cart', JSON.stringify(cart)); } catch (_) {}
@@ -163,6 +163,7 @@ tailwind.config = { theme: { extend: {
     tab = t; openId = id || null;
     if (t === 'product') months = PRICE.termsOf(G(id))[0].months;
     render(); window.scrollTo({ top: 0 });
+    TRACK('view', { p: t, g: id || undefined });
   }
 
   /* ---------- экраны ---------- */
@@ -228,7 +229,7 @@ tailwind.config = { theme: { extend: {
       <div class="bg-board border border-edge rounded-2xl p-4 mb-4">
         <div class="font-display font-bold text-[26px] leading-none">${money(p)}</div>
         <div class="text-sage text-[13px] mt-1.5">криптой ${money(PRICE.crypto(p))}</div>
-        <div class="text-faded text-[12px] mt-1">за ${PRICE.term(g, months).label.toLowerCase()}${g.noLogin ? ' · по ID аккаунта' : ''}</div>
+        <div class="text-faded text-[12px] mt-1">за ${PRICE.term(g, months).label.toLowerCase()}${g.noLogin ? ' · по Organization ID' : ''}</div>
       </div>
       ${PRICE.term(g, months).annual ? `<div class="text-[13px] leading-relaxed bg-brass/10 rounded-xl px-4 py-3 mb-4">Официальный годовой план: одна оплата на 12 месяцев, без продлений. Экономия <b>${money(PRICE.base(g) * 12 - p)}</b>.</div>` : ''}
 
@@ -242,7 +243,7 @@ tailwind.config = { theme: { extend: {
 
       <div class="bg-panel border border-edge rounded-2xl p-4">
         <div class="font-semibold text-[14px] mb-1">Если подписка слетит</div>
-        <div class="text-faded text-[13px] leading-relaxed">Восстанавливаем за свой счёт. Не выходит — возвращаем деньги за неиспользованные дни.</div>
+        <div class="text-faded text-[13px] leading-relaxed">Не активировалась или слетела оплата — восстановим или вернём деньги за оставшиеся дни. Блокировку аккаунта самим сервисом не покрываем.</div>
       </div>
       <div class="h-3"></div>`;
   }
@@ -273,7 +274,7 @@ tailwind.config = { theme: { extend: {
               <div class="flex items-center gap-2">
                 <button data-qty="${i.key}" data-v="${i.qty-1}" class="w-8 h-8 rounded-lg border border-edge2 text-[16px] leading-none">−</button>
                 <span class="w-6 text-center text-[14px]">${i.qty}</span>
-                <button data-qty="${i.key}" data-v="${i.qty+1}" class="w-8 h-8 rounded-lg border border-edge2 text-[16px] leading-none">+</button>
+                <button data-qty="${i.key}" data-v="${Math.min(9, i.qty+1)}" class="w-8 h-8 rounded-lg border border-edge2 text-[16px] leading-none">+</button>
               </div>
               <button data-qty="${i.key}" data-v="0" class="text-faded text-[13px]">Убрать</button>
             </div></div>`; }).join('')}
@@ -290,8 +291,8 @@ tailwind.config = { theme: { extend: {
 
   function scHelp() {
     const faq = [
-      ['Нужно ли давать пароль?', 'Для Claude и ChatGPT — нет: для Claude нужен только ID аккаунта, для ChatGPT — ключ сессии (бот покажет, где взять). Для остальных сервисов попросим временный пароль после оплаты; потом смените его — бот напомнит.'],
-      ['Сколько ждать?', 'Обычно до часа в часы работы (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00 по Минску). Ночной заказ возьмём утром.'],
+      ['Нужно ли давать пароль?', 'Для Claude и ChatGPT — нет: для Claude нужен только Organization ID, для ChatGPT — ключ сессии (бот покажет, где взять). Для остальных сервисов попросим временный пароль после оплаты; потом смените его — бот напомнит.'],
+      ['Сколько ждать?', 'Обычно до часа в часы работы (' + CONFIG.openFrom + ':00–' + CONFIG.openTo + ':00 по Москве). Ночной заказ возьмём утром.'],
       ['Как оплатить?', 'Картой или кошельком через форму ЮMoney, либо USDT (TRC-20, BEP-20) со скидкой ' + CONFIG.cryptoOff + '%. Из Беларуси и Казахстана удобнее USDT.'],
       ['Что если подписка слетит?', 'Если не по вашей вине — восстановим за свой счёт или вернём деньги за оставшиеся дни. Блокировка сервисом за нарушение его правил (общий доступ, смена страны) не покрывается.'],
       ['Будут автосписания?', 'Нет. За три дня до конца бот напомнит, продлить можно в одно касание.'],
@@ -359,7 +360,7 @@ tailwind.config = { theme: { extend: {
         </div>
         <div class="text-faded text-[13px] leading-relaxed">
           ${open ? 'Отвечаем сейчас, обычно оформляем в течение часа.'
-                 : 'Заказ можно оставить — возьмём в работу с ' + CONFIG.openFrom + ':00 по Минску.'}
+                 : 'Заказ можно оставить — возьмём в работу с ' + CONFIG.openFrom + ':00 по Москве.'}
         </div>
       </div>
 
@@ -388,7 +389,7 @@ tailwind.config = { theme: { extend: {
 
       <div class="text-faded text-[12px] leading-relaxed mt-5 mb-2">
         Мы не продаём готовые аккаунты и не просим пароль от почты.
-        Claude оформляем по номеру аккаунта, ChatGPT — по ключу сессии, остальное — на ваш аккаунт с временным паролем.
+        Claude оформляем по Organization ID, ChatGPT — по ключу сессии, остальное — на ваш аккаунт, временный пароль бот попросит после оплаты.
         <a href="${CONFIG.site}#/terms" target="_blank" class="underline">Условия</a>
       </div>`;
   }
@@ -431,6 +432,7 @@ tailwind.config = { theme: { extend: {
     if (!qty()) return;
     const items = list().map(i => ({ id: i.id, months: i.months, qty: i.qty }));
     const url = CART_LINK.url(items, null);
+    TRACK('checkout', { n: total() });
     cart = {}; sync();
     toBot(url);
   }
@@ -458,6 +460,7 @@ tailwind.config = { theme: { extend: {
       return;
     }
     const b = e.target.closest('[data-bot]');
+    if (b) TRACK('out', { p: 'bot:' + b.dataset.bot });
     if (b) return toBot(BOT + '?start=' + b.dataset.bot);
     const tl = e.target.closest('[data-tg]');
     if (tl) return toBot(tl.dataset.tg);
@@ -475,7 +478,7 @@ tailwind.config = { theme: { extend: {
     });
     TG.onEvent('backButtonClicked', () => go('shop'));
   }
-  sync(); render();
+  sync(); render(); TRACK('view', { p: tab });
 })();
 </script>
 </body>
