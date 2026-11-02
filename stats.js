@@ -1,12 +1,12 @@
 /* AKU Лавка — своя статистика сайта и мини-приложения.
-   Сайт шлёт события на https://api.akulavka.com/t → Caddy → сюда (127.0.0.1:8787).
+   Сайт шлёт события на https://api.akulavka.com/t → Caddy → сюда (127.0.0.1:8797).
    Данные: stats.json рядом с ботом. Экран в боте: /admin → 🌐 Сайт (или /site). */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const FILE = path.join(__dirname, 'stats.json');
-const PORT = +process.env.STATS_PORT || 8787;
+const PORT = +process.env.STATS_PORT || 8797;   // 8787 на сервере уже занят другим проектом
 const KEEP_DAYS = 120;
 const TZ = 'Europe/Minsk';
 const EVENTS = ['view', 'add', 'buy', 'checkout', 'out'];
